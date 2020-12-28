@@ -1,46 +1,85 @@
-package initialise
+package config
 
 import (
 	"errors"
 	"fmt"
+	"os"
 	"regexp"
 	"runtime"
 	"strings"
 	"time"
 
+	"text/template"
+
 	"github.com/manifoldco/promptui"
+	"github.com/marlinprotocol/ctl2/version"
 	"github.com/mitchellh/go-homedir"
 	log "github.com/sirupsen/logrus"
 )
 
-type InitConfig struct{}
+type ConfigConfig struct {
+	HomeDir string
+}
 
-func (cfg *InitConfig) Initialise() error {
+func (cfg *ConfigConfig) Initialise() error {
 	// TODO add links
 	log.Info("marlinctl will ask you a few set of inputs to correctly setup your config file. For most of the following options, the given defaults are what you need. In case you need help setting up marlinctl, refer init logs at <insert link here>")
 
 	// Get marlindir config
-	_, err := cfg.getMarlinDir()
+	marlinDir, err := cfg.getMarlinDir()
 	if err != nil {
 		return err
 	}
 
 	// Get upstream repo config
-	_, err = cfg.getUpstreamRepo()
+	upstream, err := cfg.getUpstreamRepo()
 	if err != nil {
 		return err
 	}
 
 	// Get platform and runtime config
-	_, _, err = cfg.getPlatformAndRuntime()
+	platform, runtime, err := cfg.getPlatformAndRuntime()
 	if err != nil {
 		return err
 	}
 
+	data := struct {
+		ConfigVersion, Platform, Runtime, Upstream string
+	}{version.CfgVersion, platform, runtime, upstream}
+
+	// Write configuration
+	log.Info("Writing configuration at dir: ", marlinDir)
+	err = os.MkdirAll(marlinDir, os.ModePerm)
+	if err != nil {
+		return err
+	}
+
+	cfgTemplate, err := template.New("cfgTemplate").Parse(version.CfgTemplate)
+	if err != nil {
+		return err
+	}
+
+	cfgFile, err := os.Create(marlinDir + "/marlinctl_config.yaml")
+	if err != nil {
+		return err
+	}
+	defer cfgFile.Close()
+
+	err = cfgTemplate.Execute(cfgFile, data)
+	if err != nil {
+		return err
+	}
+	log.Info("Configuration written successfully to disk")
+
 	return nil
 }
 
-func (cfg *InitConfig) getMarlinDir() (string, error) {
+func (cfg *ConfigConfig) RemoveLocalConfig() error {
+	err := os.Remove(cfg.HomeDir + "/marlinctl_config.yaml")
+	return err
+}
+
+func (cfg *ConfigConfig) getMarlinDir() (string, error) {
 	validate := func(input string) error {
 		directoryPathRegex := `^/|(/[\w-]+)+$`
 
@@ -80,7 +119,7 @@ func (cfg *InitConfig) getMarlinDir() (string, error) {
 	return result, nil
 }
 
-func (cfg *InitConfig) getUpstreamRepo() (string, error) {
+func (cfg *ConfigConfig) getUpstreamRepo() (string, error) {
 	validate := func(input string) error {
 		githubRemoteRepoRegex := `((git|ssh|http(s)?)|(git@[\w\.]+))(:(//)?)([\w\.@\:/\-~]+)(\.git)(/)?`
 
@@ -114,7 +153,7 @@ func (cfg *InitConfig) getUpstreamRepo() (string, error) {
 	return result, nil
 }
 
-func (cfg *InitConfig) getPlatformAndRuntime() (string, string, error) {
+func (cfg *ConfigConfig) getPlatformAndRuntime() (string, string, error) {
 	platform := runtime.GOOS + "-" + runtime.GOARCH
 
 	supportedPlatformsRuntimeCombinations := []string{"linux-amd64.supervisor", "linux-amd64.systemd"}
