@@ -35,21 +35,25 @@ var location string
 
 var defaultReleaseUpstreams = []types.Registry{
 	types.Registry{
+		Name:    "rtw",
 		Link:    "https://github.com/marlinprotocol/releases.git",
 		Branch:  "rtw",
 		Enabled: true,
 	},
 	types.Registry{
+		Name:    "beta",
 		Link:    "https://github.com/marlinprotocol/releases.git",
 		Branch:  "beta",
 		Enabled: true,
 	},
 	types.Registry{
+		Name:    "alpha",
 		Link:    "https://github.com/marlinprotocol/releases.git",
 		Branch:  "alpha",
 		Enabled: false,
 	},
 	types.Registry{
+		Name:    "dev",
 		Link:    "https://github.com/marlinprotocol/releases.git",
 		Branch:  "dev",
 		Enabled: false,

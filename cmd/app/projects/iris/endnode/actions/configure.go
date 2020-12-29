@@ -71,6 +71,9 @@ to quickly create a Cobra application.`,
 						" may not be supported by marlinctl or is not supported by your system." +
 						" If you think this is incorrect, override this check using --force-runtime.")
 					os.Exit(1)
+				} else {
+					log.Info("Runtime provided for configuration: " + runtime +
+						" seems to be supported. Going ahead with configuring this.")
 				}
 			}
 
@@ -86,35 +89,14 @@ to quickly create a Cobra application.`,
 			}
 
 			viper.Set(projectId, types.Project{
-				Subscription:  []string{"rtw"},
+				Subscription:  releaseSubscriptions,
 				Version:       "latest",
 				Storage:       viper.GetString("homedir") + "/project/" + projectId,
-				Runtime:       "",
+				Runtime:       runtime,
 				ForcedRuntime: false,
 			})
 			viper.WriteConfig()
-
-			// err := viper.UnmarshalKey(projectId, &projectConfig)
-			// if err != nil {
-			// 	log.Error("Error encountered while retrieving project configuration: ", err)
-			// 	return
-			// }
 		}
-
-		// var configurationProjects types.Project
-		// err := viper.UnmarshalKey("project2", &configurationProjects)
-
-		// if err != nil {
-		// 	log.Error(err)
-		// }
-
-		// log.Info(configurationProjects)
-		// viper.Set("project2", types.Project{ProjectName: "hello",
-		// 	Subscription: []string{"rtw", "beta"},
-		// 	Version:      "latest",
-		// 	Storage:      "helllll",
-		// })
-		// viper.WriteConfig()
 	},
 }
 

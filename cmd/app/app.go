@@ -32,6 +32,7 @@ import (
 )
 
 var cfgFile string
+var skipRegistrySync bool
 
 // AppCmd represents the registry command
 var AppCmd = &cobra.Command{
@@ -56,12 +57,15 @@ to quickly create a Cobra application.`,
 
 		registry.SetupGlobalRegistry(configuredRegistries)
 
-		registry.GlobalRegistry.Sync()
+		if !skipRegistrySync {
+			registry.GlobalRegistry.Sync()
+		}
 	},
 }
 
 func init() {
 	AppCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.marlinctl/marlinctl_config.yaml)")
+	AppCmd.PersistentFlags().BoolVar(&skipRegistrySync, "skip-registry-sync", false, "skip registry sync during run")
 	AppCmd.AddCommand(iris.IrisCmd)
 }
 

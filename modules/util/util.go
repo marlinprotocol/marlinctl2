@@ -3,12 +3,17 @@ package util
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+
+	git "gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing"
 )
 
 func RemoveConfigEntry(key string) error {
@@ -36,12 +41,12 @@ func GetRuntimes() map[string]bool {
 		isSystemdAvailable = true
 	}
 
-	var isSupervisordAvailable bool = false
+	var isSupervisorAvailable bool = false
 	if _, err := os.Stat("/bin/supervisord"); err == nil {
-		isSupervisordAvailable = true
+		isSupervisorAvailable = true
 	}
 
-	var returnMap map[string]bool
+	var returnMap = make(map[string]bool)
 
 	for _, runtime := range availableRuntimes {
 		rInfo := strings.Split(runtime, ".")
@@ -52,7 +57,7 @@ func GetRuntimes() map[string]bool {
 		if platform == systemPlatform {
 			switch runner {
 			case "supervisor":
-				if isSupervisordAvailable {
+				if isSupervisorAvailable {
 					returnMap[runtime] = true
 				} else {
 					returnMap[runtime] = false
@@ -75,26 +80,49 @@ func GetRuntimes() map[string]bool {
 }
 
 func CreateDirPathIfNotExists(dirPath string) error {
-	log.Warning("Yet to implement")
+	if _, err := os.Stat(dirPath); os.IsNotExist(err) {
+		return os.MkdirAll(dirPath, 0777)
+	}
 	return nil
 }
 
 func RemoveDirContents(dirPath string) error {
-	log.Warning("Yet to implement")
+	files, err := filepath.Glob(filepath.Join(dirPath, "*"))
+	if err != nil {
+		return err
+	}
+	for _, file := range files {
+		log.Info("Removing ", file)
+		err = os.RemoveAll(file)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
 func GitPullHead(upstreamUrl string, branch string, dirPath string) error {
-	log.Warning("Yet to implement")
-	return nil
+	_, err := git.PlainClone(dirPath, false, &git.CloneOptions{
+		URL:           upstreamUrl,
+		ReferenceName: plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", branch)),
+		SingleBranch:  true,
+		Depth:         1,
+	})
+	return err
 }
 
 func MoveDir(srcDir string, dstDir string) error {
-	log.Warning("Yet to implement")
-	return nil
+	err := RemoveDirPathIfExists(dstDir)
+	if err != nil {
+		return nil
+	}
+	return os.Rename(srcDir, dstDir)
 }
 
 func RemoveDirPathIfExists(dirPath string) error {
-	log.Warning("Yet to implement")
-	return nil
+	if _, err := os.Stat(dirPath); os.IsNotExist(err) {
+		return nil
+	} else {
+		return os.RemoveAll(dirPath)
+	}
 }
