@@ -115,7 +115,7 @@ func (c *RegistryConfig) Sync() error {
 	}
 	elapsed := time.Since(start)
 
-	log.Info("Remote registeries pulled in ", elapsed)
+	log.Debug("Remote registeries pulled in ", elapsed)
 	return nil
 }
 
@@ -250,7 +250,7 @@ func (c *RegistryConfig) GetVersionToRun(projectName string) (ProjectVersion, er
 	if proj.Version == "latest" {
 		if len(versions) > 0 {
 			versionToRun = versions[0]
-			log.Info("Resolving \"latest\" project version to: ", versionToRun.Version)
+			log.Debug("Resolving \"latest\" project version to: ", versionToRun.Version)
 			return versions[0], nil
 		} else {
 			return ProjectVersion{}, errors.New("No version available to run for latest for this project")

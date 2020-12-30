@@ -11,7 +11,7 @@ CFGTEMPLATE=$(shell cat version/marlincfg_texttemplate.yaml | sed ':a;N;$!ba;s/\
 
 release:
 	$(GOBUILD) -ldflags="\
-	-X github.com/marlinprotocol/ctl2/version.applicationVersion=2.0.0 \
+	-X github.com/marlinprotocol/ctl2/version.ApplicationVersion=2.0.0 \
 	-X github.com/marlinprotocol/ctl2/version.buildCommit=$(BUILDLINE)@$(BUILDCOMMIT) \
 	-X github.com/marlinprotocol/ctl2/version.buildTime=$(CURRENTTIME) \
 	-linkmode=external" \

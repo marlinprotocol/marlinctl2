@@ -22,6 +22,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/marlinprotocol/ctl2/modules/util"
 	"github.com/marlinprotocol/ctl2/types"
@@ -34,6 +35,7 @@ import (
 	"github.com/marlinprotocol/ctl2/modules/registry"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/inconshreveable/go-update"
 	"github.com/marlinprotocol/ctl2/cmd/gateway"
 )
 
@@ -220,8 +222,41 @@ func checkMarlinctlUpdates() error {
 		return err
 	}
 	if version.ApplicationVersion == ver.Version {
+		log.Debug("Latest marlinctl described upstream is current marlinctl's version. No updates to do.")
 		return nil
 	}
-	log.Info("MarlinCTL needs to upgrade, YET to implement")
+	log.Debug("MarlinCTL needs to upgrade, going from ", version.ApplicationVersion, " to ", ver.Version)
+
+	executableURL := ver.RunnerData.(map[string]interface{})["executable"].(string)
+	executableChecksum := ver.RunnerData.(map[string]interface{})["checksum"].(string)
+	tempDownloadLoc := "/tmp/marlinctl.tempdownload." + strconv.FormatInt(time.Now().Unix(), 10)
+
+	log.Debug("Downloading marlinctl to ", tempDownloadLoc)
+
+	err = util.DownloadFile(tempDownloadLoc, executableURL)
+	if err != nil {
+		return err
+	}
+
+	err = util.VerifyChecksum(tempDownloadLoc, executableChecksum)
+	if err != nil {
+		return err
+	}
+
+	log.Debug("Patching start")
+
+	updateFile, err := os.Open(tempDownloadLoc)
+	if err != nil {
+		return nil
+	}
+	defer updateFile.Close()
+
+	err = update.Apply(updateFile, update.Options{})
+	if err != nil {
+		return err
+	}
+
+	log.Debug("Patching complete")
+
 	return nil
 }
