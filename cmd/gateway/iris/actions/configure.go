@@ -30,18 +30,13 @@ import (
 var enableBeta, clearCache, forceRuntime bool
 var version, runtime string
 
-var projectId string = "iris_endnode"
+var projectId string = "gateway_iris"
 
 // AppCmd represents the registry command
 var ConfigureCmd = &cobra.Command{
 	Use:   "configure",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Configure iris gateway",
+	Long:  `Configure iris gateway`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var projectConfig types.Project
 
@@ -78,14 +73,14 @@ to quickly create a Cobra application.`,
 				}
 			}
 
-			var releaseSubscriptions = []string{"rtw"}
+			var releaseSubscriptions = []string{"public"}
 
 			if enableBeta {
 				releaseSubscriptions = append(releaseSubscriptions, "beta")
 			}
 
 			if version != "latest" {
-				versions, err := registry.GlobalRegistry.GetVersions("iris_endnode", releaseSubscriptions, runtime)
+				versions, err := registry.GlobalRegistry.GetVersions(projectId, releaseSubscriptions, runtime)
 				if err != nil {
 					log.Error("Error while fetching from global registry: ", err)
 					os.Exit(1)

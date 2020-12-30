@@ -23,7 +23,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/marlinprotocol/ctl2/modules/registry"
-	projectRunners "github.com/marlinprotocol/ctl2/modules/runner/iris_endnode"
+	projectRunners "github.com/marlinprotocol/ctl2/modules/runner/gateway_iris"
 	"github.com/marlinprotocol/ctl2/types"
 )
 
@@ -31,47 +31,21 @@ var runtimeArgs map[string]string
 var skipChecksum bool
 
 // AppCmd represents the registry command
-var UpCmd = &cobra.Command{
-	Use:   "up",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+var CreateCmd = &cobra.Command{
+	Use:   "create",
+	Short: `Create a gateway on local system`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var projectConfig types.Project
 		err := viper.UnmarshalKey(projectId, &projectConfig)
-		versions, err := registry.GlobalRegistry.GetVersions("iris_endnode", projectConfig.Subscription, projectConfig.Runtime)
-
 		if err != nil {
-			log.Error("Error encountered while listing versions: ", err)
-			return
+			log.Error("Error while reading project config: ", err)
+			os.Exit(1)
 		}
 
-		var versionToRun registry.ProjectVersion
-		if projectConfig.Version == "latest" {
-			if len(versions) > 0 {
-				versionToRun = versions[0]
-				log.Info("Latest version is being picked: ", versionToRun.Version)
-			} else {
-				log.Error("No version available to run for latest for this project. Aborting")
-				os.Exit(1)
-			}
-		} else {
-			var isVersionAvailable bool = false
-			for _, v := range versions {
-				if projectConfig.Version == v.Version {
-					isVersionAvailable = true
-					versionToRun = v
-					break
-				}
-			}
-			if !isVersionAvailable {
-				log.Error("Explicitly configured version " + projectConfig.Version + " is not available in registries. Aborting")
-				os.Exit(1)
-			}
+		versionToRun, err := registry.GlobalRegistry.GetVersionToRun(projectId)
+		if err != nil {
+			log.Error("Error while getting version to run: ", err)
+			os.Exit(1)
 		}
 
 		runner, err := projectRunners.GetRunnerInstance(versionToRun.RunnerId, versionToRun.Version, projectConfig.Storage, versionToRun.RunnerData, skipChecksum)
@@ -102,6 +76,6 @@ to quickly create a Cobra application.`,
 
 func init() {
 	runtimeArgs = make(map[string]string)
-	UpCmd.Flags().BoolVarP(&skipChecksum, "skip-checksum", "s", false, "skips checking file integrity during run")
-	UpCmd.Flags().StringToStringVarP(&runtimeArgs, "runtime-arguments", "r", map[string]string{}, "runtime arguments for iris endnode")
+	CreateCmd.Flags().BoolVarP(&skipChecksum, "skip-checksum", "s", false, "skips checking file integrity during run")
+	CreateCmd.Flags().StringToStringVarP(&runtimeArgs, "runtime-arguments", "r", map[string]string{}, "runtime arguments for iris endnode")
 }

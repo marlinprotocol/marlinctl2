@@ -23,53 +23,28 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/marlinprotocol/ctl2/modules/registry"
-	projectRunners "github.com/marlinprotocol/ctl2/modules/runner/iris_endnode"
+	projectRunners "github.com/marlinprotocol/ctl2/modules/runner/gateway_iris"
 	"github.com/marlinprotocol/ctl2/types"
 )
 
 // AppCmd represents the registry command
 var StatusCmd = &cobra.Command{
 	Use:   "status",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Get status of iris gateway",
+	Long:  `Get status of iris gateway`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var projectConfig types.Project
 		err := viper.UnmarshalKey(projectId, &projectConfig)
-		versions, err := registry.GlobalRegistry.GetVersions("iris_endnode", projectConfig.Subscription, projectConfig.Runtime)
-
 		if err != nil {
-			log.Error("Error encountered while listing versions: ", err)
-			return
+			log.Error("Error while reading project config: ", err)
+			os.Exit(1)
 		}
 
-		var versionToRun registry.ProjectVersion
-		if projectConfig.Version == "latest" {
-			if len(versions) > 0 {
-				versionToRun = versions[0]
-			} else {
-				log.Error("No version available to run for latest for this project. Aborting")
-				os.Exit(1)
-			}
-		} else {
-			var isVersionAvailable bool = false
-			for _, v := range versions {
-				if projectConfig.Version == v.Version {
-					isVersionAvailable = true
-					versionToRun = v
-					break
-				}
-			}
-			if !isVersionAvailable {
-				log.Error("Explicitly configured version " + projectConfig.Version + " is not available in registries. Aborting")
-				os.Exit(1)
-			}
+		versionToRun, err := registry.GlobalRegistry.GetVersionToRun(projectId)
+		if err != nil {
+			log.Error("Error while getting version to run: ", err)
+			os.Exit(1)
 		}
-		log.Info("Calculated Version: ", versionToRun.Version)
 
 		runner, err := projectRunners.GetRunnerInstance(versionToRun.RunnerId, versionToRun.Version, projectConfig.Storage, versionToRun.RunnerData, skipChecksum)
 		if err != nil {

@@ -14,6 +14,7 @@ import (
 	"github.com/marlinprotocol/ctl2/modules/util"
 	"github.com/marlinprotocol/ctl2/types"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 // Upstream configuration
@@ -232,6 +233,36 @@ func (c *RegistryConfig) PrettyPrintProjectVersions(versions []ProjectVersion) {
 	// 	t.SetStyle(table.StyleColoredBlueWhiteOnBlack)
 	// }
 	t.Render()
+}
+
+func (c *RegistryConfig) GetVersionToRun(projectName string) (ProjectVersion, error) {
+	var proj types.Project
+	err := viper.UnmarshalKey(projectName, &proj)
+	if err != nil {
+		return ProjectVersion{}, err
+	}
+	versions, err := c.GetVersions(projectName, proj.Subscription, proj.Runtime)
+	if err != nil {
+		return ProjectVersion{}, err
+	}
+
+	var versionToRun ProjectVersion
+	if proj.Version == "latest" {
+		if len(versions) > 0 {
+			versionToRun = versions[0]
+			log.Info("Resolving \"latest\" project version to: ", versionToRun.Version)
+			return versions[0], nil
+		} else {
+			return ProjectVersion{}, errors.New("No version available to run for latest for this project")
+		}
+	} else {
+		for _, v := range versions {
+			if proj.Version == v.Version {
+				return v, nil
+			}
+		}
+		return ProjectVersion{}, errors.New("Explicitly configured version " + proj.Version + " is not available in registries. Aborting")
+	}
 }
 
 type ProjectVersion struct {

@@ -1,4 +1,4 @@
-package iris_endnode
+package gateway_iris
 
 import (
 	"encoding/json"
@@ -47,7 +47,7 @@ const (
 	bridgeSupervisorConfFile  = "irisbridge"
 	logRootDir                = "/var/log/supervisor"
 	oldLogRootDir             = "/var/log/old_logs"
-	projectName               = "iris_endnode"
+	projectName               = "gateway_iris"
 )
 
 func (r *linux_amd64_supervisor_runner01) PreRunSanity() error {

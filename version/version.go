@@ -5,7 +5,7 @@ import (
 )
 
 // Application version  -- supplied compile time
-var applicationVersion string = "0.0.0"
+var ApplicationVersion string = "0.0.0"
 
 // Build commit -- supplied compile time
 var buildCommit string = "0x0000"
@@ -17,7 +17,7 @@ var RootCmdVersion string = prepareVersionString()
 
 func prepareVersionString() string {
 	var buffer bytes.Buffer
-	buffer.WriteString(applicationVersion + " build " + buildCommit)
+	buffer.WriteString(ApplicationVersion + " build " + buildCommit)
 	buffer.WriteString("\nCompiled on: " + buildTime)
 	// buffer.WriteString("\nConfiguration file version supported: " + CfgVersion)
 	return buffer.String()

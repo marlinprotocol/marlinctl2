@@ -1,4 +1,4 @@
-package iris_endnode
+package gateway_iris
 
 import (
 	"errors"
