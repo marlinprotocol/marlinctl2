@@ -36,6 +36,20 @@ type linux_amd64_supervisor_runner01 struct {
 	SkipChecksum bool
 }
 
+const (
+	gatewayName               = "iris_gateway_linux-amd64"
+	bridgeName                = "iris_bridge_linux-amd64"
+	gatewayProgramName        = "irisgateway"
+	bridgeProgramName         = "irisbridge"
+	defaultUser               = "root"
+	supervisorConfFiles       = "/etc/supervisor/conf.d"
+	gatewaySupervisorConfFile = "irisgateway"
+	bridgeSupervisorConfFile  = "irisbridge"
+	logRootDir                = "/var/log/supervisor"
+	oldLogRootDir             = "/var/log/old_logs"
+	projectName               = "iris_endnode"
+)
+
 func (r *linux_amd64_supervisor_runner01) PreRunSanity() error {
 	if !util.IsSupervisorAvailable() {
 		return errors.New("System does not support supervisor")
@@ -53,11 +67,11 @@ func (r *linux_amd64_supervisor_runner01) Download() error {
 		return err
 	}
 
-	var gatewayLocation = dirPath + "/iris_gateway_linux-amd64"
-	var bridgeLocation = dirPath + "/iris_bridge_linux-amd64"
+	var gatewayLocation = dirPath + "/" + gatewayName
+	var bridgeLocation = dirPath + "/" + bridgeName
 
 	if _, err := os.Stat(gatewayLocation); os.IsNotExist(err) {
-		log.Info("Fetching iris gateway from upstream")
+		log.Info("Fetching gateway from upstream")
 		util.DownloadFile(gatewayLocation, r.RunnerData.Gateway)
 	}
 	if !r.SkipChecksum {
@@ -69,7 +83,7 @@ func (r *linux_amd64_supervisor_runner01) Download() error {
 		}
 	}
 	if _, err := os.Stat(bridgeLocation); os.IsNotExist(err) {
-		log.Info("Fetching iris bridge from upstream")
+		log.Info("Fetching bridge from upstream")
 		util.DownloadFile(bridgeLocation, r.RunnerData.Bridge)
 	}
 	if !r.SkipChecksum {
@@ -103,10 +117,10 @@ func (r *linux_amd64_supervisor_runner01) Prepare() error {
 	if err != nil {
 		return err
 	}
-	var keyfileLocation = r.Storage + "/common/iris_keyfile.json"
+	var keyfileLocation = r.Storage + "/common/keyfile.json"
 	if _, err := os.Stat(keyfileLocation); os.IsNotExist(err) {
 		log.Info("Creating a new keyfile since none found at " + keyfileLocation)
-		var gatewayLocation = r.Storage + "/" + r.Version + "/iris_gateway_linux-amd64"
+		var gatewayLocation = r.Storage + "/" + r.Version + "/" + gatewayName
 		keyFileGenCommand := exec.Command(gatewayLocation, "keyfile", "--chain=irisnet", "--generate", "--filelocation="+keyfileLocation)
 		_, err := keyFileGenCommand.Output()
 		if err != nil {
@@ -126,7 +140,7 @@ func (r *linux_amd64_supervisor_runner01) Prepare() error {
 	json.Unmarshal(byteValue, &keyFileData)
 
 	log.Info("Keyfile information")
-	util.PrettyPrintKV(keyFileData)
+	util.PrettyPrintKVStruct(keyFileData)
 
 	return nil
 }
@@ -136,19 +150,19 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 		GatewayProgram, GatewayUser, GatewayRunDir, GatewayExecutablePath, GatewayKeyfile, GatewayListenPortPeer, GatewayMarlinIp, GatewayMarlinPort string
 		BridgeProgram, BridgeUser, BridgeRunDir, BridgeExecutablePath, BridgeBootstrapAddr                                                           string
 	}{
-		"irisgateway", "root", "/", r.Storage + "/" + r.Version + "/iris_gateway_linux-amd64", r.Storage + "/common/iris_keyfile.json", "21900", "127.0.0.1", "21901",
-		"irisbridge", "root", "/", r.Storage + "/" + r.Version + "/iris_bridge_linux-amd64", "127.0.0.1:8002",
+		gatewayProgramName, defaultUser, "/", r.Storage + "/" + r.Version + "/" + gatewayName, r.Storage + "/common/keyfile.json", "21900", "127.0.0.1", "21901",
+		bridgeProgramName, defaultUser, "/", r.Storage + "/" + r.Version + "/" + bridgeName, "127.0.0.1:8002",
 	}
 
 	for k, v := range runtimeArgs {
-		if k != "GetewayProgram" && k != "BridgeProgram" &&
+		if k != "GatewayProgram" && k != "BridgeProgram" &&
 			reflect.ValueOf(&substitutions).Elem().FieldByName(k).CanSet() {
 			reflect.ValueOf(&substitutions).Elem().FieldByName(k).SetString(v)
 		}
 	}
 
 	log.Info("Running configuration")
-	util.PrettyPrintKV(substitutions)
+	util.PrettyPrintKVStruct(substitutions)
 
 	gt := template.Must(template.New("gateway-template").Parse(util.TrimSpacesEveryLine(`
 		[program:{{.GatewayProgram}}]
@@ -162,7 +176,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 		autostart=true
 		autorestart=true
 	`)))
-	gFile, err := os.Create("/etc/supervisor/conf.d/irisgateway.conf")
+	gFile, err := os.Create(supervisorConfFiles + "/" + gatewaySupervisorConfFile + ".conf")
 	if err != nil {
 		return err
 	}
@@ -183,7 +197,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 		autostart=true
 		autorestart=true
 	`)))
-	bFile, err := os.Create("/etc/supervisor/conf.d/irisbridge.conf")
+	bFile, err := os.Create(supervisorConfFiles + "/" + bridgeSupervisorConfFile + ".conf")
 	if err != nil {
 		return err
 	}
@@ -221,24 +235,36 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 	if err != nil {
 		return errors.New("Error while reading supervisor status: " + err.Error())
 	}
+
+	var supervisorStatus = make(map[string]interface{})
+
 	statusLines := strings.Split(string(status), "\n")
+	var anyStatusLine = false
 	for _, v := range statusLines {
-		if match, err := regexp.MatchString(substitutions.GatewayProgram+"|"+substitutions.BridgeProgram, v); err == nil && match {
-			log.Info("{SUPERVISOR STATUS} " + v)
+		if match, err := regexp.MatchString(gatewayProgramName+"|"+bridgeProgramName, v); err == nil && match {
+			vSplit := strings.Split(v, " ")
+			supervisorStatus[vSplit[0]] = strings.Trim(strings.Join(vSplit[1:], " "), " ")
+			anyStatusLine = true
 		}
+	}
+	if !anyStatusLine {
+		log.Info("No proceses seem to be running")
+	} else {
+		log.Info("Process status")
+		util.PrettyPrintKVMap(supervisorStatus)
 	}
 
 	return nil
 }
 
 func (r *linux_amd64_supervisor_runner01) Destroy() error {
-	_, err := exec.Command("supervisorctl", "stop", "irisgateway").Output()
+	_, err := exec.Command("supervisorctl", "stop", gatewaySupervisorConfFile).Output()
 	if err != nil {
 		return errors.New("Error while stopping gateway: " + err.Error())
 	}
 	log.Info("Trigerred gateway stop")
 
-	_, err = exec.Command("supervisorctl", "stop", "irisbridge").Output()
+	_, err = exec.Command("supervisorctl", "stop", bridgeSupervisorConfFile).Output()
 	if err != nil {
 		return errors.New("Error while stopping bridge: " + err.Error())
 	}
@@ -251,8 +277,8 @@ func (r *linux_amd64_supervisor_runner01) Destroy() error {
 }
 
 func (r *linux_amd64_supervisor_runner01) PostRun() error {
-	var gatewayConfig = "/etc/supervisor/conf.d/irisgateway.conf"
-	var bridgeConfig = "/etc/supervisor/conf.d/irisbridge.conf"
+	var gatewayConfig = supervisorConfFiles + "/" + gatewaySupervisorConfFile + ".conf"
+	var bridgeConfig = supervisorConfFiles + "/" + bridgeSupervisorConfFile + ".conf"
 
 	if _, err := os.Stat(gatewayConfig); !os.IsNotExist(err) {
 		if err := os.Remove(gatewayConfig); err != nil {
@@ -265,9 +291,7 @@ func (r *linux_amd64_supervisor_runner01) PostRun() error {
 		}
 	}
 
-	var logRootDir = "/var/log/supervisor/"
-	var oldLogsRootDir = "/var/log/old_logs/"
-	err := util.CreateDirPathIfNotExists(oldLogsRootDir)
+	err := util.CreateDirPathIfNotExists(oldLogRootDir)
 	if err != nil {
 		return err
 	}
@@ -275,7 +299,7 @@ func (r *linux_amd64_supervisor_runner01) PostRun() error {
 		if !f.IsDir() {
 			r, err := regexp.MatchString("irisgateway.*|irisbridge.*", f.Name())
 			if err == nil && r {
-				err2 := os.Rename(logRootDir+f.Name(), oldLogsRootDir+"previous_run_"+f.Name())
+				err2 := os.Rename(logRootDir+"/"+f.Name(), oldLogRootDir+"/previous_run_"+f.Name())
 				if err2 != nil {
 					return err2
 				}
@@ -300,20 +324,20 @@ func (r *linux_amd64_supervisor_runner01) PostRun() error {
 		return errors.New("Error while supervisorctl update: " + err.Error())
 	}
 
-	log.Info("All iris processes stopped, supervisor configs removed, logs marked as old")
+	log.Info("All relevant processes stopped, supervisor configs removed, logs marked as old")
 	return nil
 }
 
 func (r *linux_amd64_supervisor_runner01) Status() error {
 	var projectConfig types.Project
-	err := viper.UnmarshalKey("iris_endnode", &projectConfig)
+	err := viper.UnmarshalKey(projectName, &projectConfig)
 	if err != nil {
 		return err
 	}
 	log.Info("Project configuration")
-	util.PrettyPrintKV(projectConfig)
+	util.PrettyPrintKVStruct(projectConfig)
 
-	var keyfileLocation = r.Storage + "/common/iris_keyfile.json"
+	var keyfileLocation = r.Storage + "/common/keyfile.json"
 	keyfile, err := os.Open(keyfileLocation)
 	if err != nil {
 		return err
@@ -326,22 +350,29 @@ func (r *linux_amd64_supervisor_runner01) Status() error {
 	json.Unmarshal(byteValue, &keyFileData)
 
 	log.Info("Keyfile information")
-	util.PrettyPrintKV(keyFileData)
+	util.PrettyPrintKVStruct(keyFileData)
 
 	status, err := exec.Command("supervisorctl", "status").Output()
 	if err != nil {
 		return errors.New("Error while reading supervisor status: " + err.Error())
 	}
+
+	var supervisorStatus = make(map[string]interface{})
+
 	statusLines := strings.Split(string(status), "\n")
 	var anyStatusLine = false
 	for _, v := range statusLines {
-		if match, err := regexp.MatchString("irisgateway|irisbridge", v); err == nil && match {
-			log.Info("{SUPERVISOR STATUS} " + v)
+		if match, err := regexp.MatchString(gatewayProgramName+"|"+bridgeProgramName, v); err == nil && match {
+			vSplit := strings.Split(v, " ")
+			supervisorStatus[vSplit[0]] = strings.Trim(strings.Join(vSplit[1:], " "), " ")
 			anyStatusLine = true
 		}
 	}
 	if !anyStatusLine {
 		log.Info("No proceses seem to be running")
+	} else {
+		log.Info("Process status")
+		util.PrettyPrintKVMap(supervisorStatus)
 	}
 
 	return nil

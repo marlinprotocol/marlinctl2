@@ -218,7 +218,7 @@ func TrimSpacesEveryLine(s string) string {
 	return retString
 }
 
-func PrettyPrintKV(s interface{}) {
+func PrettyPrintKVStruct(s interface{}) {
 	v := reflect.ValueOf(s)
 
 	t := GetTable()
@@ -228,11 +228,17 @@ func PrettyPrintKV(s interface{}) {
 	for i := 0; i < v.NumField(); i++ {
 		t.AppendRow(table.Row{v.Type().Field(i).Name, v.Field(i).Interface()})
 	}
-	// t.SetStyle(table.Style{Box: table.BoxStyle{}})
-	// terminalColorCapability, err := exec.Command("tput", "colors").Output()
-	// if err == nil && strings.TrimSpace(string(terminalColorCapability)) == "256" && isatty.IsTerminal(os.Stdout.Fd()) {
-	// 	t.SetStyle(table.StyleColoredBlueWhiteOnBlack)
-	// }
+	t.Render()
+}
+
+func PrettyPrintKVMap(s map[string]interface{}) {
+	t := GetTable()
+	t.SetOutputMirror(os.Stdout)
+	t.AppendHeader(table.Row{"Key", "Value"})
+
+	for k, v := range s {
+		t.AppendRow(table.Row{k, v})
+	}
 	t.Render()
 }
 
