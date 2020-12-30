@@ -18,11 +18,13 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/marlinprotocol/ctl2/modules/util"
 	"github.com/marlinprotocol/ctl2/types"
 	"github.com/marlinprotocol/ctl2/version"
 	log "github.com/sirupsen/logrus"
@@ -91,16 +93,33 @@ to quickly create a Cobra application.`,
 				location = home + "/.marlinctl/marlinctl_config.yaml"
 			}
 
+			lSplice := strings.Split(location, "/")
+			var dirPath string
+
+			for i := 0; i < len(lSplice)-1; i++ {
+				dirPath = dirPath + "/" + lSplice[i]
+			}
+
+			err = util.CreateDirPathIfNotExists(dirPath)
+			if err != nil {
+				log.Error("Error while creating directory ", dirPath, " ", err.Error())
+			}
+
 			viper.SetConfigFile(location)
 
 			for i := 0; i < len(defaultReleaseUpstreams); i++ {
 				defaultReleaseUpstreams[i].Local = home + "/.marlinctl/registries/" + defaultReleaseUpstreams[i].Branch
 			}
 			viper.Set("config_version", version.CfgVersion)
+			viper.Set("homedir", home+"/.marlinctl/storage")
 			viper.Set("registries", defaultReleaseUpstreams)
-			viper.WriteConfig()
+			err = viper.WriteConfig()
 
-			log.Info("Default marlinctl config written to disk successfully")
+			if err != nil {
+				log.Error("Error while writing config file to ", location, " ", err.Error())
+			}
+
+			log.Info("Default marlinctl config written to disk successfully to ", location)
 		}
 	},
 }

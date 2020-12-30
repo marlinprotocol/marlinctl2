@@ -20,7 +20,7 @@ clean:
 	rm -rf $(BINDIR)/*
 
 install:
-	cp $(BIN) $(INSTALLLOC)
+	cp $(BINDIR)/marlinctl $(INSTALLLOC)
 
 uninstall:
 	rm $(INSTALLLOC)

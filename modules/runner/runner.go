@@ -4,9 +4,9 @@ type Runner interface {
 	PreRunSanity() error
 	Download() error
 	Prepare() error
-	Create() error
+	Create(runtimeArgs map[string]string) error
 	Destroy() error
 	PostRun() error
 	Status() error
-	Logs(tailLogs bool, prevLines int) error
+	Logs() error
 }

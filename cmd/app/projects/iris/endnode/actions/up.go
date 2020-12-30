@@ -27,6 +27,7 @@ import (
 	"github.com/marlinprotocol/ctl2/types"
 )
 
+var runtimeArgs map[string]string
 var skipChecksum bool
 
 // AppCmd represents the registry command
@@ -91,7 +92,7 @@ to quickly create a Cobra application.`,
 			return
 		}
 
-		err = runner.Create()
+		err = runner.Create(runtimeArgs)
 		if err != nil {
 			log.Error("Failure during start: ", err.Error())
 			return
@@ -100,5 +101,7 @@ to quickly create a Cobra application.`,
 }
 
 func init() {
+	runtimeArgs = make(map[string]string)
 	UpCmd.Flags().BoolVarP(&skipChecksum, "skip-checksum", "s", false, "skips checking file integrity during run")
+	UpCmd.Flags().StringToStringVarP(&runtimeArgs, "runtime-arguments", "r", map[string]string{}, "runtime arguments for iris endnode")
 }

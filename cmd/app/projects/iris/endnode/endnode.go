@@ -16,8 +16,6 @@ limitations under the License.
 package endnode
 
 import (
-	"fmt"
-
 	"github.com/marlinprotocol/ctl2/cmd/app/projects/iris/endnode/actions"
 	"github.com/spf13/cobra"
 )
@@ -32,13 +30,13 @@ and usage of using your command. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("up called")
-	},
 }
 
 func init() {
 	EndnodeCmd.AddCommand(actions.ConfigureCmd)
 	EndnodeCmd.AddCommand(actions.UpCmd)
+	EndnodeCmd.AddCommand(actions.DestroyCmd)
+	EndnodeCmd.AddCommand(actions.LogsCmd)
+	EndnodeCmd.AddCommand(actions.StatusCmd)
 	EndnodeCmd.AddCommand(actions.ListVersionsCmd)
 }

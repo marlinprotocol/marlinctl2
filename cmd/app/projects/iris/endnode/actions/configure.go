@@ -22,6 +22,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/marlinprotocol/ctl2/modules/registry"
 	"github.com/marlinprotocol/ctl2/modules/util"
 	"github.com/marlinprotocol/ctl2/types"
 )
@@ -84,14 +85,28 @@ to quickly create a Cobra application.`,
 			}
 
 			if version != "latest" {
-				// TODO
-				log.Warn("Yet to implement non latest versions")
+				versions, err := registry.GlobalRegistry.GetVersions("iris_endnode", releaseSubscriptions, runtime)
+				if err != nil {
+					log.Error("Error while fetching from global registry: ", err)
+					os.Exit(1)
+				}
+				var foundVersion = false
+				for _, v := range versions {
+					if v.Version == version {
+						foundVersion = true
+						break
+					}
+				}
+				if !foundVersion {
+					log.Error("Version was not found in global registry: ", version)
+					os.Exit(1)
+				}
 			}
 
 			viper.Set(projectId, types.Project{
 				Subscription:  releaseSubscriptions,
-				Version:       "latest",
-				Storage:       viper.GetString("homedir") + "/project/" + projectId,
+				Version:       version,
+				Storage:       viper.GetString("homedir") + "/projects/" + projectId,
 				Runtime:       runtime,
 				ForcedRuntime: false,
 			})

@@ -2,16 +2,26 @@ package util
 
 import (
 	"bytes"
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"strings"
 
+	"github.com/mattn/go-isatty"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
+	"github.com/jedib0t/go-pretty/table"
+	"github.com/schollz/progressbar/v3"
 	git "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 )
@@ -31,20 +41,37 @@ func RemoveConfigEntry(key string) error {
 	return nil
 }
 
+func IsSystemdAvailable() bool {
+	var isSystemdAvailable bool = false
+	if _, err := os.Stat("/run/systemd/system"); err == nil {
+		isSystemdAvailable = true
+	}
+	return isSystemdAvailable
+}
+
+func IsSupervisorAvailable() bool {
+	var isSupervisorAvailable bool = false
+	if _, err := os.Stat("/bin/supervisord"); err == nil {
+		isSupervisorAvailable = true
+	}
+	return isSupervisorAvailable
+}
+
+func IsSupervisorInRunningState() bool {
+	var isSupervisorInRunningState bool = false
+	if _, err := os.Stat("/run/supervisor.sock"); err == nil {
+		isSupervisorInRunningState = true
+	}
+	return isSupervisorInRunningState
+}
+
 func GetRuntimes() map[string]bool {
 	availableRuntimes := []string{"linux-amd64.supervisor", "linux-amd64.systemd"}
 
 	systemPlatform := runtime.GOOS + "-" + runtime.GOARCH
 
-	var isSystemdAvailable bool = false
-	if _, err := os.Stat("/run/systemd/system"); err == nil {
-		isSystemdAvailable = true
-	}
-
-	var isSupervisorAvailable bool = false
-	if _, err := os.Stat("/bin/supervisord"); err == nil {
-		isSupervisorAvailable = true
-	}
+	var isSystemdAvailable bool = IsSystemdAvailable()
+	var isSupervisorAvailable bool = IsSupervisorAvailable()
 
 	var returnMap = make(map[string]bool)
 
@@ -125,4 +152,87 @@ func RemoveDirPathIfExists(dirPath string) error {
 	} else {
 		return os.RemoveAll(dirPath)
 	}
+}
+
+func DownloadFile(filepath string, url string) error {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return err
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	f, err := os.OpenFile(filepath, os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	bar := progressbar.DefaultBytes(
+		resp.ContentLength,
+		"Downloading File",
+	)
+	io.Copy(io.MultiWriter(f, bar), resp.Body)
+	return nil
+}
+
+func VerifyChecksum(filepath string, md5hash string) error {
+	var calculatedMD5 string
+
+	file, err := os.Open(filepath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	hash := md5.New()
+
+	if _, err := io.Copy(hash, file); err != nil {
+		return err
+	}
+
+	hashInBytes := hash.Sum(nil)[:16]
+
+	calculatedMD5 = hex.EncodeToString(hashInBytes)
+
+	if calculatedMD5 != md5hash {
+		return errors.New("MD5 mismatch. Got " + calculatedMD5 + " while expecting " + md5hash)
+	}
+	return nil
+}
+
+func TrimSpacesEveryLine(s string) string {
+	s = strings.Trim(s, " \t\n")
+	sArray := strings.Split(s, "\n")
+	retString := ""
+	ls := len(sArray)
+
+	for i := 0; i < ls; i++ {
+		retString = retString + strings.Trim(sArray[i], " \t")
+		if i != ls-1 {
+			retString = retString + "\n"
+		}
+	}
+	return retString
+}
+
+func PrettyPrintKV(s interface{}) {
+	v := reflect.ValueOf(s)
+
+	t := table.NewWriter()
+	t.SetOutputMirror(os.Stdout)
+	t.AppendHeader(table.Row{"Param", "Value"})
+
+	for i := 0; i < v.NumField(); i++ {
+		t.AppendRow(table.Row{v.Type().Field(i).Name, v.Field(i).Interface()})
+	}
+
+	terminalColorCapability, err := exec.Command("tput", "colors").Output()
+	if err == nil && strings.TrimSpace(string(terminalColorCapability)) == "256" && isatty.IsTerminal(os.Stdout.Fd()) {
+		t.SetStyle(table.StyleColoredBlueWhiteOnBlack)
+	}
+	t.Render()
 }
