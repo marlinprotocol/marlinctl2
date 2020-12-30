@@ -5,17 +5,14 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"sort"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/getlantern/deepcopy"
 	"github.com/jedib0t/go-pretty/table"
 	"github.com/marlinprotocol/ctl2/modules/util"
 	"github.com/marlinprotocol/ctl2/types"
-	"github.com/mattn/go-isatty"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -220,7 +217,7 @@ func (c *RegistryConfig) decodeReleasesJsonVersion1(data interface{}, subscripti
 }
 
 func (c *RegistryConfig) PrettyPrintProjectVersions(versions []ProjectVersion) {
-	t := table.NewWriter()
+	t := util.GetTable()
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(table.Row{"Type", "Version", "Time", "Description", "Runner"})
 	for _, v := range versions {
@@ -230,10 +227,10 @@ func (c *RegistryConfig) PrettyPrintProjectVersions(versions []ProjectVersion) {
 		}
 		t.AppendRow(table.Row{releaseType, v.Version, v.ReleaseTime, v.Description, v.RunnerId})
 	}
-	terminalColorCapability, err := exec.Command("tput", "colors").Output()
-	if err == nil && strings.TrimSpace(string(terminalColorCapability)) == "256" && isatty.IsTerminal(os.Stdout.Fd()) {
-		t.SetStyle(table.StyleColoredBlueWhiteOnBlack)
-	}
+	// terminalColorCapability, err := exec.Command("tput", "colors").Output()
+	// if err == nil && strings.TrimSpace(string(terminalColorCapability)) == "256" && isatty.IsTerminal(os.Stdout.Fd()) {
+	// 	t.SetStyle(table.StyleColoredBlueWhiteOnBlack)
+	// }
 	t.Render()
 }
 

@@ -10,17 +10,16 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"reflect"
 	"runtime"
 	"strings"
 
-	"github.com/mattn/go-isatty"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
 	"github.com/jedib0t/go-pretty/table"
+	"github.com/jedib0t/go-pretty/text"
 	"github.com/schollz/progressbar/v3"
 	git "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
@@ -222,17 +221,43 @@ func TrimSpacesEveryLine(s string) string {
 func PrettyPrintKV(s interface{}) {
 	v := reflect.ValueOf(s)
 
-	t := table.NewWriter()
+	t := GetTable()
 	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"Param", "Value"})
+	t.AppendHeader(table.Row{"Key", "Value"})
 
 	for i := 0; i < v.NumField(); i++ {
 		t.AppendRow(table.Row{v.Type().Field(i).Name, v.Field(i).Interface()})
 	}
-
-	terminalColorCapability, err := exec.Command("tput", "colors").Output()
-	if err == nil && strings.TrimSpace(string(terminalColorCapability)) == "256" && isatty.IsTerminal(os.Stdout.Fd()) {
-		t.SetStyle(table.StyleColoredBlueWhiteOnBlack)
-	}
+	// t.SetStyle(table.Style{Box: table.BoxStyle{}})
+	// terminalColorCapability, err := exec.Command("tput", "colors").Output()
+	// if err == nil && strings.TrimSpace(string(terminalColorCapability)) == "256" && isatty.IsTerminal(os.Stdout.Fd()) {
+	// 	t.SetStyle(table.StyleColoredBlueWhiteOnBlack)
+	// }
 	t.Render()
+}
+
+func GetTable() table.Writer {
+	t := table.NewWriter()
+	t.SetStyle(table.Style{Box: table.BoxStyle{
+		BottomLeft:       " ",
+		BottomRight:      " ",
+		BottomSeparator:  " ",
+		Left:             " ",
+		LeftSeparator:    " ",
+		MiddleHorizontal: " ",
+		MiddleSeparator:  " ",
+		MiddleVertical:   " ",
+		PaddingLeft:      " ",
+		PaddingRight:     " ",
+		PageSeparator:    "\n",
+		Right:            " ",
+		RightSeparator:   " ",
+		TopLeft:          " ",
+		TopRight:         " ",
+		TopSeparator:     " ",
+		UnfinishedRow:    " ",
+	}, Color: table.ColorOptions{
+		Header: text.Colors{text.FgBlue},
+	}})
+	return t
 }

@@ -17,7 +17,9 @@ import (
 
 	"github.com/hpcloud/tail"
 	"github.com/marlinprotocol/ctl2/modules/util"
+	"github.com/marlinprotocol/ctl2/types"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 type linux_amd64_supervisor_runner01_runnerdata struct {
@@ -303,6 +305,14 @@ func (r *linux_amd64_supervisor_runner01) PostRun() error {
 }
 
 func (r *linux_amd64_supervisor_runner01) Status() error {
+	var projectConfig types.Project
+	err := viper.UnmarshalKey("iris_endnode", &projectConfig)
+	if err != nil {
+		return err
+	}
+	log.Info("Project configuration")
+	util.PrettyPrintKV(projectConfig)
+
 	var keyfileLocation = r.Storage + "/common/iris_keyfile.json"
 	keyfile, err := os.Open(keyfileLocation)
 	if err != nil {
@@ -323,10 +333,15 @@ func (r *linux_amd64_supervisor_runner01) Status() error {
 		return errors.New("Error while reading supervisor status: " + err.Error())
 	}
 	statusLines := strings.Split(string(status), "\n")
+	var anyStatusLine = false
 	for _, v := range statusLines {
 		if match, err := regexp.MatchString("irisgateway|irisbridge", v); err == nil && match {
 			log.Info("{SUPERVISOR STATUS} " + v)
+			anyStatusLine = true
 		}
+	}
+	if !anyStatusLine {
+		log.Info("No proceses seem to be running")
 	}
 
 	return nil
