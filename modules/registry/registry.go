@@ -183,6 +183,7 @@ func (c *RegistryConfig) decodeReleasesJsonVersion1(data interface{}, subscripti
 	}
 
 	var versions []ProjectVersion
+	var missedVersions []string
 	// TODO more error checking
 	for MajVer, MajVerData := range data.(map[string]interface{}) {
 		for MinVer, MinVerData := range MajVerData.(map[string]interface{}) {
@@ -198,9 +199,18 @@ func (c *RegistryConfig) decodeReleasesJsonVersion1(data interface{}, subscripti
 						continue
 					}
 
+					var fullVersion = MajVer + "." + MinVer + "." + PatchVer
+					if !isPublic {
+						fullVersion = fullVersion + "-" + subscription + "." + Build
+					}
+
 					if !isFirstRun && !util.CanUseVersion(maj, min, patch, subscription, build,
 						currMaj, currMin, currPatch, currSub, currBuild,
 						updatePolicy) {
+						if isPublic && util.IsHigherVersion(maj, min, patch,
+							currMaj, currMin, currPatch, currSub) {
+							missedVersions = append(missedVersions, fullVersion)
+						}
 						continue
 					}
 
@@ -219,10 +229,6 @@ func (c *RegistryConfig) decodeReleasesJsonVersion1(data interface{}, subscripti
 					runnerData, runnerDataok := runtimeData.(map[string]interface{})["data"]
 					if !runnerDataok {
 						continue
-					}
-					var fullVersion = MajVer + "." + MinVer + "." + PatchVer
-					if !isPublic {
-						fullVersion = fullVersion + "-" + subscription + "." + Build
 					}
 					var r, ok = BuildData.(map[string]interface{})["time"]
 					if !ok {
@@ -248,6 +254,16 @@ func (c *RegistryConfig) decodeReleasesJsonVersion1(data interface{}, subscripti
 				}
 			}
 		}
+	}
+	if len(missedVersions) > 0 {
+		var updatesMissedString = ""
+		for _, v := range missedVersions {
+			updatesMissedString = updatesMissedString + "[version \"" + v + "\"] "
+		}
+		log.Warning("It seems that you are missing vital updates on public releases channel." +
+			" You are not able to upgrade to them due to update policy applied on the project." +
+			" Here are versions you are missing: " + updatesMissedString)
+
 	}
 	return versions, nil
 }

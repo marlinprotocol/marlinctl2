@@ -14,8 +14,7 @@ var ConfigTest = func(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if !viper.IsSet("gateway_iris") {
-		log.Debug("Setting up default config for running.")
-		log.Info(marlinConfig.AdditionalInfo)
+		log.Debug("Setting up default config for running gateway_iris.")
 		updPol, ok1 := marlinConfig.AdditionalInfo["defaultprojectupdatepolicy"]
 		defRun, ok2 := marlinConfig.AdditionalInfo["defaultprojectruntime"]
 		if ok1 && ok2 {

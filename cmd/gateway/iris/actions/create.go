@@ -16,8 +16,6 @@ limitations under the License.
 package actions
 
 import (
-	"os"
-
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -41,19 +39,19 @@ var CreateCmd = &cobra.Command{
 		err := viper.UnmarshalKey(projectId, &projectConfig)
 		if err != nil {
 			log.Error("Error while reading project config: ", err)
-			os.Exit(1)
+			return
 		}
 
 		versionToRun, err := registry.GlobalRegistry.GetVersionToRun(projectId)
 		if err != nil {
 			log.Error("Error while getting version to run: ", err)
-			os.Exit(1)
+			return
 		}
 
 		runner, err := projectRunners.GetRunnerInstance(versionToRun.RunnerId, versionToRun.Version, projectConfig.Storage, versionToRun.RunnerData, skipChecksum, instanceId)
 		if err != nil {
 			log.Error("Cannot get runner: ", err.Error())
-			os.Exit(1)
+			return
 		}
 
 		err = runner.PreRunSanity()
@@ -71,6 +69,15 @@ var CreateCmd = &cobra.Command{
 		err = runner.Create(runtimeArgs)
 		if err != nil {
 			log.Error("Failure during start: ", err.Error())
+			return
+		}
+
+		projectConfig.CurrentVersion = versionToRun.Version
+
+		viper.Set(projectId, projectConfig)
+		err = viper.WriteConfig()
+		if err != nil {
+			log.Error("Failure while updating config for current version: ", err.Error())
 			return
 		}
 	},

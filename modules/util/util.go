@@ -199,7 +199,7 @@ func VerifyChecksum(filepath string, md5hash string) error {
 	calculatedMD5 = hex.EncodeToString(hashInBytes)
 
 	if calculatedMD5 != md5hash {
-		return errors.New("MD5 mismatch. Got " + calculatedMD5 + " while expecting " + md5hash)
+		return errors.New("MD5 mismatch. Got " + calculatedMD5 + " while expecting " + md5hash + " @ " + filepath)
 	}
 	return nil
 }
@@ -333,6 +333,24 @@ func CanUseVersion(maj1 int, min1 int, patch1 int, sub1 string, build1 int,
 		return (maj1 == maj2)
 	case "major":
 		return true
+	}
+	return false
+}
+
+func IsHigherVersion(maj1 int, min1 int, patch1 int,
+	maj2 int, min2 int, patch2 int, sub2 string) bool {
+	if maj1 > maj2 {
+		return true
+	} else if maj1 == maj2 {
+		if min1 > min2 {
+			return true
+		} else if min1 == min2 {
+			if patch1 > patch2 {
+				return true
+			} else if patch1 == patch2 && sub2 != "public" {
+				return true
+			}
+		}
 	}
 	return false
 }

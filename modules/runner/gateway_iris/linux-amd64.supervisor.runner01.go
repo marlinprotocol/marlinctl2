@@ -38,14 +38,14 @@ type linux_amd64_supervisor_runner01 struct {
 }
 
 const (
-	gatewayName               = "iris_gateway_linux-amd64"
-	bridgeName                = "iris_bridge_linux-amd64"
-	gatewayProgramName        = "irisgateway"
-	bridgeProgramName         = "irisbridge"
+	gatewayName               = "gateway_iris_linux-amd64"
+	bridgeName                = "bridge_iris_linux-amd64"
+	gatewayProgramName        = "gatewayiris"
+	bridgeProgramName         = "bridgeiris"
 	defaultUser               = "root"
 	supervisorConfFiles       = "/etc/supervisor/conf.d"
-	gatewaySupervisorConfFile = "irisgateway"
-	bridgeSupervisorConfFile  = "irisbridge"
+	gatewaySupervisorConfFile = "gatewayiris"
+	bridgeSupervisorConfFile  = "bridgeiris"
 	logRootDir                = "/var/log/supervisor"
 	oldLogRootDir             = "/var/log/old_logs"
 	projectName               = "gateway_iris"
@@ -72,7 +72,7 @@ func (r *linux_amd64_supervisor_runner01) Download() error {
 	var bridgeLocation = dirPath + "/" + bridgeName
 
 	if _, err := os.Stat(gatewayLocation); os.IsNotExist(err) {
-		log.Info("Fetching gateway from upstream")
+		log.Info("Fetching gateway from upstream for version ", r.Version)
 		util.DownloadFile(gatewayLocation, r.RunnerData.Gateway)
 	}
 	if !r.SkipChecksum {
@@ -80,19 +80,19 @@ func (r *linux_amd64_supervisor_runner01) Download() error {
 		if err != nil {
 			return errors.New("Error while verifying gateway checksum: " + err.Error())
 		} else {
-			log.Info("Successully verified gateway's integrity")
+			log.Debug("Successully verified gateway's integrity")
 		}
 	}
 	if _, err := os.Stat(bridgeLocation); os.IsNotExist(err) {
-		log.Info("Fetching bridge from upstream")
+		log.Info("Fetching bridge from upstream for version ", r.Version)
 		util.DownloadFile(bridgeLocation, r.RunnerData.Bridge)
 	}
 	if !r.SkipChecksum {
 		err := util.VerifyChecksum(bridgeLocation, r.RunnerData.BridgeChecksum)
 		if err != nil {
-			return errors.New("Error while verifying gateway checksum: " + err.Error())
+			return errors.New("Error while verifying bridge checksum: " + err.Error())
 		} else {
-			log.Info("Successully verified bridge's integrity")
+			log.Debug("Successully verified bridge's integrity")
 		}
 	}
 
@@ -120,14 +120,14 @@ func (r *linux_amd64_supervisor_runner01) Prepare() error {
 	}
 	var keyfileLocation = r.Storage + "/common/keyfile.json"
 	if _, err := os.Stat(keyfileLocation); os.IsNotExist(err) {
-		log.Info("Creating a new keyfile since none found at " + keyfileLocation)
+		log.Debug("Creating a new keyfile since none found at " + keyfileLocation)
 		var gatewayLocation = r.Storage + "/" + r.Version + "/" + gatewayName
 		keyFileGenCommand := exec.Command(gatewayLocation, "keyfile", "--chain=irisnet", "--generate", "--filelocation="+keyfileLocation)
 		_, err := keyFileGenCommand.Output()
 		if err != nil {
 			return errors.New("Keyfile generation error: " + err.Error())
 		}
-		log.Info("New Keyfile generated.")
+		log.Debug("New Keyfile generated.")
 	}
 	keyfile, err := os.Open(keyfileLocation)
 	if err != nil {
@@ -147,12 +147,8 @@ func (r *linux_amd64_supervisor_runner01) Prepare() error {
 }
 
 func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) error {
-	available, _, err := r.fetchResourceInformation(r.getResourceFileLocation())
-	if err != nil {
-		return err
-	}
-	if available {
-		return errors.New("resource by id " + r.InstanceId + " already exists. Can't create new")
+	if _, err := os.Stat(r.getResourceFileLocation()); err == nil {
+		return errors.New("Resource file already exisits, cannot create a new instance: " + r.getResourceFileLocation())
 	}
 
 	substitutions := resource{
@@ -182,7 +178,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 		autostart=true
 		autorestart=true
 	`)))
-	gFile, err := os.Create(supervisorConfFiles + "/" + gatewaySupervisorConfFile + ".conf")
+	gFile, err := os.Create(supervisorConfFiles + "/" + gatewaySupervisorConfFile + r.InstanceId + ".conf")
 	if err != nil {
 		return err
 	}
@@ -203,7 +199,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 		autostart=true
 		autorestart=true
 	`)))
-	bFile, err := os.Create(supervisorConfFiles + "/" + bridgeSupervisorConfFile + ".conf")
+	bFile, err := os.Create(supervisorConfFiles + "/" + bridgeSupervisorConfFile + r.InstanceId + ".conf")
 	if err != nil {
 		return err
 	}
@@ -226,40 +222,40 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 	if err != nil {
 		return errors.New("Error while starting bridge: " + err.Error())
 	}
-	log.Info("Trigerred bridge run")
+	log.Debug("Trigerred bridge run")
 
 	_, err = exec.Command("supervisorctl", "start", substitutions.GatewayProgram).Output()
 	if err != nil {
 		return errors.New("Error while starting bridge: " + err.Error())
 	}
-	log.Info("Trigerred gateway run")
+	log.Debug("Trigerred gateway run")
 
 	log.Info("Waiting 10 seconds to poll for status")
 	time.Sleep(10 * time.Second)
 
 	status, err := exec.Command("supervisorctl", "status").Output()
 	if err != nil {
-		return errors.New("Error while reading supervisor status: " + err.Error())
-	}
+		log.Warning("Error while reading supervisor status: " + err.Error())
+	} else {
+		var supervisorStatus = make(map[string]interface{})
 
-	var supervisorStatus = make(map[string]interface{})
-
-	statusLines := strings.Split(string(status), "\n")
-	var anyStatusLine = false
-	for _, v := range statusLines {
-		if match, err := regexp.MatchString(gatewayProgramName+"|"+bridgeProgramName, v); err == nil && match {
-			vSplit := strings.Split(v, " ")
-			supervisorStatus[vSplit[0]] = strings.Trim(strings.Join(vSplit[1:], " "), " ")
-			anyStatusLine = true
+		statusLines := strings.Split(string(status), "\n")
+		var anyStatusLine = false
+		for _, v := range statusLines {
+			if match, err := regexp.MatchString(gatewayProgramName+r.InstanceId+"|"+bridgeProgramName+r.InstanceId, v); err == nil && match {
+				vSplit := strings.Split(v, " ")
+				supervisorStatus[vSplit[0]] = strings.Trim(strings.Join(vSplit[1:], " "), " ")
+				anyStatusLine = true
+			}
+		}
+		if !anyStatusLine {
+			log.Info("No proceses seem to be running")
+		} else {
+			log.Info("Process status")
+			util.PrettyPrintKVMap(supervisorStatus)
 		}
 	}
-	if !anyStatusLine {
-		log.Info("No proceses seem to be running")
-	} else {
-		log.Info("Process status")
-		util.PrettyPrintKVMap(supervisorStatus)
-		r.writeResourceToFile(substitutions, r.getResourceFileLocation())
-	}
+	r.writeResourceToFile(substitutions, r.getResourceFileLocation())
 
 	return nil
 }
@@ -273,17 +269,17 @@ func (r *linux_amd64_supervisor_runner01) Destroy() error {
 		return errors.New("resource by id " + r.InstanceId + " doesn't exists. Can't destroy")
 	}
 
-	_, err = exec.Command("supervisorctl", "stop", gatewaySupervisorConfFile).Output()
+	_, err = exec.Command("supervisorctl", "stop", gatewaySupervisorConfFile+r.InstanceId).Output()
 	if err != nil {
 		return errors.New("Error while stopping gateway: " + err.Error())
 	}
-	log.Info("Trigerred gateway stop")
+	log.Debug("Trigerred gateway stop")
 
-	_, err = exec.Command("supervisorctl", "stop", bridgeSupervisorConfFile).Output()
+	_, err = exec.Command("supervisorctl", "stop", bridgeSupervisorConfFile+r.InstanceId).Output()
 	if err != nil {
 		return errors.New("Error while stopping bridge: " + err.Error())
 	}
-	log.Info("Trigerred bridge stop")
+	log.Debug("Trigerred bridge stop")
 
 	log.Info("Waiting 5 seconds for SIGTERM to take affect")
 	time.Sleep(5 * time.Second)
@@ -292,8 +288,8 @@ func (r *linux_amd64_supervisor_runner01) Destroy() error {
 }
 
 func (r *linux_amd64_supervisor_runner01) PostRun() error {
-	var gatewayConfig = supervisorConfFiles + "/" + gatewaySupervisorConfFile + ".conf"
-	var bridgeConfig = supervisorConfFiles + "/" + bridgeSupervisorConfFile + ".conf"
+	var gatewayConfig = supervisorConfFiles + "/" + gatewaySupervisorConfFile + r.InstanceId + ".conf"
+	var bridgeConfig = supervisorConfFiles + "/" + bridgeSupervisorConfFile + r.InstanceId + ".conf"
 
 	if _, err := os.Stat(gatewayConfig); !os.IsNotExist(err) {
 		if err := os.Remove(gatewayConfig); err != nil {
@@ -312,7 +308,7 @@ func (r *linux_amd64_supervisor_runner01) PostRun() error {
 	}
 	err = filepath.Walk(logRootDir, func(path string, f os.FileInfo, _ error) error {
 		if !f.IsDir() {
-			r, err := regexp.MatchString("irisgateway.*|irisbridge.*", f.Name())
+			r, err := regexp.MatchString(gatewayProgramName+r.InstanceId+".*|"+bridgeProgramName+r.InstanceId+".*", f.Name())
 			if err == nil && r {
 				err2 := os.Rename(logRootDir+"/"+f.Name(), oldLogRootDir+"/previous_run_"+f.Name())
 				if err2 != nil {
@@ -344,12 +340,12 @@ func (r *linux_amd64_supervisor_runner01) PostRun() error {
 		return errors.New("Error while removing resource file: " + err.Error())
 	}
 
-	log.Info("All relevant processes stopped, supervisor configs removed, logs marked as old")
+	log.Info("All relevant processes stopped, resourced deleted, supervisor configs removed, logs marked as old")
 	return nil
 }
 
 func (r *linux_amd64_supervisor_runner01) Status() error {
-	available, _, err := r.fetchResourceInformation(r.getResourceFileLocation())
+	available, resData, err := r.fetchResourceInformation(r.getResourceFileLocation())
 	if err != nil {
 		return err
 	}
@@ -380,6 +376,9 @@ func (r *linux_amd64_supervisor_runner01) Status() error {
 	log.Info("Keyfile information")
 	util.PrettyPrintKVStruct(keyFileData)
 
+	log.Info("Resource information")
+	util.PrettyPrintKVStruct(resData)
+
 	status, err := exec.Command("supervisorctl", "status").Output()
 	if err != nil {
 		return errors.New("Error while reading supervisor status: " + err.Error())
@@ -390,7 +389,7 @@ func (r *linux_amd64_supervisor_runner01) Status() error {
 	statusLines := strings.Split(string(status), "\n")
 	var anyStatusLine = false
 	for _, v := range statusLines {
-		if match, err := regexp.MatchString(gatewayProgramName+"|"+bridgeProgramName, v); err == nil && match {
+		if match, err := regexp.MatchString(gatewayProgramName+r.InstanceId+"|"+bridgeProgramName+r.InstanceId, v); err == nil && match {
 			vSplit := strings.Split(v, " ")
 			supervisorStatus[vSplit[0]] = strings.Trim(strings.Join(vSplit[1:], " "), " ")
 			anyStatusLine = true
@@ -419,7 +418,10 @@ func (r *linux_amd64_supervisor_runner01) Logs() error {
 	var logRootDir = "/var/log/supervisor/"
 	err = filepath.Walk(logRootDir, func(path string, f os.FileInfo, _ error) error {
 		if !f.IsDir() {
-			for _, v := range []string{"irisgateway-stdout.*", "irisgateway-stderr.*", "irisbridge-stdout.*", "irisbridge-stdout.*"} {
+			for _, v := range []string{gatewaySupervisorConfFile + r.InstanceId + "-stdout.*",
+				gatewaySupervisorConfFile + r.InstanceId + "-stderr.*",
+				bridgeSupervisorConfFile + r.InstanceId + "-stdout.*",
+				bridgeSupervisorConfFile + r.InstanceId + "-stderr.*"} {
 				r, err := regexp.MatchString(v, f.Name())
 				if err == nil && r {
 					fileSubscriptions[v[:len(v)-2]] = logRootDir + f.Name()
