@@ -124,7 +124,11 @@ func (c *RegistryConfig) registryPreSanity(dirPath string) (bool, error) {
 	return true, nil
 }
 
-func (c *RegistryConfig) GetVersions(project string, subscriptions []string, runtime string) ([]ProjectVersion, error) {
+func (c *RegistryConfig) GetVersions(project string, subscriptions []string, currentVersion string, updatePolicy string, runtime string) ([]ProjectVersion, error) {
+	if !util.IsValidUpdatePolicy(updatePolicy) {
+		return []ProjectVersion{}, errors.New("Unknown update policy: " + updatePolicy)
+	}
+
 	var grsMap = make(map[string]types.Registry)
 	for _, v := range *c {
 		grsMap[v.Name] = v
@@ -152,7 +156,7 @@ func (c *RegistryConfig) GetVersions(project string, subscriptions []string, run
 		}
 		switch releasesJson.JSONVersion {
 		case 1:
-			versions, err := c.decodeReleasesJsonVersion1(releasesJson.Data, s, runtime)
+			versions, err := c.decodeReleasesJsonVersion1(releasesJson.Data, s, runtime, currentVersion, updatePolicy)
 			if err != nil {
 				return projectVersions, err
 			}
@@ -169,16 +173,38 @@ func (c *RegistryConfig) GetVersions(project string, subscriptions []string, run
 	return projectVersions, nil
 }
 
-func (c *RegistryConfig) decodeReleasesJsonVersion1(data interface{}, subscription string, runtime string) ([]ProjectVersion, error) {
-	var isRTW bool = (subscription == "rtw")
+func (c *RegistryConfig) decodeReleasesJsonVersion1(data interface{}, subscription string, runtime string, currentVersion string, updatePolicy string) ([]ProjectVersion, error) {
+	var isPublic bool = (subscription == "public")
+	var isFirstRun bool = (currentVersion == "0.0.0")
+
+	currMaj, currMin, currPatch, currSub, currBuild, err := util.DecodeVersionString(currentVersion)
+	if err != nil {
+		return []ProjectVersion{}, err
+	}
 
 	var versions []ProjectVersion
 	// TODO more error checking
 	for MajVer, MajVerData := range data.(map[string]interface{}) {
 		for MinVer, MinVerData := range MajVerData.(map[string]interface{}) {
 			for PatchVer, PatchVerData := range MinVerData.(map[string]interface{}) {
-				for Release, ReleaseData := range PatchVerData.(map[string]interface{}) {
-					bundles, bundlesok := ReleaseData.(map[string]interface{})["bundles"]
+				for Build, BuildData := range PatchVerData.(map[string]interface{}) {
+
+					maj, err1 := strconv.Atoi(MajVer)
+					min, err2 := strconv.Atoi(MinVer)
+					patch, err3 := strconv.Atoi(PatchVer)
+					build, err4 := strconv.Atoi(Build)
+
+					if err1 != nil || err2 != nil || err3 != nil || err4 != nil {
+						continue
+					}
+
+					if !isFirstRun && !util.CanUseVersion(maj, min, patch, subscription, build,
+						currMaj, currMin, currPatch, currSub, currBuild,
+						updatePolicy) {
+						continue
+					}
+
+					bundles, bundlesok := BuildData.(map[string]interface{})["bundles"]
 					if !bundlesok {
 						continue
 					}
@@ -195,12 +221,21 @@ func (c *RegistryConfig) decodeReleasesJsonVersion1(data interface{}, subscripti
 						continue
 					}
 					var fullVersion = MajVer + "." + MinVer + "." + PatchVer
-					if !isRTW {
-						fullVersion = fullVersion + "-" + subscription + "." + Release
+					if !isPublic {
+						fullVersion = fullVersion + "-" + subscription + "." + Build
 					}
-					var r, _ = ReleaseData.(map[string]interface{})["time"]
-					var reltime, _ = time.Parse(time.RFC822Z, r.(string))
-					var desc, _ = ReleaseData.(map[string]interface{})["description"]
+					var r, ok = BuildData.(map[string]interface{})["time"]
+					if !ok {
+						continue
+					}
+					var reltime, err = time.Parse(time.RFC822Z, r.(string))
+					if err != nil {
+						continue
+					}
+					var desc, ok3 = BuildData.(map[string]interface{})["description"]
+					if !ok3 {
+						continue
+					}
 					var version = ProjectVersion{
 						ReleaseType: subscription,
 						Version:     fullVersion,
@@ -241,28 +276,15 @@ func (c *RegistryConfig) GetVersionToRun(projectName string) (ProjectVersion, er
 	if err != nil {
 		return ProjectVersion{}, err
 	}
-	versions, err := c.GetVersions(projectName, proj.Subscription, proj.Runtime)
+	versions, err := c.GetVersions(projectName, proj.Subscription, proj.CurrentVersion, proj.UpdatePolicy, proj.Runtime)
 	if err != nil {
 		return ProjectVersion{}, err
 	}
 
-	var versionToRun ProjectVersion
-	if proj.Version == "latest" {
-		if len(versions) > 0 {
-			versionToRun = versions[0]
-			log.Debug("Resolving \"latest\" project version to: ", versionToRun.Version)
-			return versions[0], nil
-		} else {
-			return ProjectVersion{}, errors.New("No version available to run for latest for this project")
-		}
-	} else {
-		for _, v := range versions {
-			if proj.Version == v.Version {
-				return v, nil
-			}
-		}
-		return ProjectVersion{}, errors.New("Explicitly configured version " + proj.Version + " is not available in registries. Aborting")
+	if len(versions) > 0 {
+		return versions[0], nil
 	}
+	return ProjectVersion{}, errors.New("No version found for running the project " + projectName)
 }
 
 type ProjectVersion struct {

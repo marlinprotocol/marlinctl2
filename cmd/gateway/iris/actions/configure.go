@@ -16,6 +16,7 @@ limitations under the License.
 package actions
 
 import (
+	"errors"
 	"os"
 
 	log "github.com/sirupsen/logrus"
@@ -27,8 +28,8 @@ import (
 	"github.com/marlinprotocol/ctl2/types"
 )
 
-var enableBeta, clearCache, forceRuntime bool
-var version, runtime string
+var enableBeta, forceRuntime bool
+var version, runtime, updatePolicy string
 
 var projectId string = "gateway_iris"
 
@@ -38,80 +39,16 @@ var ConfigureCmd = &cobra.Command{
 	Short: "Configure iris gateway",
 	Long:  `Configure iris gateway`,
 	Run: func(cmd *cobra.Command, args []string) {
-		var projectConfig types.Project
-
-		if viper.IsSet(projectId) {
-			err := viper.UnmarshalKey(projectId, &projectConfig)
-			if err != nil {
-				log.Error("Error encountered while retrieving project configuration: ", err)
-				return
-			}
-
-			if clearCache {
-				err := clearCacheFunc(projectConfig, projectId)
-				if err != nil {
-					log.Error("Error encountered while removing project cache: ", err)
-					return
-				}
-			}
+		if err := setupConfiguration(enableBeta, forceRuntime, updatePolicy, runtime, version); err != nil {
+			log.Error("Error while setting up config: ", err)
 		} else {
-
-		}
-
-		if !clearCache {
-			suitableRuntimes := util.GetRuntimes()
-
-			if !forceRuntime {
-				if suitable, ok := suitableRuntimes[runtime]; !ok || !suitable {
-					log.Error("Runtime provided for configuration: " + runtime +
-						" may not be supported by marlinctl or is not supported by your system." +
-						" If you think this is incorrect, override this check using --force-runtime.")
-					os.Exit(1)
-				} else {
-					log.Info("Runtime provided for configuration: " + runtime +
-						" seems to be supported. Going ahead with configuring this.")
-				}
-			}
-
-			var releaseSubscriptions = []string{"public"}
-
-			if enableBeta {
-				releaseSubscriptions = append(releaseSubscriptions, "beta")
-			}
-
-			if version != "latest" {
-				versions, err := registry.GlobalRegistry.GetVersions(projectId, releaseSubscriptions, runtime)
-				if err != nil {
-					log.Error("Error while fetching from global registry: ", err)
-					os.Exit(1)
-				}
-				var foundVersion = false
-				for _, v := range versions {
-					if v.Version == version {
-						foundVersion = true
-						break
-					}
-				}
-				if !foundVersion {
-					log.Error("Version was not found in global registry: ", version)
-					os.Exit(1)
-				}
-			}
-
-			viper.Set(projectId, types.Project{
-				Subscription:  releaseSubscriptions,
-				Version:       version,
-				Storage:       viper.GetString("homedir") + "/projects/" + projectId,
-				Runtime:       runtime,
-				ForcedRuntime: false,
-			})
-			viper.WriteConfig()
+			log.Info("Config setup successfully")
 		}
 	},
 }
 
 func init() {
-	ConfigureCmd.Flags().BoolVarP(&clearCache, "clear-cache", "c", false, "clear any locally available binaries and configurations")
+	ConfigureCmd.Flags().StringVarP(&updatePolicy, "update-policy", "u", "minor", "update policy to enforce - major / minor / patch / none")
 	ConfigureCmd.Flags().BoolVarP(&enableBeta, "enable-beta", "b", false, "enable beta releases")
 	ConfigureCmd.Flags().StringVarP(&version, "version", "v", "latest", "Version to run")
 	ConfigureCmd.Flags().StringVarP(&runtime, "runtime", "r", "", "Application runtime")
@@ -129,4 +66,72 @@ func clearCacheFunc(projectConfig types.Project, projectId string) error {
 		return err
 	}
 	return nil
+}
+
+func setupConfiguration(enableBeta bool, forceRuntime bool, updatePolicy string, runtime string, version string) error {
+	if !util.IsValidUpdatePolicy(updatePolicy) {
+		return errors.New("Unknown update policy: " + updatePolicy)
+	}
+
+	var projectConfig types.Project
+
+	err := viper.UnmarshalKey(projectId, &projectConfig)
+	if err != nil {
+		return err
+	}
+
+	suitableRuntimes := util.GetRuntimes()
+
+	if !forceRuntime {
+		if suitable, ok := suitableRuntimes[runtime]; !ok || !suitable {
+			log.Error("Runtime provided for configuration: " + runtime +
+				" may not be supported by marlinctl or is not supported by your system." +
+				" If you think this is incorrect, override this check using --force-runtime.")
+			os.Exit(1)
+		} else {
+			log.Debug("Runtime provided for configuration: " + runtime +
+				" seems to be supported. Going ahead with configuring this.")
+		}
+	} else {
+		log.Warning("Skipped runtime suitability check due to forced runtime")
+	}
+
+	var releaseSubscriptions = []string{"public"}
+
+	if enableBeta {
+		releaseSubscriptions = append(releaseSubscriptions, "beta")
+	}
+
+	var currentVersion = "0.0.0"
+
+	if version != "latest" {
+		versions, err := registry.GlobalRegistry.GetVersions(projectId, releaseSubscriptions, version, updatePolicy, runtime)
+		if err != nil {
+			log.Error("Error while fetching from global registry: ", err)
+			os.Exit(1)
+		}
+		var foundVersion = false
+		for _, v := range versions {
+			if v.Version == version {
+				foundVersion = true
+				currentVersion = version
+				break
+			}
+		}
+		if !foundVersion {
+			log.Error("Version was not found in global registry: ", version)
+			os.Exit(1)
+		}
+	}
+
+	viper.Set(projectId, types.Project{
+		Subscription:   releaseSubscriptions,
+		UpdatePolicy:   updatePolicy,
+		CurrentVersion: currentVersion,
+		Storage:        viper.GetString("homedir") + "/projects/" + projectId,
+		Runtime:        runtime,
+		ForcedRuntime:  false,
+	})
+
+	return viper.WriteConfig()
 }

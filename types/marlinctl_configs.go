@@ -1,11 +1,13 @@
 package types
 
 type Project struct {
-	Subscription  []string
-	Version       string
-	Storage       string
-	Runtime       string
-	ForcedRuntime bool
+	Subscription   []string
+	UpdatePolicy   string
+	CurrentVersion string
+	Storage        string
+	Runtime        string
+	ForcedRuntime  bool
+	AdditionalInfo map[string]interface{}
 }
 
 type Registry struct {

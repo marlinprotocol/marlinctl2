@@ -196,15 +196,26 @@ func setupDefaultConfig() error {
 	for i := 0; i < len(defaultReleaseUpstreams); i++ {
 		defaultReleaseUpstreams[i].Local = home + "/.marlinctl/registries/" + defaultReleaseUpstreams[i].Branch
 	}
+
+	var defaultProjectRuntime = "linux-amd64.supervisor"
+	if runtime.GOOS+"-"+runtime.GOARCH != "linux-amd64" {
+		return errors.New("don't know how to service non linux-amd64 system as of now.")
+	}
+
 	viper.Set("config_version", version.CfgVersion)
 	viper.Set("homedir", home+"/.marlinctl/storage")
 	viper.Set("registries", defaultReleaseUpstreams)
 	viper.Set("marlinctl", types.Project{
-		Subscription:  []string{"public"},
-		Version:       "latest",
-		Storage:       home + "/.marlinctl/storage/projects/marlinctl",
-		Runtime:       runtime.GOOS + "-" + runtime.GOARCH,
-		ForcedRuntime: false,
+		Subscription:   []string{"public"},
+		UpdatePolicy:   "minor",
+		CurrentVersion: version.ApplicationVersion,
+		Storage:        home + "/.marlinctl/storage/projects/marlinctl",
+		Runtime:        runtime.GOOS + "-" + runtime.GOARCH,
+		ForcedRuntime:  false,
+		AdditionalInfo: map[string]interface{}{
+			"defaultprojectruntime":      defaultProjectRuntime,
+			"defaultprojectupdatepolicy": "minor",
+		},
 	})
 	err = viper.WriteConfig()
 

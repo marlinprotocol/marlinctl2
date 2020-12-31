@@ -28,12 +28,14 @@ import (
 )
 
 var runtimeArgs map[string]string
+var instanceId string
 var skipChecksum bool
 
 // AppCmd represents the registry command
 var CreateCmd = &cobra.Command{
-	Use:   "create",
-	Short: `Create a gateway on local system`,
+	Use:     "create",
+	Short:   `Create a gateway on local system`,
+	PreRunE: ConfigTest,
 	Run: func(cmd *cobra.Command, args []string) {
 		var projectConfig types.Project
 		err := viper.UnmarshalKey(projectId, &projectConfig)
@@ -48,7 +50,7 @@ var CreateCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		runner, err := projectRunners.GetRunnerInstance(versionToRun.RunnerId, versionToRun.Version, projectConfig.Storage, versionToRun.RunnerData, skipChecksum)
+		runner, err := projectRunners.GetRunnerInstance(versionToRun.RunnerId, versionToRun.Version, projectConfig.Storage, versionToRun.RunnerData, skipChecksum, instanceId)
 		if err != nil {
 			log.Error("Cannot get runner: ", err.Error())
 			os.Exit(1)
@@ -76,6 +78,7 @@ var CreateCmd = &cobra.Command{
 
 func init() {
 	runtimeArgs = make(map[string]string)
+	CreateCmd.Flags().StringVarP(&instanceId, "instance-id", "i", "001", "instance-id of the resource")
 	CreateCmd.Flags().BoolVarP(&skipChecksum, "skip-checksum", "s", false, "skips checking file integrity during run")
 	CreateCmd.Flags().StringToStringVarP(&runtimeArgs, "runtime-arguments", "r", map[string]string{}, "runtime arguments for iris endnode")
 }

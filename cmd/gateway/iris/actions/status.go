@@ -29,9 +29,10 @@ import (
 
 // AppCmd represents the registry command
 var StatusCmd = &cobra.Command{
-	Use:   "status",
-	Short: "Get status of iris gateway",
-	Long:  `Get status of iris gateway`,
+	Use:     "status",
+	Short:   "Get status of iris gateway",
+	Long:    `Get status of iris gateway`,
+	PreRunE: ConfigTest,
 	Run: func(cmd *cobra.Command, args []string) {
 		var projectConfig types.Project
 		err := viper.UnmarshalKey(projectId, &projectConfig)
@@ -46,7 +47,7 @@ var StatusCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		runner, err := projectRunners.GetRunnerInstance(versionToRun.RunnerId, versionToRun.Version, projectConfig.Storage, versionToRun.RunnerData, skipChecksum)
+		runner, err := projectRunners.GetRunnerInstance(versionToRun.RunnerId, versionToRun.Version, projectConfig.Storage, versionToRun.RunnerData, skipChecksum, instanceId)
 		if err != nil {
 			log.Error("Cannot get runner: ", err.Error())
 			os.Exit(1)
@@ -67,5 +68,5 @@ var StatusCmd = &cobra.Command{
 }
 
 func init() {
-	// NIL
+	StatusCmd.Flags().StringVarP(&instanceId, "instance-id", "i", "001", "instance-id of the resource")
 }

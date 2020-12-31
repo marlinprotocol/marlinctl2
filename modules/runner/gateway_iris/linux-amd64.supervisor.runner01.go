@@ -32,6 +32,7 @@ type linux_amd64_supervisor_runner01_runnerdata struct {
 type linux_amd64_supervisor_runner01 struct {
 	Version      string
 	Storage      string
+	InstanceId   string
 	RunnerData   linux_amd64_supervisor_runner01_runnerdata
 	SkipChecksum bool
 }
@@ -146,12 +147,17 @@ func (r *linux_amd64_supervisor_runner01) Prepare() error {
 }
 
 func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) error {
-	substitutions := struct {
-		GatewayProgram, GatewayUser, GatewayRunDir, GatewayExecutablePath, GatewayKeyfile, GatewayListenPortPeer, GatewayMarlinIp, GatewayMarlinPort string
-		BridgeProgram, BridgeUser, BridgeRunDir, BridgeExecutablePath, BridgeBootstrapAddr                                                           string
-	}{
-		gatewayProgramName, defaultUser, "/", r.Storage + "/" + r.Version + "/" + gatewayName, r.Storage + "/common/keyfile.json", "21900", "127.0.0.1", "21901",
-		bridgeProgramName, defaultUser, "/", r.Storage + "/" + r.Version + "/" + bridgeName, "127.0.0.1:8002",
+	available, _, err := r.fetchResourceInformation(r.getResourceFileLocation())
+	if err != nil {
+		return err
+	}
+	if available {
+		return errors.New("resource by id " + r.InstanceId + " already exists. Can't create new")
+	}
+
+	substitutions := resource{
+		gatewayProgramName + r.InstanceId, defaultUser, "/", r.Storage + "/" + r.Version + "/" + gatewayName, r.Storage + "/common/keyfile.json", "21900", "127.0.0.1", "21901",
+		bridgeProgramName + r.InstanceId, defaultUser, "/", r.Storage + "/" + r.Version + "/" + bridgeName, "127.0.0.1:8002",
 	}
 
 	for k, v := range runtimeArgs {
@@ -252,13 +258,22 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 	} else {
 		log.Info("Process status")
 		util.PrettyPrintKVMap(supervisorStatus)
+		r.writeResourceToFile(substitutions, r.getResourceFileLocation())
 	}
 
 	return nil
 }
 
 func (r *linux_amd64_supervisor_runner01) Destroy() error {
-	_, err := exec.Command("supervisorctl", "stop", gatewaySupervisorConfFile).Output()
+	available, _, err := r.fetchResourceInformation(r.getResourceFileLocation())
+	if err != nil {
+		return err
+	}
+	if !available {
+		return errors.New("resource by id " + r.InstanceId + " doesn't exists. Can't destroy")
+	}
+
+	_, err = exec.Command("supervisorctl", "stop", gatewaySupervisorConfFile).Output()
 	if err != nil {
 		return errors.New("Error while stopping gateway: " + err.Error())
 	}
@@ -324,13 +339,26 @@ func (r *linux_amd64_supervisor_runner01) PostRun() error {
 		return errors.New("Error while supervisorctl update: " + err.Error())
 	}
 
+	err = os.Remove(r.getResourceFileLocation())
+	if err != nil {
+		return errors.New("Error while removing resource file: " + err.Error())
+	}
+
 	log.Info("All relevant processes stopped, supervisor configs removed, logs marked as old")
 	return nil
 }
 
 func (r *linux_amd64_supervisor_runner01) Status() error {
+	available, _, err := r.fetchResourceInformation(r.getResourceFileLocation())
+	if err != nil {
+		return err
+	}
+	if !available {
+		return errors.New("resource by id " + r.InstanceId + " doesn't exist. Can't return status.")
+	}
+
 	var projectConfig types.Project
-	err := viper.UnmarshalKey(projectName, &projectConfig)
+	err = viper.UnmarshalKey(projectName, &projectConfig)
 	if err != nil {
 		return err
 	}
@@ -379,9 +407,17 @@ func (r *linux_amd64_supervisor_runner01) Status() error {
 }
 
 func (r *linux_amd64_supervisor_runner01) Logs() error {
+	available, _, err := r.fetchResourceInformation(r.getResourceFileLocation())
+	if err != nil {
+		return err
+	}
+	if !available {
+		return errors.New("resource by id " + r.InstanceId + " doesn't exists. Can't tail logs")
+	}
+	// Check for resource
 	fileSubscriptions := make(map[string]string)
 	var logRootDir = "/var/log/supervisor/"
-	err := filepath.Walk(logRootDir, func(path string, f os.FileInfo, _ error) error {
+	err = filepath.Walk(logRootDir, func(path string, f os.FileInfo, _ error) error {
 		if !f.IsDir() {
 			for _, v := range []string{"irisgateway-stdout.*", "irisgateway-stderr.*", "irisbridge-stdout.*", "irisbridge-stdout.*"} {
 				r, err := regexp.MatchString(v, f.Name())
@@ -412,4 +448,48 @@ func (r *linux_amd64_supervisor_runner01) Logs() error {
 	}
 	wg.Wait()
 	return nil
+}
+
+type resource struct {
+	GatewayProgram, GatewayUser, GatewayRunDir, GatewayExecutablePath, GatewayKeyfile, GatewayListenPortPeer, GatewayMarlinIp, GatewayMarlinPort string
+	BridgeProgram, BridgeUser, BridgeRunDir, BridgeExecutablePath, BridgeBootstrapAddr                                                           string
+}
+
+func (r *linux_amd64_supervisor_runner01) fetchResourceInformation(fileLocation string) (bool, resource, error) {
+	if _, err := os.Stat(fileLocation); os.IsNotExist(err) {
+		return false, resource{}, err
+	}
+
+	file, err := ioutil.ReadFile(fileLocation)
+	if err != nil {
+		return false, resource{}, err
+	}
+
+	var resData = resource{}
+	err = json.Unmarshal([]byte(file), &resData)
+
+	return true, resData, err
+}
+
+func (r *linux_amd64_supervisor_runner01) writeResourceToFile(resData resource, fileLocation string) error {
+	lSplice := strings.Split(fileLocation, "/")
+	var dirPath string
+
+	for i := 0; i < len(lSplice)-1; i++ {
+		dirPath = dirPath + "/" + lSplice[i]
+	}
+	err := util.CreateDirPathIfNotExists(dirPath)
+	if err != nil {
+		log.Error("Error while creating directory ", dirPath, " ", err.Error())
+	}
+
+	fileData, err := json.MarshalIndent(resData, "", " ")
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(fileLocation, fileData, 0644)
+}
+
+func (r *linux_amd64_supervisor_runner01) getResourceFileLocation() string {
+	return r.Storage + "/common/resource" + r.InstanceId
 }

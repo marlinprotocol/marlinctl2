@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"strconv"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -266,4 +267,72 @@ func GetTable() table.Writer {
 		Header: text.Colors{text.FgBlue},
 	}})
 	return t
+}
+
+func IsValidUpdatePolicy(updatePolicy string) bool {
+	var updatePolicies = map[string]bool{"major": true, "minor": true, "patch": true, "frozen": true}
+	if found, ok := updatePolicies[updatePolicy]; found && ok {
+		return true
+	}
+	return false
+}
+
+func DecodeVersionString(verString string) (int, int, int, string, int, error) {
+	dashSplit := strings.Split(verString, "-")
+	if len(dashSplit) < 1 {
+		return 0, 0, 0, "", 0, errors.New("Invalid version string")
+	} else if len(dashSplit) < 2 {
+		var majVer, minVer, patchVer, build int
+		var channel string
+		dotSplit := strings.Split(dashSplit[0], ".")
+		if len(dotSplit) != 3 {
+			return 0, 0, 0, "", 0, errors.New("Invalid version string")
+		}
+		majVer, err1 := strconv.Atoi(dotSplit[0])
+		minVer, err2 := strconv.Atoi(dotSplit[1])
+		patchVer, err3 := strconv.Atoi(dotSplit[2])
+		build = 0
+		channel = "public"
+		if err1 != nil || err2 != nil || err3 != nil {
+			return 0, 0, 0, "", 0, errors.New("Invalid version string")
+		}
+		return majVer, minVer, patchVer, channel, build, nil
+	} else if len(dashSplit) == 2 {
+		var majVer, minVer, patchVer, build int
+		var channel string
+		dotSplit := strings.Split(dashSplit[0], ".")
+		if len(dotSplit) != 3 {
+			return 0, 0, 0, "", 0, errors.New("Invalid version string")
+		}
+		majVer, err1 := strconv.Atoi(dotSplit[0])
+		minVer, err2 := strconv.Atoi(dotSplit[1])
+		patchVer, err3 := strconv.Atoi(dotSplit[2])
+		dotSplit2 := strings.Split(dashSplit[1], ".")
+		if len(dotSplit2) != 2 {
+			return 0, 0, 0, "", 0, errors.New("Invalid version string")
+		}
+		channel = dotSplit2[0]
+		build, err4 := strconv.Atoi(dotSplit2[1])
+		if err1 != nil || err2 != nil || err3 != nil || err4 != nil {
+			return 0, 0, 0, "", 0, errors.New("Invalid version string")
+		}
+		return majVer, minVer, patchVer, channel, build, nil
+	}
+	return 0, 0, 0, "", 0, errors.New("Invalid version string")
+}
+
+func CanUseVersion(maj1 int, min1 int, patch1 int, sub1 string, build1 int,
+	maj2 int, min2 int, patch2 int, sub2 string, build2 int,
+	updatePolicy string) bool {
+	switch updatePolicy {
+	case "frozen":
+		return (maj1 == maj2 && min1 == min2 && patch1 == patch2 && sub1 == sub2 && build1 == build2)
+	case "patch":
+		return (maj1 == maj2 && min1 == min2)
+	case "minor":
+		return (maj1 == maj2)
+	case "major":
+		return true
+	}
+	return false
 }

@@ -28,9 +28,10 @@ import (
 
 // AppCmd represents the registry command
 var ListVersionsCmd = &cobra.Command{
-	Use:   "listversions",
-	Short: "List versions for iris gateway",
-	Long:  `List versions for iris gateway`,
+	Use:     "listversions",
+	Short:   "List versions for iris gateway",
+	Long:    `List versions for iris gateway`,
+	PreRunE: ConfigTest,
 	Run: func(cmd *cobra.Command, args []string) {
 		var projectConfig types.Project
 		err := viper.UnmarshalKey(projectId, &projectConfig)
@@ -38,7 +39,7 @@ var ListVersionsCmd = &cobra.Command{
 			log.Error("Error while reading project config: ", err)
 			os.Exit(1)
 		}
-		versions, err := registry.GlobalRegistry.GetVersions(projectId, projectConfig.Subscription, projectConfig.Runtime)
+		versions, err := registry.GlobalRegistry.GetVersions(projectId, projectConfig.Subscription, "0.0.0", "major", projectConfig.Runtime)
 
 		if err != nil {
 			log.Error("Error encountered while listing versions: ", err)
@@ -50,5 +51,4 @@ var ListVersionsCmd = &cobra.Command{
 }
 
 func init() {
-	// NIL
 }
