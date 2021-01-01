@@ -25,10 +25,6 @@ import (
 	"github.com/marlinprotocol/ctl2/types"
 )
 
-var runtimeArgs map[string]string
-var instanceId string
-var skipChecksum bool
-
 // AppCmd represents the registry command
 var CreateCmd = &cobra.Command{
 	Use:     "create",
@@ -41,8 +37,7 @@ var CreateCmd = &cobra.Command{
 			log.Error("Error while reading project config: ", err)
 			return
 		}
-
-		versionToRun, err := registry.GlobalRegistry.GetVersionToRun(projectId)
+		versionToRun, err := registry.GlobalRegistry.GetVersionToRun(projectId, updatePolicy, version)
 		if err != nil {
 			log.Error("Error while getting version to run: ", err)
 			return
@@ -85,6 +80,8 @@ var CreateCmd = &cobra.Command{
 
 func init() {
 	runtimeArgs = make(map[string]string)
+	CreateCmd.Flags().StringVarP(&version, "runtime-version", "x", "", "version override")
+	CreateCmd.Flags().StringVarP(&updatePolicy, "update-policy", "u", "", "update policy override")
 	CreateCmd.Flags().StringVarP(&instanceId, "instance-id", "i", "001", "instance-id of the resource")
 	CreateCmd.Flags().BoolVarP(&skipChecksum, "skip-checksum", "s", false, "skips checking file integrity during run")
 	CreateCmd.Flags().StringToStringVarP(&runtimeArgs, "runtime-arguments", "r", map[string]string{}, "runtime arguments for iris endnode")

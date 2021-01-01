@@ -7,6 +7,18 @@ import (
 	"github.com/spf13/viper"
 )
 
+var (
+	enableBeta   bool
+	runtime      string
+	version      string
+	instanceId   string
+	projectId    string = "gateway_iris"
+	updatePolicy string
+	skipChecksum bool
+	forceRuntime bool
+	runtimeArgs  map[string]string
+)
+
 var ConfigTest = func(cmd *cobra.Command, args []string) error {
 	var marlinConfig types.Project
 	err := viper.UnmarshalKey("marlinctl", &marlinConfig)

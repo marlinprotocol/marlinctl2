@@ -28,11 +28,6 @@ import (
 	"github.com/marlinprotocol/ctl2/types"
 )
 
-var enableBeta, forceRuntime bool
-var version, runtime, updatePolicy string
-
-var projectId string = "gateway_iris"
-
 // AppCmd represents the registry command
 var ConfigureCmd = &cobra.Command{
 	Use:   "configure",
@@ -53,19 +48,6 @@ func init() {
 	ConfigureCmd.Flags().StringVarP(&version, "version", "v", "latest", "Version to run")
 	ConfigureCmd.Flags().StringVarP(&runtime, "runtime", "r", "", "Application runtime")
 	ConfigureCmd.Flags().BoolVarP(&forceRuntime, "force-runtime", "f", false, "Forcefully set application runtime")
-}
-
-func clearCacheFunc(projectConfig types.Project, projectId string) error {
-	err := util.RemoveDirPathIfExists(projectConfig.Storage)
-	if err != nil {
-		return err
-	}
-
-	err = util.RemoveConfigEntry(projectId)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func setupConfiguration(enableBeta bool, forceRuntime bool, updatePolicy string, runtime string, version string) error {

@@ -228,7 +228,7 @@ func setupDefaultConfig() error {
 }
 
 func checkMarlinctlUpdates() error {
-	ver, err := registry.GlobalRegistry.GetVersionToRun("marlinctl")
+	ver, err := registry.GlobalRegistry.GetVersionToRun("marlinctl", "", "")
 	if err != nil {
 		return err
 	}

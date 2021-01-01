@@ -286,12 +286,20 @@ func (c *RegistryConfig) PrettyPrintProjectVersions(versions []ProjectVersion) {
 	t.Render()
 }
 
-func (c *RegistryConfig) GetVersionToRun(projectName string) (ProjectVersion, error) {
+func (c *RegistryConfig) GetVersionToRun(projectName string, updatePolicyOverride string, versionOverride string) (ProjectVersion, error) {
 	var proj types.Project
 	err := viper.UnmarshalKey(projectName, &proj)
 	if err != nil {
 		return ProjectVersion{}, err
 	}
+	if updatePolicyOverride != "" {
+		proj.UpdatePolicy = updatePolicyOverride
+	}
+	if versionOverride != "" {
+		proj.CurrentVersion = versionOverride
+		proj.UpdatePolicy = "frozen"
+	}
+	log.Debug("Getting versions with ", proj)
 	versions, err := c.GetVersions(projectName, proj.Subscription, proj.CurrentVersion, proj.UpdatePolicy, proj.Runtime)
 	if err != nil {
 		return ProjectVersion{}, err
