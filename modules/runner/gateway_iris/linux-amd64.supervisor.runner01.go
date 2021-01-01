@@ -147,11 +147,12 @@ func (r *linux_amd64_supervisor_runner01) Prepare() error {
 }
 
 func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) error {
-	if _, err := os.Stat(r.getResourceFileLocation()); err == nil {
-		return errors.New("Resource file already exisits, cannot create a new instance: " + r.getResourceFileLocation())
+	if _, err := os.Stat(GetResourceFileLocation(r.Storage, r.InstanceId)); err == nil {
+		return errors.New("Resource file already exisits, cannot create a new instance: " + GetResourceFileLocation(r.Storage, r.InstanceId))
 	}
 
 	substitutions := resource{
+		"linux-amd64.supervisor.runner01", r.Version, time.Now().Format(time.RFC822Z),
 		gatewayProgramName + r.InstanceId, defaultUser, "/", r.Storage + "/" + r.Version + "/" + gatewayName, r.Storage + "/common/keyfile.json", "21900", "127.0.0.1", "21901",
 		bridgeProgramName + r.InstanceId, defaultUser, "/", r.Storage + "/" + r.Version + "/" + bridgeName, "127.0.0.1:8002",
 	}
@@ -255,13 +256,13 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 			util.PrettyPrintKVMap(supervisorStatus)
 		}
 	}
-	r.writeResourceToFile(substitutions, r.getResourceFileLocation())
+	r.writeResourceToFile(substitutions, GetResourceFileLocation(r.Storage, r.InstanceId))
 
 	return nil
 }
 
 func (r *linux_amd64_supervisor_runner01) Destroy() error {
-	available, _, err := r.fetchResourceInformation(r.getResourceFileLocation())
+	available, _, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
 	if err != nil {
 		return err
 	}
@@ -335,7 +336,7 @@ func (r *linux_amd64_supervisor_runner01) PostRun() error {
 		return errors.New("Error while supervisorctl update: " + err.Error())
 	}
 
-	err = os.Remove(r.getResourceFileLocation())
+	err = os.Remove(GetResourceFileLocation(r.Storage, r.InstanceId))
 	if err != nil {
 		return errors.New("Error while removing resource file: " + err.Error())
 	}
@@ -345,7 +346,7 @@ func (r *linux_amd64_supervisor_runner01) PostRun() error {
 }
 
 func (r *linux_amd64_supervisor_runner01) Status() error {
-	available, resData, err := r.fetchResourceInformation(r.getResourceFileLocation())
+	available, resData, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
 	if err != nil {
 		return err
 	}
@@ -406,7 +407,7 @@ func (r *linux_amd64_supervisor_runner01) Status() error {
 }
 
 func (r *linux_amd64_supervisor_runner01) Logs() error {
-	available, _, err := r.fetchResourceInformation(r.getResourceFileLocation())
+	available, _, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
 	if err != nil {
 		return err
 	}
@@ -453,6 +454,7 @@ func (r *linux_amd64_supervisor_runner01) Logs() error {
 }
 
 type resource struct {
+	Runner, Version, StartTime                                                                                                                   string
 	GatewayProgram, GatewayUser, GatewayRunDir, GatewayExecutablePath, GatewayKeyfile, GatewayListenPortPeer, GatewayMarlinIp, GatewayMarlinPort string
 	BridgeProgram, BridgeUser, BridgeRunDir, BridgeExecutablePath, BridgeBootstrapAddr                                                           string
 }
@@ -490,8 +492,4 @@ func (r *linux_amd64_supervisor_runner01) writeResourceToFile(resData resource, 
 		return err
 	}
 	return ioutil.WriteFile(fileLocation, fileData, 0644)
-}
-
-func (r *linux_amd64_supervisor_runner01) getResourceFileLocation() string {
-	return r.Storage + "/common/resource" + r.InstanceId
 }

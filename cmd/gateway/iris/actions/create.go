@@ -48,7 +48,7 @@ var CreateCmd = &cobra.Command{
 			return
 		}
 
-		runner, err := projectRunners.GetRunnerInstance(versionToRun.RunnerId, versionToRun.Version, projectConfig.Storage, versionToRun.RunnerData, skipChecksum, instanceId)
+		runner, err := projectRunners.GetRunnerInstance(versionToRun.RunnerId, versionToRun.Version, projectConfig.Storage, versionToRun.RunnerData, false, skipChecksum, instanceId)
 		if err != nil {
 			log.Error("Cannot get runner: ", err.Error())
 			return

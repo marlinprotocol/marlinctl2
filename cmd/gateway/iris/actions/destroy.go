@@ -16,13 +16,15 @@ limitations under the License.
 package actions
 
 import (
+	"encoding/json"
+	"errors"
+	"io/ioutil"
 	"os"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/marlinprotocol/ctl2/modules/registry"
 	projectRunners "github.com/marlinprotocol/ctl2/modules/runner/gateway_iris"
 	"github.com/marlinprotocol/ctl2/types"
 )
@@ -41,13 +43,13 @@ var DestroyCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		versionToRun, err := registry.GlobalRegistry.GetVersionToRun(projectId)
+		runnerId, version, err := getResourceMetaData(projectConfig, instanceId)
 		if err != nil {
-			log.Error("Error while getting version to run: ", err)
+			log.Error("Error while fetching resource information: ", err)
 			os.Exit(1)
 		}
 
-		runner, err := projectRunners.GetRunnerInstance(versionToRun.RunnerId, versionToRun.Version, projectConfig.Storage, versionToRun.RunnerData, skipChecksum, instanceId)
+		runner, err := projectRunners.GetRunnerInstance(runnerId, version, projectConfig.Storage, struct{}{}, true, true, instanceId)
 		if err != nil {
 			log.Error("Cannot get runner: ", err.Error())
 			os.Exit(1)
@@ -77,4 +79,25 @@ var DestroyCmd = &cobra.Command{
 
 func init() {
 	DestroyCmd.Flags().StringVarP(&instanceId, "instance-id", "i", "001", "instance-id of the resource")
+}
+
+func getResourceMetaData(projectConfig types.Project, instanceId string) (string, string, error) {
+	resFileLocation := projectRunners.GetResourceFileLocation(projectConfig.Storage, instanceId)
+	if _, err := os.Stat(resFileLocation); os.IsNotExist(err) {
+		return "", "", errors.New("Cannot locate resource: " + resFileLocation)
+	}
+	file, err := ioutil.ReadFile(resFileLocation)
+	if err != nil {
+		return "", "", err
+	}
+	var resourceMetaData = struct {
+		Runner  string `json:"Runner"`
+		Version string `json:"Version"`
+	}{}
+	err = json.Unmarshal([]byte(file), &resourceMetaData)
+	if err != nil {
+		return "", "", err
+	}
+	log.Debug("Resource metadata: ", resourceMetaData)
+	return resourceMetaData.Runner, resourceMetaData.Version, nil
 }

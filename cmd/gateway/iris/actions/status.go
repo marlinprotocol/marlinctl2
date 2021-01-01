@@ -22,7 +22,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/marlinprotocol/ctl2/modules/registry"
 	projectRunners "github.com/marlinprotocol/ctl2/modules/runner/gateway_iris"
 	"github.com/marlinprotocol/ctl2/types"
 )
@@ -41,13 +40,13 @@ var StatusCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		versionToRun, err := registry.GlobalRegistry.GetVersionToRun(projectId)
+		runnerId, version, err := getResourceMetaData(projectConfig, instanceId)
 		if err != nil {
-			log.Error("Error while getting version to run: ", err)
+			log.Error("Error while fetching resource information: ", err)
 			os.Exit(1)
 		}
 
-		runner, err := projectRunners.GetRunnerInstance(versionToRun.RunnerId, versionToRun.Version, projectConfig.Storage, versionToRun.RunnerData, skipChecksum, instanceId)
+		runner, err := projectRunners.GetRunnerInstance(runnerId, version, projectConfig.Storage, struct{}{}, true, true, instanceId)
 		if err != nil {
 			log.Error("Cannot get runner: ", err.Error())
 			os.Exit(1)
