@@ -83,6 +83,11 @@ It can spawn up beacons, gateways, relays on various platforms and runtimes.`,
 				os.Exit(1)
 			}
 		}
+		err = util.ChownRmarlinctlDir()
+		if err != nil {
+			log.Error("Error while chowning .marlin " + err.Error())
+			os.Exit(1)
+		}
 	},
 }
 
