@@ -102,7 +102,7 @@ func init() {
 	RootCmd.PersistentFlags().BoolVar(&skipRegistrySync, "skip-registry-sync", false, "skip registry sync during run")
 	RootCmd.PersistentFlags().BoolVar(&skipMarlinctlUpdateCheck, "skip-update-check", false, "skip update check during run")
 	RootCmd.PersistentFlags().StringVar(&logLevel, "loglevel", "info", "marlinctl loglevel (default is INFO)")
-	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.marlinctl/marlinctl_config.yaml)")
+	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.marlin/ctl/state.yaml)")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -115,7 +115,7 @@ func readConfig() error {
 			return err
 		}
 
-		viper.SetConfigFile(home + "/.marlinctl/marlinctl_config.yaml")
+		viper.SetConfigFile(home + "/.marlin/ctl/state.yaml")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
@@ -137,7 +137,7 @@ func readConfig() error {
 		if err != nil {
 			return err
 		}
-		viper.SetConfigFile(home + "/.marlinctl/marlinctl_config.yaml")
+		viper.SetConfigFile(home + "/.marlin/ctl/state.yaml")
 		return viper.ReadInConfig()
 	}
 	return nil
@@ -180,7 +180,7 @@ func setupDefaultConfig() error {
 		os.Exit(1)
 	}
 
-	location := home + "/.marlinctl/marlinctl_config.yaml"
+	location := home + "/.marlin/ctl/state.yaml"
 
 	lSplice := strings.Split(location, "/")
 	var dirPath string
@@ -197,7 +197,7 @@ func setupDefaultConfig() error {
 	viper.SetConfigFile(location)
 
 	for i := 0; i < len(defaultReleaseUpstreams); i++ {
-		defaultReleaseUpstreams[i].Local = home + "/.marlinctl/registries/" + defaultReleaseUpstreams[i].Branch
+		defaultReleaseUpstreams[i].Local = home + "/.marlin/ctl/registries/" + defaultReleaseUpstreams[i].Branch
 	}
 
 	var defaultProjectRuntime = "linux-amd64.supervisor"
@@ -206,13 +206,13 @@ func setupDefaultConfig() error {
 	}
 
 	viper.Set("config_version", version.CfgVersion)
-	viper.Set("homedir", home+"/.marlinctl/storage")
+	viper.Set("homedir", home+"/.marlin/ctl/storage")
 	viper.Set("registries", defaultReleaseUpstreams)
 	viper.Set("marlinctl", types.Project{
 		Subscription:   []string{"public"},
 		UpdatePolicy:   "minor",
 		CurrentVersion: version.ApplicationVersion,
-		Storage:        home + "/.marlinctl/storage/projects/marlinctl",
+		Storage:        home + "/.marlin/ctl/storage/projects/marlinctl",
 		Runtime:        runtime.GOOS + "-" + runtime.GOARCH,
 		ForcedRuntime:  false,
 		AdditionalInfo: map[string]interface{}{

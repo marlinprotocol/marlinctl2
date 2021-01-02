@@ -54,6 +54,9 @@ func IsSupervisorAvailable() bool {
 	if _, err := os.Stat("/bin/supervisord"); err == nil {
 		isSupervisorAvailable = true
 	}
+	if _, err := os.Stat("/usr/bin/supervisord"); err == nil {
+		isSupervisorAvailable = true
+	}
 	return isSupervisorAvailable
 }
 
