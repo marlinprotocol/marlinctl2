@@ -113,6 +113,10 @@ func (r *linux_amd64_supervisor_runner01) Prepare() error {
 	if err != nil {
 		return err
 	}
+	err = util.ChownRmarlinctlDir()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

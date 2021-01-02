@@ -143,6 +143,11 @@ func (r *linux_amd64_supervisor_runner01) Prepare() error {
 	log.Info("Keyfile information")
 	util.PrettyPrintKVStruct(keyFileData)
 
+	err = util.ChownRmarlinctlDir()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

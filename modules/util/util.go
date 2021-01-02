@@ -205,6 +205,27 @@ func RemoveDirPathIfExists(dirPath string) error {
 	}
 }
 
+func ChownRmarlinctlDir() error {
+	currentUser, err := GetUser()
+	if err != nil {
+		return err
+	}
+	uid, err := strconv.Atoi(currentUser.Uid)
+	if err != nil {
+		return err
+	}
+	gid, err := strconv.Atoi(currentUser.Gid)
+	if err != nil {
+		return err
+	}
+	return filepath.Walk(currentUser.HomeDir+"/.marlin", func(name string, info os.FileInfo, err error) error {
+		if err == nil {
+			err = os.Chown(name, uid, gid)
+		}
+		return err
+	})
+}
+
 func DownloadFile(filepath string, url string) error {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
