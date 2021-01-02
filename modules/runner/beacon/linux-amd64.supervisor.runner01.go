@@ -123,7 +123,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 		process_name={{.BeaconProgram}}
 		user={{.BeaconUser}}
 		directory={{.BeaconRunDir}}
-		command={{.BeaconExecutablePath}} {{if .DiscoveryAddr}} --discovery_addr "{{.DiscoveryAddr}}"{{end}}{{if .HeartbeatAddr}} --heartbeat_addr "{{.HeartbeatAddr}}"{{end}}{{if .BootstrapAddr}} --beacon_addr "{{.BootstrapAddr}}" --keystore_path "{{.KeystorePath}}" --keystore_path_pass "{{.KeystorePassPath}}" {{end}}
+		command={{.BeaconExecutablePath}} {{if .DiscoveryAddr}} --discovery_addr "{{.DiscoveryAddr}}"{{end}}{{if .HeartbeatAddr}} --heartbeat_addr "{{.HeartbeatAddr}}"{{end}}{{if .BootstrapAddr}} --beacon_addr "{{.BootstrapAddr}}" --keystore_path "{{.KeystorePath}}" --keystore_pass_path "{{.KeystorePassPath}}" {{end}}
 		priority=100
 		numprocs=1
 		numprocs_start=1
