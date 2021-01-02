@@ -25,7 +25,7 @@ import (
 	"github.com/marlinprotocol/ctl2/types"
 )
 
-var raDiscoveryAddr, raHeartbeatAddr, raBeaconAddr, raKeystorePath, raKeystorePassPath string
+var raDiscoveryAddr, raHeartbeatAddr, raBootStrapAddr, raKeystorePath, raKeystorePassPath string
 
 // AppCmd represents the registry command
 var CreateCmd = &cobra.Command{
@@ -36,7 +36,7 @@ var CreateCmd = &cobra.Command{
 		if len(runtimeArgs) == 0 {
 			runtimeArgs["DiscoveryAddr"] = raDiscoveryAddr
 			runtimeArgs["HeartbeatAddr"] = raHeartbeatAddr
-			runtimeArgs["BeaconAddr"] = raBeaconAddr
+			runtimeArgs["BootStrapAddr"] = raBootStrapAddr
 			runtimeArgs["KeyStorePath"] = raKeystorePath
 			runtimeArgs["KeyStorePassPath"] = raKeystorePassPath
 		}
@@ -97,7 +97,7 @@ func init() {
 
 	CreateCmd.Flags().StringVar(&raDiscoveryAddr, "discovery-addr", "127.0.0.1:8002", "Discovery address of beacon")
 	CreateCmd.Flags().StringVar(&raHeartbeatAddr, "heartbeat-addr", "127.0.0.1:8003", "Heartbeat address of beacon")
-	CreateCmd.Flags().StringVar(&raBeaconAddr, "beacon-addr", "", "Bootstrap address of beacon")
+	CreateCmd.Flags().StringVar(&raBootStrapAddr, "bootstrap-addr", "", "Bootstrap address of beacon")
 	CreateCmd.Flags().StringVar(&raKeystorePath, "keystore-path", "", "Keystore Path")
 	CreateCmd.Flags().StringVar(&raKeystorePassPath, "keystore-pass-path", "", "Keystore Pass path")
 }

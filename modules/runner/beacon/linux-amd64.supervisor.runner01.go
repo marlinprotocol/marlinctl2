@@ -118,7 +118,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 		process_name={{.BeaconProgram}}
 		user={{.BeaconUser}}
 		directory={{.BeaconRunDir}}
-		command={{.BeaconExecutablePath}} {{if .DiscoveryAddr}} --discovery_addr "{{.DiscoveryAddr}}"{{end}}{{if .HeartbeatAddr}} --heartbeat_addr "{{.HeartbeatAddr}}"{{end}}{{if .BeaconAddr}} --beacon_addr "{{.BeaconAddr}}" --keystore_path "{{.KeystorePath}}" --keystore_path_pass "{{.KeystorePathPass}}" {{end}}
+		command={{.BeaconExecutablePath}} {{if .DiscoveryAddr}} --discovery_addr "{{.DiscoveryAddr}}"{{end}}{{if .HeartbeatAddr}} --heartbeat_addr "{{.HeartbeatAddr}}"{{end}}{{if .BootstrapAddr}} --beacon_addr "{{.BootstrapAddr}}" --keystore_path "{{.KeystorePath}}" --keystore_path_pass "{{.KeystorePathPass}}" {{end}}
 		priority=100
 		numprocs=1
 		numprocs_start=1
@@ -351,8 +351,8 @@ func (r *linux_amd64_supervisor_runner01) Logs() error {
 }
 
 type resource struct {
-	Runner, Version, StartTime                                                                                                              string
-	BeaconProgram, BeaconUser, BeaconRunDir, BeaconExecutablePath, DiscoveryAddr, HeartbeatAddr, BeaconAddr, KeystorePath, KeystorePassPath string
+	Runner, Version, StartTime                                                                                                                 string
+	BeaconProgram, BeaconUser, BeaconRunDir, BeaconExecutablePath, DiscoveryAddr, HeartbeatAddr, BootstrapAddr, KeystorePath, KeystorePassPath string
 }
 
 func (r *linux_amd64_supervisor_runner01) fetchResourceInformation(fileLocation string) (bool, resource, error) {
