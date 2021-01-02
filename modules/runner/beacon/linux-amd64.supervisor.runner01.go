@@ -100,7 +100,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 
 	substitutions := resource{
 		"linux-amd64.supervisor.runner01", r.Version, time.Now().Format(time.RFC822Z),
-		beaconProgramName + r.InstanceId, defaultUser, "/", r.Storage + "/" + r.Version + "/" + beaconName, "127.0.0.1:8002", "127.0.0.1:8003", "",
+		beaconProgramName + r.InstanceId, defaultUser, "/", r.Storage + "/" + r.Version + "/" + beaconName, "127.0.0.1:8002", "127.0.0.1:8003", "", "", "",
 	}
 
 	for k, v := range runtimeArgs {
@@ -118,7 +118,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 		process_name={{.BeaconProgram}}
 		user={{.BeaconUser}}
 		directory={{.BeaconRunDir}}
-		command={{.BeaconExecutablePath}} {{if .DiscoveryAddr}} --discovery_addr "{{.DiscoveryAddr}}"{{end}}{{if .HeartbeatAddr}} --heartbeat_addr "{{.HeartbeatAddr}}"{{end}}{{if .BeaconAddr}} --beacon_addr "{{.BeaconAddr}}"{{end}}
+		command={{.BeaconExecutablePath}} {{if .DiscoveryAddr}} --discovery_addr "{{.DiscoveryAddr}}"{{end}}{{if .HeartbeatAddr}} --heartbeat_addr "{{.HeartbeatAddr}}"{{end}}{{if .BeaconAddr}} --beacon_addr "{{.BeaconAddr}}" --keystore_path "{{.KeystorePath}}" --keystore_path_pass "{{.KeystorePathPass}}" {{end}}
 		priority=100
 		numprocs=1
 		numprocs_start=1
@@ -351,8 +351,8 @@ func (r *linux_amd64_supervisor_runner01) Logs() error {
 }
 
 type resource struct {
-	Runner, Version, StartTime                                                                              string
-	BeaconProgram, BeaconUser, BeaconRunDir, BeaconExecutablePath, DiscoveryAddr, HeartbeatAddr, BeaconAddr string
+	Runner, Version, StartTime                                                                                                              string
+	BeaconProgram, BeaconUser, BeaconRunDir, BeaconExecutablePath, DiscoveryAddr, HeartbeatAddr, BeaconAddr, KeystorePath, KeystorePathPass string
 }
 
 func (r *linux_amd64_supervisor_runner01) fetchResourceInformation(fileLocation string) (bool, resource, error) {
