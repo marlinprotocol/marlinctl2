@@ -37,7 +37,7 @@ type linux_amd64_supervisor_runner01 struct {
 
 const (
 	relayName               = "relay_eth_linux-amd64"
-	relayProgramName        = "relay_eth"
+	relayProgramName        = "relayeth"
 	defaultUser             = "root"
 	supervisorConfFiles     = "/etc/supervisor/conf.d"
 	relaySupervisorConfFile = "relayeth"
@@ -118,7 +118,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 		process_name={{.RelayProgram}}
 		user={{.RelayUser}}
 		directory={{.RelayRunDir}}
-		command={{.RelayExecutable}} "{{.DiscoveryAddrs}}" "{{.HeartbeatAddrs}}" "{{.Datadir}}"{{if .PubsubPort}} --pubsub_port "{{.PubsubPort}}"{{end}}{{if .DiscoveryPort}} --discovery_port "{{.DiscoveryPort}}"{{end}}{{if .Address}} --address "{{.Address}}"{{end}}{{if .Name}} --name "{{.Name}}"{{end}} 
+		command={{.RelayExecutablePath}} "{{.DiscoveryAddrs}}" "{{.HeartbeatAddrs}}" "{{.DataDir}}"{{if .PubsubPort}} --pubsub_port "{{.PubsubPort}}"{{end}}{{if .DiscoveryPort}} --discovery_port "{{.DiscoveryPort}}"{{end}}{{if .Address}} --address "{{.Address}}"{{end}}{{if .Name}} --name "{{.Name}}"{{end}} 
 		priority=100
 		numprocs=1
 		numprocs_start=1
@@ -156,24 +156,23 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 	status, err := exec.Command("supervisorctl", "status").Output()
 	if err != nil {
 		log.Warning("Error while reading supervisor status: " + err.Error())
-	} else {
-		var supervisorStatus = make(map[string]interface{})
+	}
+	var supervisorStatus = make(map[string]interface{})
 
-		statusLines := strings.Split(string(status), "\n")
-		var anyStatusLine = false
-		for _, v := range statusLines {
-			if match, err := regexp.MatchString(relayName+r.InstanceId, v); err == nil && match {
-				vSplit := strings.Split(v, " ")
-				supervisorStatus[vSplit[0]] = strings.Trim(strings.Join(vSplit[1:], " "), " ")
-				anyStatusLine = true
-			}
+	statusLines := strings.Split(string(status), "\n")
+	var anyStatusLine = false
+	for _, v := range statusLines {
+		if match, err := regexp.MatchString(substitutions.RelayProgram, v); err == nil && match {
+			vSplit := strings.Split(v, " ")
+			supervisorStatus[vSplit[0]] = strings.Trim(strings.Join(vSplit[1:], " "), " ")
+			anyStatusLine = true
 		}
-		if !anyStatusLine {
-			log.Info("No proceses seem to be running")
-		} else {
-			log.Info("Process status")
-			util.PrettyPrintKVMap(supervisorStatus)
-		}
+	}
+	if !anyStatusLine {
+		log.Info("No proceses seem to be running")
+	} else {
+		log.Info("Process status")
+		util.PrettyPrintKVMap(supervisorStatus)
 	}
 	r.writeResourceToFile(substitutions, GetResourceFileLocation(r.Storage, r.InstanceId))
 
@@ -181,7 +180,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 }
 
 func (r *linux_amd64_supervisor_runner01) Destroy() error {
-	available, _, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
+	available, resData, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
 	if err != nil {
 		return err
 	}
@@ -189,9 +188,12 @@ func (r *linux_amd64_supervisor_runner01) Destroy() error {
 		return errors.New("resource by id " + r.InstanceId + " doesn't exists. Can't destroy")
 	}
 
-	_, err = exec.Command("supervisorctl", "stop", relaySupervisorConfFile+r.InstanceId).Output()
+	returned, err := exec.Command("supervisorctl", "stop", resData.RelayProgram).Output()
 	if err != nil {
-		return errors.New("Error while stopping relayeth: " + err.Error())
+		alreadyDead, err2 := regexp.MatchString("not running", string(returned))
+		if !alreadyDead || err2 != nil {
+			return errors.New("Error while stopping relayeth: " + err.Error())
+		}
 	}
 	log.Debug("Trigerred relayeth stop")
 
@@ -210,13 +212,22 @@ func (r *linux_amd64_supervisor_runner01) PostRun() error {
 		}
 	}
 
-	err := util.CreateDirPathIfNotExists(oldLogRootDir)
+	available, resData, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
 	if err != nil {
 		return err
 	}
+	if !available {
+		return errors.New("resource by id " + r.InstanceId + " doesn't exists. Can't destroy")
+	}
+
+	err = util.CreateDirPathIfNotExists(oldLogRootDir)
+	if err != nil {
+		return err
+	}
+
 	err = filepath.Walk(logRootDir, func(path string, f os.FileInfo, _ error) error {
 		if !f.IsDir() {
-			r, err := regexp.MatchString(relayProgramName+r.InstanceId+".*", f.Name())
+			r, err := regexp.MatchString(resData.RelayProgram+".*", f.Name())
 			if err == nil && r {
 				err2 := os.Rename(logRootDir+"/"+f.Name(), oldLogRootDir+"/previous_run_"+f.Name())
 				if err2 != nil {
@@ -272,10 +283,10 @@ func (r *linux_amd64_supervisor_runner01) Status() error {
 	log.Info("Resource information")
 	util.PrettyPrintKVStruct(resData)
 
-	status, err := exec.Command("supervisorctl", "status").Output()
-	if err != nil {
-		return errors.New("Error while reading supervisor status: " + err.Error())
-	}
+	status, _ := exec.Command("supervisorctl", "status").Output()
+	// if err != nil {
+	// 	return errors.New("Error while reading supervisor status: " + err.Error())
+	// }
 
 	var supervisorStatus = make(map[string]interface{})
 
@@ -299,7 +310,7 @@ func (r *linux_amd64_supervisor_runner01) Status() error {
 }
 
 func (r *linux_amd64_supervisor_runner01) Logs() error {
-	available, _, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
+	available, resData, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
 	if err != nil {
 		return err
 	}
@@ -311,8 +322,8 @@ func (r *linux_amd64_supervisor_runner01) Logs() error {
 	var logRootDir = "/var/log/supervisor/"
 	err = filepath.Walk(logRootDir, func(path string, f os.FileInfo, _ error) error {
 		if !f.IsDir() {
-			for _, v := range []string{relaySupervisorConfFile + r.InstanceId + "-stdout.*",
-				relaySupervisorConfFile + r.InstanceId + "-stderr.*"} {
+			for _, v := range []string{resData.RelayProgram + "-stdout.*",
+				resData.RelayProgram + "-stderr.*"} {
 				r, err := regexp.MatchString(v, f.Name())
 				if err == nil && r {
 					fileSubscriptions[v[:len(v)-2]] = logRootDir + f.Name()

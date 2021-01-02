@@ -115,7 +115,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 
 	gt := template.Must(template.New("beacon-template").Parse(util.TrimSpacesEveryLine(`
 		[program:{{.BeaconProgram}}]
-		process_name={{.GatewayProgram}}
+		process_name={{.BeaconProgram}}
 		user={{.BeaconUser}}
 		directory={{.BeaconRunDir}}
 		command={{.BeaconExecutablePath}} --discovery_addr "{{.DiscoveryAddr}}" --heartbeat_addr "{{.HeartbeatAddr}}" --beacon_addr "{{.BootstrapAddr}}"
@@ -156,24 +156,23 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 	status, err := exec.Command("supervisorctl", "status").Output()
 	if err != nil {
 		log.Warning("Error while reading supervisor status: " + err.Error())
-	} else {
-		var supervisorStatus = make(map[string]interface{})
+	}
+	var supervisorStatus = make(map[string]interface{})
 
-		statusLines := strings.Split(string(status), "\n")
-		var anyStatusLine = false
-		for _, v := range statusLines {
-			if match, err := regexp.MatchString(beaconName+r.InstanceId, v); err == nil && match {
-				vSplit := strings.Split(v, " ")
-				supervisorStatus[vSplit[0]] = strings.Trim(strings.Join(vSplit[1:], " "), " ")
-				anyStatusLine = true
-			}
+	statusLines := strings.Split(string(status), "\n")
+	var anyStatusLine = false
+	for _, v := range statusLines {
+		if match, err := regexp.MatchString(substitutions.BeaconProgram, v); err == nil && match {
+			vSplit := strings.Split(v, " ")
+			supervisorStatus[vSplit[0]] = strings.Trim(strings.Join(vSplit[1:], " "), " ")
+			anyStatusLine = true
 		}
-		if !anyStatusLine {
-			log.Info("No proceses seem to be running")
-		} else {
-			log.Info("Process status")
-			util.PrettyPrintKVMap(supervisorStatus)
-		}
+	}
+	if !anyStatusLine {
+		log.Info("No proceses seem to be running")
+	} else {
+		log.Info("Process status")
+		util.PrettyPrintKVMap(supervisorStatus)
 	}
 	r.writeResourceToFile(substitutions, GetResourceFileLocation(r.Storage, r.InstanceId))
 
@@ -181,7 +180,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 }
 
 func (r *linux_amd64_supervisor_runner01) Destroy() error {
-	available, _, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
+	available, resData, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
 	if err != nil {
 		return err
 	}
@@ -189,7 +188,7 @@ func (r *linux_amd64_supervisor_runner01) Destroy() error {
 		return errors.New("resource by id " + r.InstanceId + " doesn't exists. Can't destroy")
 	}
 
-	_, err = exec.Command("supervisorctl", "stop", beaconSupervisorConfFile+r.InstanceId).Output()
+	_, err = exec.Command("supervisorctl", "stop", resData.BeaconProgram).Output()
 	if err != nil {
 		return errors.New("Error while stopping beacon: " + err.Error())
 	}
@@ -210,13 +209,21 @@ func (r *linux_amd64_supervisor_runner01) PostRun() error {
 		}
 	}
 
-	err := util.CreateDirPathIfNotExists(oldLogRootDir)
+	available, resData, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
+	if err != nil {
+		return err
+	}
+	if !available {
+		return errors.New("resource by id " + r.InstanceId + " doesn't exists. Can't destroy")
+	}
+
+	err = util.CreateDirPathIfNotExists(oldLogRootDir)
 	if err != nil {
 		return err
 	}
 	err = filepath.Walk(logRootDir, func(path string, f os.FileInfo, _ error) error {
 		if !f.IsDir() {
-			r, err := regexp.MatchString(beaconProgramName+r.InstanceId+".*", f.Name())
+			r, err := regexp.MatchString(resData.BeaconProgram+".*", f.Name())
 			if err == nil && r {
 				err2 := os.Rename(logRootDir+"/"+f.Name(), oldLogRootDir+"/previous_run_"+f.Name())
 				if err2 != nil {
@@ -273,9 +280,9 @@ func (r *linux_amd64_supervisor_runner01) Status() error {
 	util.PrettyPrintKVStruct(resData)
 
 	status, err := exec.Command("supervisorctl", "status").Output()
-	if err != nil {
-		return errors.New("Error while reading supervisor status: " + err.Error())
-	}
+	// if err != nil {
+	// 	return errors.New("Error while reading supervisor status: " + err.Error())
+	// }
 
 	var supervisorStatus = make(map[string]interface{})
 
@@ -299,7 +306,7 @@ func (r *linux_amd64_supervisor_runner01) Status() error {
 }
 
 func (r *linux_amd64_supervisor_runner01) Logs() error {
-	available, _, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
+	available, resData, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
 	if err != nil {
 		return err
 	}
@@ -311,8 +318,8 @@ func (r *linux_amd64_supervisor_runner01) Logs() error {
 	var logRootDir = "/var/log/supervisor/"
 	err = filepath.Walk(logRootDir, func(path string, f os.FileInfo, _ error) error {
 		if !f.IsDir() {
-			for _, v := range []string{beaconSupervisorConfFile + r.InstanceId + "-stdout.*",
-				beaconSupervisorConfFile + r.InstanceId + "-stderr.*"} {
+			for _, v := range []string{resData.BeaconProgram + "-stdout.*",
+				resData.BeaconProgram + "-stderr.*"} {
 				r, err := regexp.MatchString(v, f.Name())
 				if err == nil && r {
 					fileSubscriptions[v[:len(v)-2]] = logRootDir + f.Name()

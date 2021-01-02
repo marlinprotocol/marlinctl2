@@ -262,7 +262,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 }
 
 func (r *linux_amd64_supervisor_runner01) Destroy() error {
-	available, _, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
+	available, resData, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
 	if err != nil {
 		return err
 	}
@@ -270,15 +270,21 @@ func (r *linux_amd64_supervisor_runner01) Destroy() error {
 		return errors.New("resource by id " + r.InstanceId + " doesn't exists. Can't destroy")
 	}
 
-	_, err = exec.Command("supervisorctl", "stop", gatewaySupervisorConfFile+r.InstanceId).Output()
+	returned, err := exec.Command("supervisorctl", "stop", resData.GatewayProgram).Output()
 	if err != nil {
-		return errors.New("Error while stopping gateway: " + err.Error())
+		alreadyDead, err2 := regexp.MatchString("not running", string(returned))
+		if !alreadyDead || err2 != nil {
+			return errors.New("Error while stopping gateway: " + err.Error())
+		}
 	}
 	log.Debug("Trigerred gateway stop")
 
-	_, err = exec.Command("supervisorctl", "stop", bridgeSupervisorConfFile+r.InstanceId).Output()
+	returned, err = exec.Command("supervisorctl", "stop", resData.BridgeProgram).Output()
 	if err != nil {
-		return errors.New("Error while stopping bridge: " + err.Error())
+		alreadyDead, err2 := regexp.MatchString("not running", string(returned))
+		if !alreadyDead || err2 != nil {
+			return errors.New("Error while stopping bridge: " + err.Error())
+		}
 	}
 	log.Debug("Trigerred bridge stop")
 
@@ -380,10 +386,10 @@ func (r *linux_amd64_supervisor_runner01) Status() error {
 	log.Info("Resource information")
 	util.PrettyPrintKVStruct(resData)
 
-	status, err := exec.Command("supervisorctl", "status").Output()
-	if err != nil {
-		return errors.New("Error while reading supervisor status: " + err.Error())
-	}
+	status, _ := exec.Command("supervisorctl", "status").Output()
+	// if err != nil {
+	// 	return errors.New("Error while reading supervisor status: " + err.Error())
+	// }
 
 	var supervisorStatus = make(map[string]interface{})
 
