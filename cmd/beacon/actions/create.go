@@ -37,8 +37,8 @@ var CreateCmd = &cobra.Command{
 			runtimeArgs["DiscoveryAddr"] = raDiscoveryAddr
 			runtimeArgs["HeartbeatAddr"] = raHeartbeatAddr
 			runtimeArgs["BootstrapAddr"] = raBootstrapAddr
-			runtimeArgs["KeyStorePath"] = raKeystorePath
-			runtimeArgs["KeyStorePassPath"] = raKeystorePassPath
+			runtimeArgs["KeystorePath"] = raKeystorePath
+			runtimeArgs["KeystorePassPath"] = raKeystorePassPath
 		}
 		var projectConfig types.Project
 		err := viper.UnmarshalKey(projectId, &projectConfig)
