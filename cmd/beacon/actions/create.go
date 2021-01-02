@@ -1,5 +1,5 @@
 /*
-Copyright © 2020 NAME HERE <EMAIL ADDRESS>
+Copyright © 2020 MARLIN TEAM <info@marlin.pro>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,12 +25,19 @@ import (
 	"github.com/marlinprotocol/ctl2/types"
 )
 
+var raDiscoveryAddr, raHeartbeatAddr, raBeaconAddr string
+
 // AppCmd represents the registry command
 var CreateCmd = &cobra.Command{
 	Use:     "create",
 	Short:   `Create a beacon on local system`,
 	PreRunE: ConfigTest,
 	Run: func(cmd *cobra.Command, args []string) {
+		if len(runtimeArgs) == 0 {
+			runtimeArgs["DiscoveryAddr"] = raDiscoveryAddr
+			runtimeArgs["HeartbeatAddr"] = raHeartbeatAddr
+			runtimeArgs["BeaconAddr"] = raBeaconAddr
+		}
 		var projectConfig types.Project
 		err := viper.UnmarshalKey(projectId, &projectConfig)
 		if err != nil {
@@ -85,4 +92,8 @@ func init() {
 	CreateCmd.Flags().StringVarP(&instanceId, "instance-id", "i", "001", "instance-id of the resource")
 	CreateCmd.Flags().BoolVarP(&skipChecksum, "skip-checksum", "s", false, "skips checking file integrity during run")
 	CreateCmd.Flags().StringToStringVarP(&runtimeArgs, "runtime-arguments", "r", map[string]string{}, "runtime arguments for beacon")
+
+	CreateCmd.Flags().StringVar(&raDiscoveryAddr, "discovery-addr", "127.0.0.1:8002", "Discovery address of beacon")
+	CreateCmd.Flags().StringVar(&raHeartbeatAddr, "heartbeat-addr", "127.0.0.1:8003", "Heartbeat address of beacon")
+	CreateCmd.Flags().StringVar(&raBeaconAddr, "beacon-addr", "", "Bootstrap address of beacon")
 }

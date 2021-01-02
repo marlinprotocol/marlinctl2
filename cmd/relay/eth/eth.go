@@ -1,5 +1,5 @@
 /*
-Copyright © 2020 NAME HERE <EMAIL ADDRESS>
+Copyright © 2020 MARLIN TEAM <info@marlin.pro>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -31,6 +31,6 @@ func init() {
 	EthCmd.AddCommand(actions.CreateCmd)
 	EthCmd.AddCommand(actions.StatusCmd)
 	EthCmd.AddCommand(actions.DestroyCmd)
-	EthCmd.AddCommand(actions.ListVersionsCmd)
+	EthCmd.AddCommand(actions.VersionsCmd)
 	EthCmd.AddCommand(actions.LogsCmd)
 }

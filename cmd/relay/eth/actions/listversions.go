@@ -1,5 +1,5 @@
 /*
-Copyright © 2020 NAME HERE <EMAIL ADDRESS>
+Copyright © 2020 MARLIN TEAM <info@marlin.pro>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -27,8 +27,8 @@ import (
 )
 
 // AppCmd represents the registry command
-var ListVersionsCmd = &cobra.Command{
-	Use:     "listversions",
+var VersionsCmd = &cobra.Command{
+	Use:     "versions",
 	Short:   "List versions for eth relay",
 	Long:    `List versions for eth relay`,
 	PreRunE: ConfigTest,

@@ -10,6 +10,8 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
+	"os/user"
 	"path/filepath"
 	"reflect"
 	"runtime"
@@ -39,6 +41,14 @@ func RemoveConfigEntry(key string) error {
 	}
 	viper.WriteConfig()
 	return nil
+}
+
+func IsCommandAvailable(name string) bool {
+	cmd := exec.Command("/bin/sh", "-c", "command -v "+name)
+	if err := cmd.Run(); err != nil {
+		return false
+	}
+	return true
 }
 
 func IsSystemdAvailable() bool {
@@ -356,4 +366,23 @@ func IsHigherVersion(maj1 int, min1 int, patch1 int,
 		}
 	}
 	return false
+}
+
+func GetUser() (*user.User, error) {
+	usr, err := user.Current()
+	if err != nil {
+		return nil, err
+	}
+
+	if os.Geteuid() == 0 {
+		// Root, try to retrieve SUDO_USER if exists
+		if u := os.Getenv("SUDO_USER"); u != "" {
+			usr, err = user.Lookup(u)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return usr, nil
 }

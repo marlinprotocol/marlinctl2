@@ -1,5 +1,5 @@
 /*
-Copyright © 2020 NAME HERE <EMAIL ADDRESS>
+Copyright © 2020 MARLIN TEAM <info@marlin.pro>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -31,6 +31,6 @@ func init() {
 	IrisCmd.AddCommand(actions.CreateCmd)
 	IrisCmd.AddCommand(actions.StatusCmd)
 	IrisCmd.AddCommand(actions.DestroyCmd)
-	IrisCmd.AddCommand(actions.ListVersionsCmd)
+	IrisCmd.AddCommand(actions.VersionsCmd)
 	IrisCmd.AddCommand(actions.LogsCmd)
 }
