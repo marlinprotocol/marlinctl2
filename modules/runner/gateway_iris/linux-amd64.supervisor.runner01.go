@@ -288,7 +288,7 @@ func (r *linux_amd64_supervisor_runner01) Destroy() error {
 	}
 	log.Debug("Trigerred bridge stop")
 
-	log.Info("Waiting 5 seconds for SIGTERM to take affect")
+	log.Info("Waiting 5 seconds for SIGTERM to take effect")
 	time.Sleep(5 * time.Second)
 
 	return nil

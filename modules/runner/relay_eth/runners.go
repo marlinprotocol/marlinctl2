@@ -21,8 +21,10 @@ func GetRunnerInstance(runnerId string, version string, storage string, runnerDa
 
 		relay, ok1 := runnerDataMap["relay"]
 		relayChecksum, ok2 := runnerDataMap["relay_checksum"]
+		geth, ok3 := runnerDataMap["geth"]
+		gethChecksum, ok4 := runnerDataMap["geth_checksum"]
 
-		if !ok1 || !ok2 {
+		if !ok1 || !ok2 || !ok3 || !ok4 {
 			return &linux_amd64_supervisor_runner01{}, errors.New("Incomplete / wrong runner data for version: " + version)
 		}
 
@@ -32,6 +34,8 @@ func GetRunnerInstance(runnerId string, version string, storage string, runnerDa
 			RunnerData: linux_amd64_supervisor_runner01_runnerdata{
 				Relay:         relay.(string),
 				RelayChecksum: relayChecksum.(string),
+				Geth:          geth.(string),
+				GethChecksum:  gethChecksum.(string),
 			},
 			SkipChecksum: skipChecksum,
 			InstanceId:   instanceId,

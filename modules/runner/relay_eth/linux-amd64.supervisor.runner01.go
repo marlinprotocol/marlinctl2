@@ -25,6 +25,8 @@ import (
 type linux_amd64_supervisor_runner01_runnerdata struct {
 	Relay         string
 	RelayChecksum string
+	Geth          string
+	GethChecksum  string
 }
 
 type linux_amd64_supervisor_runner01 struct {
@@ -38,9 +40,12 @@ type linux_amd64_supervisor_runner01 struct {
 const (
 	relayName               = "relay_eth_linux-amd64"
 	relayProgramName        = "relayeth"
+	gethName                = "geth_linux-amd64"
+	gethProgramName         = "geth"
 	defaultUser             = "root"
 	supervisorConfFiles     = "/etc/supervisor/conf.d"
 	relaySupervisorConfFile = "relayeth"
+	gethSupervisorConfFile  = "geth"
 	logRootDir              = "/var/log/supervisor"
 	oldLogRootDir           = "/var/log/old_logs"
 	projectName             = "relay_eth"
@@ -64,6 +69,7 @@ func (r *linux_amd64_supervisor_runner01) Download() error {
 	}
 
 	var relayethLocation = dirPath + "/" + relayName
+	var gethLocation = dirPath + "/" + gethName
 
 	if _, err := os.Stat(relayethLocation); os.IsNotExist(err) {
 		log.Info("Fetching relayeth from upstream for version ", r.Version)
@@ -78,7 +84,24 @@ func (r *linux_amd64_supervisor_runner01) Download() error {
 		}
 	}
 
+	if _, err := os.Stat(gethLocation); os.IsNotExist(err) {
+		log.Info("Fetching geth from upstream for version ", r.Version)
+		util.DownloadFile(gethLocation, r.RunnerData.Geth)
+	}
+	if !r.SkipChecksum {
+		err := util.VerifyChecksum(gethLocation, r.RunnerData.GethChecksum)
+		if err != nil {
+			return errors.New("Error while verifying geth checksum: " + err.Error())
+		} else {
+			log.Debug("Successully verified geth's integrity")
+		}
+	}
+
 	err = os.Chmod(relayethLocation, 0755)
+	if err != nil {
+		return err
+	}
+	err = os.Chmod(gethLocation, 0755)
 	if err != nil {
 		return err
 	}
@@ -106,6 +129,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 	substitutions := resource{
 		"linux-amd64.supervisor.runner01", r.Version, time.Now().Format(time.RFC822Z),
 		relayProgramName + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + relayName, "127.0.0.1:8002", "", "", "", "", "", "",
+		gethProgramName + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + gethName, "light",
 	}
 
 	for k, v := range runtimeArgs {
@@ -118,7 +142,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 	log.Info("Running configuration")
 	util.PrettyPrintKVStruct(substitutions)
 
-	gt := template.Must(template.New("relay-eth-template").Parse(util.TrimSpacesEveryLine(`
+	rt := template.Must(template.New("relay-eth-template").Parse(util.TrimSpacesEveryLine(`
 		[program:{{.RelayProgram}}]
 		process_name={{.RelayProgram}}
 		user={{.RelayUser}}
@@ -130,14 +154,35 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 		autostart=true
 		autorestart=true
 	`)))
-	gFile, err := os.Create(supervisorConfFiles + "/" + relaySupervisorConfFile + r.InstanceId + ".conf")
+	rFile, err := os.Create(supervisorConfFiles + "/" + relaySupervisorConfFile + r.InstanceId + ".conf")
 	if err != nil {
 		return err
 	}
-	defer gFile.Close()
+	if err := rt.Execute(rFile, substitutions); err != nil {
+		panic(err)
+	}
+	rFile.Close()
+
+	gt := template.Must(template.New("geth-template").Parse(util.TrimSpacesEveryLine(`
+		[program:{{.GethProgram}}]
+		process_name={{.GethProgram}}
+		user={{.GethUser}}
+		directory={{.GethRunDir}}
+		command={{.GethExecutablePath}} --nousb --syncmode={{.SyncMode}} --datadir={{.DataDir}} --metrics --pprof --pprof.addr "0.0.0.0"
+		priority=100
+		numprocs=1
+		numprocs_start=1
+		autostart=true
+		autorestart=true
+	`)))
+	gFile, err := os.Create(supervisorConfFiles + "/" + gethSupervisorConfFile + r.InstanceId + ".conf")
+	if err != nil {
+		return err
+	}
 	if err := gt.Execute(gFile, substitutions); err != nil {
 		panic(err)
 	}
+	gFile.Close()
 
 	_, err = exec.Command("supervisorctl", "reread").Output()
 	if err != nil {
@@ -167,7 +212,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 	statusLines := strings.Split(string(status), "\n")
 	var anyStatusLine = false
 	for _, v := range statusLines {
-		if match, err := regexp.MatchString(substitutions.RelayProgram, v); err == nil && match {
+		if match, err := regexp.MatchString(substitutions.RelayProgram+"|"+substitutions.GethProgram, v); err == nil && match {
 			vSplit := strings.Split(v, " ")
 			supervisorStatus[vSplit[0]] = strings.Trim(strings.Join(vSplit[1:], " "), " ")
 			anyStatusLine = true
@@ -202,7 +247,16 @@ func (r *linux_amd64_supervisor_runner01) Destroy() error {
 	}
 	log.Debug("Trigerred relayeth stop")
 
-	log.Info("Waiting 5 seconds for SIGTERM to take affect")
+	returned, err = exec.Command("supervisorctl", "stop", resData.GethProgram).Output()
+	if err != nil {
+		alreadyDead, err2 := regexp.MatchString("not running", string(returned))
+		if !alreadyDead || err2 != nil {
+			return errors.New("Error while stopping geth: " + err.Error())
+		}
+	}
+	log.Debug("Trigerred geth stop")
+
+	log.Info("Waiting 5 seconds for SIGTERM to take effect")
 	time.Sleep(5 * time.Second)
 
 	return nil
@@ -210,9 +264,16 @@ func (r *linux_amd64_supervisor_runner01) Destroy() error {
 
 func (r *linux_amd64_supervisor_runner01) PostRun() error {
 	var relayethConfig = supervisorConfFiles + "/" + relaySupervisorConfFile + r.InstanceId + ".conf"
+	var gethConfig = supervisorConfFiles + "/" + gethSupervisorConfFile + r.InstanceId + ".conf"
 
 	if _, err := os.Stat(relayethConfig); !os.IsNotExist(err) {
 		if err := os.Remove(relayethConfig); err != nil {
+			return err
+		}
+	}
+
+	if _, err := os.Stat(gethConfig); !os.IsNotExist(err) {
+		if err := os.Remove(gethConfig); err != nil {
 			return err
 		}
 	}
@@ -232,7 +293,7 @@ func (r *linux_amd64_supervisor_runner01) PostRun() error {
 
 	err = filepath.Walk(logRootDir, func(path string, f os.FileInfo, _ error) error {
 		if !f.IsDir() {
-			r, err := regexp.MatchString(resData.RelayProgram+".*", f.Name())
+			r, err := regexp.MatchString(resData.RelayProgram+".*|"+resData.GethProgram+".*", f.Name())
 			if err == nil && r {
 				err2 := os.Rename(logRootDir+"/"+f.Name(), oldLogRootDir+"/previous_run_"+f.Name())
 				if err2 != nil {
@@ -298,7 +359,7 @@ func (r *linux_amd64_supervisor_runner01) Status() error {
 	statusLines := strings.Split(string(status), "\n")
 	var anyStatusLine = false
 	for _, v := range statusLines {
-		if match, err := regexp.MatchString(relayProgramName+r.InstanceId, v); err == nil && match {
+		if match, err := regexp.MatchString(relayProgramName+r.InstanceId+"|"+gethProgramName+r.InstanceId, v); err == nil && match {
 			vSplit := strings.Split(v, " ")
 			supervisorStatus[vSplit[0]] = strings.Trim(strings.Join(vSplit[1:], " "), " ")
 			anyStatusLine = true
@@ -328,7 +389,9 @@ func (r *linux_amd64_supervisor_runner01) Logs() error {
 	err = filepath.Walk(logRootDir, func(path string, f os.FileInfo, _ error) error {
 		if !f.IsDir() {
 			for _, v := range []string{resData.RelayProgram + "-stdout.*",
-				resData.RelayProgram + "-stderr.*"} {
+				resData.RelayProgram + "-stderr.*",
+				resData.GethProgram + "-stdout.*",
+				resData.GethProgram + "-stderr.*"} {
 				r, err := regexp.MatchString(v, f.Name())
 				if err == nil && r {
 					fileSubscriptions[v[:len(v)-2]] = logRootDir + f.Name()
@@ -362,6 +425,7 @@ func (r *linux_amd64_supervisor_runner01) Logs() error {
 type resource struct {
 	Runner, Version, StartTime                                                                                                                   string
 	RelayProgram, RelayUser, RelayRunDir, RelayExecutablePath, DiscoveryAddrs, HeartbeatAddrs, DataDir, PubsubPort, DiscoveryPort, Address, Name string
+	GethProgram, GethUser, GethRunDir, GethExecutatablePath, SyncMode                                                                            string
 }
 
 func (r *linux_amd64_supervisor_runner01) fetchResourceInformation(fileLocation string) (bool, resource, error) {
