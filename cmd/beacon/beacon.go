@@ -13,24 +13,24 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package iris
+package beacon
 
 import (
-	"github.com/marlinprotocol/ctl2/cmd/gateway/iris/actions"
+	"github.com/marlinprotocol/ctl2/cmd/beacon/actions"
 	"github.com/spf13/cobra"
 )
 
 // AppCmd represents the registry command
-var IrisCmd = &cobra.Command{
-	Use:   "iris",
-	Short: "Iris Gateway",
-	Long:  `Iris Gateway`,
+var BeaconCmd = &cobra.Command{
+	Use:   "beacon",
+	Short: "Marlin Beacon",
+	Long:  `Marlin Beacon`,
 }
 
 func init() {
-	IrisCmd.AddCommand(actions.CreateCmd)
-	IrisCmd.AddCommand(actions.StatusCmd)
-	IrisCmd.AddCommand(actions.DestroyCmd)
-	IrisCmd.AddCommand(actions.ListVersionsCmd)
-	IrisCmd.AddCommand(actions.LogsCmd)
+	BeaconCmd.AddCommand(actions.CreateCmd)
+	BeaconCmd.AddCommand(actions.StatusCmd)
+	BeaconCmd.AddCommand(actions.DestroyCmd)
+	BeaconCmd.AddCommand(actions.ListVersionsCmd)
+	BeaconCmd.AddCommand(actions.LogsCmd)
 }

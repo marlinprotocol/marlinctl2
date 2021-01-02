@@ -13,24 +13,24 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package iris
+package eth
 
 import (
-	"github.com/marlinprotocol/ctl2/cmd/gateway/iris/actions"
+	"github.com/marlinprotocol/ctl2/cmd/relay/eth/actions"
 	"github.com/spf13/cobra"
 )
 
 // AppCmd represents the registry command
-var IrisCmd = &cobra.Command{
-	Use:   "iris",
-	Short: "Iris Gateway",
-	Long:  `Iris Gateway`,
+var EthCmd = &cobra.Command{
+	Use:   "eth",
+	Short: "Eth relay",
+	Long:  `Eth relay`,
 }
 
 func init() {
-	IrisCmd.AddCommand(actions.CreateCmd)
-	IrisCmd.AddCommand(actions.StatusCmd)
-	IrisCmd.AddCommand(actions.DestroyCmd)
-	IrisCmd.AddCommand(actions.ListVersionsCmd)
-	IrisCmd.AddCommand(actions.LogsCmd)
+	EthCmd.AddCommand(actions.CreateCmd)
+	EthCmd.AddCommand(actions.StatusCmd)
+	EthCmd.AddCommand(actions.DestroyCmd)
+	EthCmd.AddCommand(actions.ListVersionsCmd)
+	EthCmd.AddCommand(actions.LogsCmd)
 }

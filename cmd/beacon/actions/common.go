@@ -17,7 +17,7 @@ var (
 	runtime      string
 	version      string
 	instanceId   string
-	projectId    string = "gateway_iris"
+	projectId    string = "beacon"
 	updatePolicy string
 	skipChecksum bool
 	forceRuntime bool
@@ -30,8 +30,8 @@ var ConfigTest = func(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	if !viper.IsSet("gateway_iris") {
-		log.Debug("Setting up default config for running gateway_iris.")
+	if !viper.IsSet("beacon") {
+		log.Debug("Setting up default config for running beacon.")
 		updPol, ok1 := marlinConfig.AdditionalInfo["defaultprojectupdatepolicy"]
 		defRun, ok2 := marlinConfig.AdditionalInfo["defaultprojectruntime"]
 		if ok1 && ok2 {

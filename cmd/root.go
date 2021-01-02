@@ -36,7 +36,9 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/inconshreveable/go-update"
+	"github.com/marlinprotocol/ctl2/cmd/beacon"
 	"github.com/marlinprotocol/ctl2/cmd/gateway"
+	"github.com/marlinprotocol/ctl2/cmd/relay"
 )
 
 var cfgFile string
@@ -95,6 +97,8 @@ func Execute() {
 
 func init() {
 	RootCmd.AddCommand(gateway.GatewayCmd)
+	RootCmd.AddCommand(beacon.BeaconCmd)
+	RootCmd.AddCommand(relay.RelayCmd)
 
 	RootCmd.PersistentFlags().BoolVar(&skipRegistrySync, "skip-registry-sync", false, "skip registry sync during run")
 	RootCmd.PersistentFlags().BoolVar(&skipMarlinctlUpdateCheck, "skip-update-check", false, "skip update check during run")

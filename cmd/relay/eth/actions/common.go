@@ -1,53 +1,50 @@
-/*
-Copyright © 2020 NAME HERE <EMAIL ADDRESS>
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
 package actions
 
 import (
 	"errors"
 	"os"
 
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-
 	"github.com/marlinprotocol/ctl2/modules/registry"
 	"github.com/marlinprotocol/ctl2/modules/util"
 	"github.com/marlinprotocol/ctl2/types"
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
-// AppCmd represents the registry command
-var ConfigureCmd = &cobra.Command{
-	Use:   "configure",
-	Short: "Configure iris gateway",
-	Long:  `Configure iris gateway`,
-	Run: func(cmd *cobra.Command, args []string) {
-		if err := setupConfiguration(enableBeta, forceRuntime, updatePolicy, runtime, version); err != nil {
-			log.Error("Error while setting up config: ", err)
-		} else {
-			log.Info("Config setup successfully")
-		}
-	},
-}
+var (
+	enableBeta   bool
+	runtime      string
+	version      string
+	instanceId   string
+	projectId    string = "relay_eth"
+	updatePolicy string
+	skipChecksum bool
+	forceRuntime bool
+	runtimeArgs  map[string]string
+)
 
-func init() {
-	ConfigureCmd.Flags().StringVarP(&updatePolicy, "update-policy", "u", "minor", "update policy to enforce - major / minor / patch / none")
-	ConfigureCmd.Flags().BoolVarP(&enableBeta, "enable-beta", "b", false, "enable beta releases")
-	ConfigureCmd.Flags().StringVarP(&version, "version", "v", "latest", "Version to run")
-	ConfigureCmd.Flags().StringVarP(&runtime, "runtime", "r", "", "Application runtime")
-	ConfigureCmd.Flags().BoolVarP(&forceRuntime, "force-runtime", "f", false, "Forcefully set application runtime")
+var ConfigTest = func(cmd *cobra.Command, args []string) error {
+	var marlinConfig types.Project
+	err := viper.UnmarshalKey("marlinctl", &marlinConfig)
+	if err != nil {
+		return err
+	}
+	if !viper.IsSet("relay_eth") {
+		log.Debug("Setting up default config for running relay_eth.")
+		updPol, ok1 := marlinConfig.AdditionalInfo["defaultprojectupdatepolicy"]
+		defRun, ok2 := marlinConfig.AdditionalInfo["defaultprojectruntime"]
+		if ok1 && ok2 {
+			setupConfiguration(false,
+				false,
+				updPol.(string),
+				defRun.(string),
+				"latest")
+		}
+	} else {
+		log.Debug("Project config found. Not creating defaults.")
+	}
+	return nil
 }
 
 func setupConfiguration(enableBeta bool, forceRuntime bool, updatePolicy string, runtime string, version string) error {
