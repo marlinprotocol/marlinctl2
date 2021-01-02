@@ -425,7 +425,7 @@ func (r *linux_amd64_supervisor_runner01) Logs() error {
 type resource struct {
 	Runner, Version, StartTime                                                                                                                   string
 	RelayProgram, RelayUser, RelayRunDir, RelayExecutablePath, DiscoveryAddrs, HeartbeatAddrs, DataDir, PubsubPort, DiscoveryPort, Address, Name string
-	GethProgram, GethUser, GethRunDir, GethExecutatablePath, SyncMode                                                                            string
+	GethProgram, GethUser, GethRunDir, GethExecutablePath, SyncMode                                                                              string
 }
 
 func (r *linux_amd64_supervisor_runner01) fetchResourceInformation(fileLocation string) (bool, resource, error) {
