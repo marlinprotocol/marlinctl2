@@ -25,7 +25,7 @@ import (
 	"github.com/marlinprotocol/ctl2/types"
 )
 
-var raDiscoveryAddr, raHeartbeatAddr, raBeaconAddr, raKeystorePath, raKeystorePathPass string
+var raDiscoveryAddr, raHeartbeatAddr, raBeaconAddr, raKeystorePath, raKeystorePassPath string
 
 // AppCmd represents the registry command
 var CreateCmd = &cobra.Command{
@@ -38,7 +38,7 @@ var CreateCmd = &cobra.Command{
 			runtimeArgs["HeartbeatAddr"] = raHeartbeatAddr
 			runtimeArgs["BeaconAddr"] = raBeaconAddr
 			runtimeArgs["KeyStorePath"] = raKeystorePath
-			runtimeArgs["KeyStorePathPass"] = raKeystorePathPass
+			runtimeArgs["KeyStorePassPath"] = raKeystorePassPath
 		}
 		var projectConfig types.Project
 		err := viper.UnmarshalKey(projectId, &projectConfig)
@@ -99,5 +99,5 @@ func init() {
 	CreateCmd.Flags().StringVar(&raHeartbeatAddr, "heartbeat-addr", "127.0.0.1:8003", "Heartbeat address of beacon")
 	CreateCmd.Flags().StringVar(&raBeaconAddr, "beacon-addr", "", "Bootstrap address of beacon")
 	CreateCmd.Flags().StringVar(&raKeystorePath, "keystore-path", "", "Keystore Path")
-	CreateCmd.Flags().StringVar(&raKeystorePathPass, "keystore-path-pass", "", "Keystore Path pass")
+	CreateCmd.Flags().StringVar(&raKeystorePassPath, "keystore-pass-path", "", "Keystore Pass path")
 }

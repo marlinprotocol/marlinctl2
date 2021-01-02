@@ -352,7 +352,7 @@ func (r *linux_amd64_supervisor_runner01) Logs() error {
 
 type resource struct {
 	Runner, Version, StartTime                                                                                                              string
-	BeaconProgram, BeaconUser, BeaconRunDir, BeaconExecutablePath, DiscoveryAddr, HeartbeatAddr, BeaconAddr, KeystorePath, KeystorePathPass string
+	BeaconProgram, BeaconUser, BeaconRunDir, BeaconExecutablePath, DiscoveryAddr, HeartbeatAddr, BeaconAddr, KeystorePath, KeystorePassPath string
 }
 
 func (r *linux_amd64_supervisor_runner01) fetchResourceInformation(fileLocation string) (bool, resource, error) {
