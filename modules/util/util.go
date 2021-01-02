@@ -28,6 +28,25 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing"
 )
 
+func GetUser() (*user.User, error) {
+	usr, err := user.Current()
+	if err != nil {
+		return nil, err
+	}
+
+	if os.Geteuid() == 0 {
+		// Root, try to retrieve SUDO_USER if exists
+		if u := os.Getenv("SUDO_USER"); u != "" {
+			usr, err = user.Lookup(u)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return usr, nil
+}
+
 func RemoveConfigEntry(key string) error {
 	configMap := viper.AllSettings()
 	delete(configMap, key)
@@ -124,7 +143,23 @@ func GetRuntimes() map[string]bool {
 
 func CreateDirPathIfNotExists(dirPath string) error {
 	if _, err := os.Stat(dirPath); os.IsNotExist(err) {
-		return os.MkdirAll(dirPath, 0777)
+		currentUser, err := GetUser()
+		if err != nil {
+			return err
+		}
+		uid, err := strconv.Atoi(currentUser.Uid)
+		if err != nil {
+			return err
+		}
+		gid, err := strconv.Atoi(currentUser.Gid)
+		if err != nil {
+			return err
+		}
+		createErr := os.MkdirAll(dirPath, 0777)
+		if createErr != nil {
+			return createErr
+		}
+		return os.Chown(dirPath, uid, gid)
 	}
 	return nil
 }
@@ -369,23 +404,4 @@ func IsHigherVersion(maj1 int, min1 int, patch1 int,
 		}
 	}
 	return false
-}
-
-func GetUser() (*user.User, error) {
-	usr, err := user.Current()
-	if err != nil {
-		return nil, err
-	}
-
-	if os.Geteuid() == 0 {
-		// Root, try to retrieve SUDO_USER if exists
-		if u := os.Getenv("SUDO_USER"); u != "" {
-			usr, err = user.Lookup(u)
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	return usr, nil
 }
