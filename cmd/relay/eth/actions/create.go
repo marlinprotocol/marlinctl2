@@ -22,6 +22,7 @@ import (
 
 	"github.com/marlinprotocol/ctl2/modules/registry"
 	projectRunners "github.com/marlinprotocol/ctl2/modules/runner/relay_eth"
+	"github.com/marlinprotocol/ctl2/modules/util"
 	"github.com/marlinprotocol/ctl2/types"
 )
 
@@ -36,7 +37,7 @@ var CreateCmd = &cobra.Command{
 		if len(runtimeArgs) == 0 {
 			runtimeArgs["DiscoveryAddr"] = raDiscoveryAddr
 			runtimeArgs["HeartbeatAddrs"] = raHeartbeatAddrs
-			runtimeArgs["DataDir"] = raDataDir
+			runtimeArgs["DataDir"] = util.ExpandTilde(raDataDir)
 			runtimeArgs["DiscoveryPort"] = raDiscoveryPort
 			runtimeArgs["PubsubPort"] = raPubsubPort
 			runtimeArgs["Address"] = raAddress

@@ -22,6 +22,7 @@ import (
 
 	"github.com/marlinprotocol/ctl2/modules/registry"
 	projectRunners "github.com/marlinprotocol/ctl2/modules/runner/beacon"
+	"github.com/marlinprotocol/ctl2/modules/util"
 	"github.com/marlinprotocol/ctl2/types"
 )
 
@@ -37,8 +38,8 @@ var CreateCmd = &cobra.Command{
 			runtimeArgs["DiscoveryAddr"] = raDiscoveryAddr
 			runtimeArgs["HeartbeatAddr"] = raHeartbeatAddr
 			runtimeArgs["BootstrapAddr"] = raBootstrapAddr
-			runtimeArgs["KeystorePath"] = raKeystorePath
-			runtimeArgs["KeystorePassPath"] = raKeystorePassPath
+			runtimeArgs["KeystorePath"] = util.ExpandTilde(raKeystorePath)
+			runtimeArgs["KeystorePassPath"] = util.ExpandTilde(raKeystorePassPath)
 		}
 		var projectConfig types.Project
 		err := viper.UnmarshalKey(projectId, &projectConfig)

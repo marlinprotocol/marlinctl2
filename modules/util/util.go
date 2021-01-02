@@ -426,3 +426,17 @@ func IsHigherVersion(maj1 int, min1 int, patch1 int,
 	}
 	return false
 }
+
+func ExpandTilde(path string) string {
+	usr, _ := GetUser()
+	dir := usr.HomeDir
+	if path == "~" {
+		// In case of "~", which won't be caught by the "else if"
+		path = dir
+	} else if strings.HasPrefix(path, "~/") {
+		// Use strings.HasPrefix so we don't match paths like
+		// "/something/~/something/"
+		path = filepath.Join(dir, path[2:])
+	}
+	return path
+}
