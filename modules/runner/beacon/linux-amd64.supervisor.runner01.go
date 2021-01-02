@@ -105,7 +105,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 
 	substitutions := resource{
 		"linux-amd64.supervisor.runner01", r.Version, time.Now().Format(time.RFC822Z),
-		beaconProgramName + r.InstanceId, currentUser.Name, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + beaconName, "127.0.0.1:8002", "127.0.0.1:8003", "", "", "",
+		beaconProgramName + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + beaconName, "127.0.0.1:8002", "127.0.0.1:8003", "", "", "",
 	}
 
 	for k, v := range runtimeArgs {
