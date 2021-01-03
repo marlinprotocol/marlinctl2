@@ -15,7 +15,7 @@ Prerequisites: go >= 1.15.1, make, supervisord, supervisorctl
 To build, run
 ```
 $ make
-$ make instal
+$ make install
 ```
 A `marlinctl` executable should be built inside the `build` directory
 
