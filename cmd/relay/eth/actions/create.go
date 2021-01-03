@@ -26,7 +26,7 @@ import (
 	"github.com/marlinprotocol/ctl2/types"
 )
 
-var raDiscoveryAddr, raHeartbeatAddrs, raDataDir, raDiscoveryPort, raPubsubPort, raAddress, raName, raAbciVersion, raSyncMode string
+var raDiscoveryAddrs, raHeartbeatAddrs, raDataDir, raDiscoveryPort, raPubsubPort, raAddress, raName, raAbciVersion, raSyncMode string
 
 // AppCmd represents the registry command
 var CreateCmd = &cobra.Command{
@@ -35,7 +35,7 @@ var CreateCmd = &cobra.Command{
 	PreRunE: ConfigTest,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(runtimeArgs) == 0 {
-			runtimeArgs["DiscoveryAddr"] = raDiscoveryAddr
+			runtimeArgs["DiscoveryAddrs"] = raDiscoveryAddrs
 			runtimeArgs["HeartbeatAddrs"] = raHeartbeatAddrs
 			runtimeArgs["DataDir"] = util.ExpandTilde(raDataDir)
 			runtimeArgs["DiscoveryPort"] = raDiscoveryPort
@@ -101,7 +101,7 @@ func init() {
 	CreateCmd.Flags().BoolVarP(&skipChecksum, "skip-checksum", "s", false, "skips checking file integrity during run")
 	CreateCmd.Flags().StringToStringVarP(&runtimeArgs, "runtime-arguments", "r", map[string]string{}, "runtime arguments for relay eth")
 
-	CreateCmd.Flags().StringVar(&raDiscoveryAddr, "discovery-addrs", "127.0.0.1:8002", "Discovery address of relay")
+	CreateCmd.Flags().StringVar(&raDiscoveryAddrs, "discovery-addrs", "127.0.0.1:8002", "Discovery address of relay")
 	CreateCmd.Flags().StringVar(&raHeartbeatAddrs, "heartbeat-addrs", "127.0.0.1:8003", "Heartbeat address of relay")
 	CreateCmd.Flags().StringVar(&raDataDir, "datadir", "~/.ethereum/", "Data directory of relay")
 	CreateCmd.Flags().StringVar(&raDiscoveryPort, "discovery-port", "", "Discovery port")
