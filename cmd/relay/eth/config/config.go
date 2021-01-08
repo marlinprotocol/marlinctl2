@@ -28,6 +28,7 @@ var ConfigCmd = &cobra.Command{
 }
 
 func init() {
+	ConfigCmd.AddCommand(actions.ConfigShowCmd)
 	ConfigCmd.AddCommand(actions.ConfigModifyCmd)
 	ConfigCmd.AddCommand(actions.ConfigDiffCmd)
 	ConfigCmd.AddCommand(actions.ConfigApplyCmd)

@@ -59,6 +59,8 @@ It can spawn up beacons, gateways, relays on various platforms and runtimes.`,
 		}
 		log.SetLevel(lvl)
 
+		// showCmdTree(cmd.Root(), "")
+
 		err = readConfig()
 		var configuredRegistries []types.Registry
 		err = viper.UnmarshalKey("registries", &configuredRegistries)
@@ -89,6 +91,13 @@ It can spawn up beacons, gateways, relays on various platforms and runtimes.`,
 			os.Exit(1)
 		}
 	},
+}
+
+func showCmdTree(cmd *cobra.Command, lvl string) {
+	fmt.Println(lvl + "-" + cmd.Use)
+	for _, c := range cmd.Commands() {
+		showCmdTree(c, lvl+"  |")
+	}
 }
 
 func Execute() {

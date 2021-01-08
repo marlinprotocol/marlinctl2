@@ -266,6 +266,68 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 	return nil
 }
 
+func (r *linux_amd64_supervisor_runner01) Restart() error {
+	available, resData, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
+	if err != nil {
+		return err
+	}
+	if !available {
+		return errors.New("resource by id " + r.InstanceId + " doesn't exist. Can't return status.")
+	}
+
+	_, err1 := exec.Command("supervisorctl", "restart", resData.GatewayProgram).Output()
+	_, err2 := exec.Command("supervisorctl", "restart", resData.BridgeProgram).Output()
+
+	if err1 == nil && err2 == nil {
+		log.Info("Triggered restart")
+	} else {
+		log.Warning("Triggered restart, however supervisor did return some errors. ", err1.Error(), " ", err2.Error())
+	}
+
+	return nil
+}
+
+func (r *linux_amd64_supervisor_runner01) Recreate() error {
+	available, resData, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
+	if err != nil {
+		return err
+	}
+	if !available {
+		return errors.New("resource by id " + r.InstanceId + " doesn't exist. Can't return status.")
+	}
+	err = r.Destroy()
+	if err != nil {
+		return err
+	}
+
+	err = r.PostRun()
+	if err != nil {
+		return err
+	}
+
+	err = r.Prepare()
+	if err != nil {
+		return err
+	}
+
+	ref := reflect.ValueOf(resData)
+	typeOfref := ref.Type()
+	runtimeArgs := make(map[string]string)
+
+	for i := 0; i < ref.NumField(); i++ {
+		var name = typeOfref.Field(i).Name
+		if name != "StartTime" {
+			runtimeArgs[name] = ref.Field(i).String()
+		}
+	}
+
+	err = r.Create(runtimeArgs)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *linux_amd64_supervisor_runner01) Destroy() error {
 	available, resData, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
 	if err != nil {

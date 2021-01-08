@@ -30,6 +30,8 @@ var EthCmd = &cobra.Command{
 
 func init() {
 	EthCmd.AddCommand(actions.CreateCmd)
+	EthCmd.AddCommand(actions.RestartCmd)
+	EthCmd.AddCommand(actions.RecreateCmd)
 	EthCmd.AddCommand(actions.StatusCmd)
 	EthCmd.AddCommand(actions.DestroyCmd)
 	EthCmd.AddCommand(actions.VersionsCmd)

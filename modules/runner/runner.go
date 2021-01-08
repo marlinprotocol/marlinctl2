@@ -5,6 +5,8 @@ type Runner interface {
 	Download() error
 	Prepare() error
 	Create(runtimeArgs map[string]string) error
+	Restart() error
+	Recreate() error
 	Destroy() error
 	PostRun() error
 	Status() error

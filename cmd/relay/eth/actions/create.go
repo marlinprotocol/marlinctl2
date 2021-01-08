@@ -84,13 +84,15 @@ var CreateCmd = &cobra.Command{
 			return
 		}
 
-		projectConfig.CurrentVersion = versionToRun.Version
+		if updatePolicy == "" && version == "" {
+			projectConfig.CurrentVersion = versionToRun.Version
 
-		viper.Set(cmn.ProjectID, projectConfig)
-		err = viper.WriteConfig()
-		if err != nil {
-			log.Error("Failure while updating config for current version: ", err.Error())
-			return
+			viper.Set(cmn.ProjectID, projectConfig)
+			err = viper.WriteConfig()
+			if err != nil {
+				log.Error("Failure while updating config for current version: ", err.Error())
+				return
+			}
 		}
 	},
 }

@@ -3,6 +3,8 @@ package actions
 import (
 	"os"
 
+	"github.com/marlinprotocol/ctl2/modules/util"
+
 	cmn "github.com/marlinprotocol/ctl2/cmd/relay/eth/common"
 	"github.com/marlinprotocol/ctl2/types"
 	log "github.com/sirupsen/logrus"
@@ -37,6 +39,18 @@ var ConfigApplyCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		viper.Set(cmn.ProjectID, projectConfigMod)
+		err = viper.WriteConfig()
+		if err != nil {
+			log.Error("Error while writing configs to disk: ", err.Error())
+			os.Exit(1)
+		}
+		err = util.RemoveConfigEntry(modifiedProjectID)
+		if err != nil {
+			log.Error("Error while removing staging configs from disk: ", err.Error())
+			os.Exit(1)
+		}
+		log.Info("Configs have been updated. These will take effect next time you create an application instance.")
 	},
 }
 
