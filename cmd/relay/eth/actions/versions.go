@@ -22,6 +22,8 @@ import (
 	"github.com/marlinprotocol/ctl2/types"
 	log "github.com/sirupsen/logrus"
 
+	cmn "github.com/marlinprotocol/ctl2/cmd/relay/eth/common"
+	cfg "github.com/marlinprotocol/ctl2/cmd/relay/eth/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -31,15 +33,15 @@ var VersionsCmd = &cobra.Command{
 	Use:     "versions",
 	Short:   "List versions for eth relay",
 	Long:    `List versions for eth relay`,
-	PreRunE: ConfigTest,
+	PreRunE: cfg.ConfigTest,
 	Run: func(cmd *cobra.Command, args []string) {
 		var projectConfig types.Project
-		err := viper.UnmarshalKey(projectId, &projectConfig)
+		err := viper.UnmarshalKey(cmn.ProjectID, &projectConfig)
 		if err != nil {
 			log.Error("Error while reading project config: ", err)
 			os.Exit(1)
 		}
-		versions, err := registry.GlobalRegistry.GetVersions(projectId, projectConfig.Subscription, "0.0.0", "major", projectConfig.Runtime)
+		versions, err := registry.GlobalRegistry.GetVersions(cmn.ProjectID, projectConfig.Subscription, "0.0.0", "major", projectConfig.Runtime)
 
 		if err != nil {
 			log.Error("Error encountered while listing versions: ", err)

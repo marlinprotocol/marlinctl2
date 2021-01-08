@@ -16,15 +16,14 @@ limitations under the License.
 package actions
 
 import (
-	"encoding/json"
-	"errors"
-	"io/ioutil"
 	"os"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	cmn "github.com/marlinprotocol/ctl2/cmd/relay/eth/common"
+	cfg "github.com/marlinprotocol/ctl2/cmd/relay/eth/config"
 	projectRunners "github.com/marlinprotocol/ctl2/modules/runner/relay_eth"
 	"github.com/marlinprotocol/ctl2/types"
 )
@@ -34,16 +33,16 @@ var DestroyCmd = &cobra.Command{
 	Use:     "destroy",
 	Short:   "Destroy any running eth relay",
 	Long:    `Destroy any running eth relay`,
-	PreRunE: ConfigTest,
+	PreRunE: cfg.ConfigTest,
 	Run: func(cmd *cobra.Command, args []string) {
 		var projectConfig types.Project
-		err := viper.UnmarshalKey(projectId, &projectConfig)
+		err := viper.UnmarshalKey(cmn.ProjectID, &projectConfig)
 		if err != nil {
 			log.Error("Error while reading project config: ", err)
 			os.Exit(1)
 		}
 
-		runnerId, version, err := getResourceMetaData(projectConfig, instanceId)
+		runnerId, version, err := cmn.GetResourceMetaData(projectConfig, instanceId)
 		if err != nil {
 			log.Error("Error while fetching resource information: ", err)
 			os.Exit(1)
@@ -79,25 +78,4 @@ var DestroyCmd = &cobra.Command{
 
 func init() {
 	DestroyCmd.Flags().StringVarP(&instanceId, "instance-id", "i", "001", "instance-id of the resource")
-}
-
-func getResourceMetaData(projectConfig types.Project, instanceId string) (string, string, error) {
-	resFileLocation := projectRunners.GetResourceFileLocation(projectConfig.Storage, instanceId)
-	if _, err := os.Stat(resFileLocation); os.IsNotExist(err) {
-		return "", "", errors.New("Cannot locate resource: " + resFileLocation)
-	}
-	file, err := ioutil.ReadFile(resFileLocation)
-	if err != nil {
-		return "", "", err
-	}
-	var resourceMetaData = struct {
-		Runner  string `json:"Runner"`
-		Version string `json:"Version"`
-	}{}
-	err = json.Unmarshal([]byte(file), &resourceMetaData)
-	if err != nil {
-		return "", "", err
-	}
-	log.Debug("Resource metadata: ", resourceMetaData)
-	return resourceMetaData.Runner, resourceMetaData.Version, nil
 }

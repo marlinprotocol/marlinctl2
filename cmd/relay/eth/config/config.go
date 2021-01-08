@@ -13,26 +13,23 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package eth
+package config
 
 import (
-	"github.com/marlinprotocol/ctl2/cmd/relay/eth/actions"
-	"github.com/marlinprotocol/ctl2/cmd/relay/eth/config"
+	"github.com/marlinprotocol/ctl2/cmd/relay/eth/config/actions"
 	"github.com/spf13/cobra"
 )
 
 // AppCmd represents the registry command
-var EthCmd = &cobra.Command{
-	Use:   "eth",
-	Short: "Eth relay",
-	Long:  `Eth relay`,
+var ConfigCmd = &cobra.Command{
+	Use:   "config",
+	Short: "Configure state information of the project",
+	Long:  `Configure state information of the project`,
 }
 
 func init() {
-	EthCmd.AddCommand(actions.CreateCmd)
-	EthCmd.AddCommand(actions.StatusCmd)
-	EthCmd.AddCommand(actions.DestroyCmd)
-	EthCmd.AddCommand(actions.VersionsCmd)
-	EthCmd.AddCommand(actions.LogsCmd)
-	EthCmd.AddCommand(config.ConfigCmd)
+	ConfigCmd.AddCommand(actions.ConfigModifyCmd)
+	ConfigCmd.AddCommand(actions.ConfigDiffCmd)
+	ConfigCmd.AddCommand(actions.ConfigApplyCmd)
+	ConfigCmd.AddCommand(actions.ConfigResetCmd)
 }

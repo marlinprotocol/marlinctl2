@@ -22,3 +22,9 @@ type ReleaseJSON struct {
 	JSONVersion int         `json:"json_version"`
 	Data        interface{} `json:"data"`
 }
+
+const (
+	ProjectID_marlinctl = "marlinctl"
+	ProjectID_beacon    = "beacon"
+	ProjectID_relay_eth = "relay_eth"
+)

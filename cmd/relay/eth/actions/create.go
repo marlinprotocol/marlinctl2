@@ -20,6 +20,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	cmn "github.com/marlinprotocol/ctl2/cmd/relay/eth/common"
+	cfg "github.com/marlinprotocol/ctl2/cmd/relay/eth/config"
 	"github.com/marlinprotocol/ctl2/modules/registry"
 	projectRunners "github.com/marlinprotocol/ctl2/modules/runner/relay_eth"
 	"github.com/marlinprotocol/ctl2/modules/util"
@@ -32,7 +34,7 @@ var raDiscoveryAddrs, raHeartbeatAddrs, raDataDir, raDiscoveryPort, raPubsubPort
 var CreateCmd = &cobra.Command{
 	Use:     "create",
 	Short:   `Create an ethrelay on local system`,
-	PreRunE: ConfigTest,
+	PreRunE: cfg.ConfigTest,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(runtimeArgs) == 0 {
 			runtimeArgs["DiscoveryAddrs"] = raDiscoveryAddrs
@@ -47,12 +49,12 @@ var CreateCmd = &cobra.Command{
 
 		}
 		var projectConfig types.Project
-		err := viper.UnmarshalKey(projectId, &projectConfig)
+		err := viper.UnmarshalKey(cmn.ProjectID, &projectConfig)
 		if err != nil {
 			log.Error("Error while reading project config: ", err)
 			return
 		}
-		versionToRun, err := registry.GlobalRegistry.GetVersionToRun(projectId, updatePolicy, version)
+		versionToRun, err := registry.GlobalRegistry.GetVersionToRun(cmn.ProjectID, updatePolicy, version)
 		if err != nil {
 			log.Error("Error while getting version to run: ", err)
 			return
@@ -84,7 +86,7 @@ var CreateCmd = &cobra.Command{
 
 		projectConfig.CurrentVersion = versionToRun.Version
 
-		viper.Set(projectId, projectConfig)
+		viper.Set(cmn.ProjectID, projectConfig)
 		err = viper.WriteConfig()
 		if err != nil {
 			log.Error("Failure while updating config for current version: ", err.Error())

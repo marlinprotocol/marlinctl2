@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 
+	cmn "github.com/marlinprotocol/ctl2/cmd/relay/eth/common"
 	"github.com/marlinprotocol/ctl2/modules/registry"
 	"github.com/marlinprotocol/ctl2/modules/util"
 	"github.com/marlinprotocol/ctl2/types"
@@ -12,49 +13,53 @@ import (
 	"github.com/spf13/viper"
 )
 
-var (
-	enableBeta   bool
-	runtime      string
-	version      string
-	instanceId   string
-	projectId    string = "relay_eth"
-	updatePolicy string
-	skipChecksum bool
-	forceRuntime bool
-	runtimeArgs  map[string]string
-)
-
-var ConfigTest = func(cmd *cobra.Command, args []string) error {
-	var marlinConfig types.Project
-	err := viper.UnmarshalKey("marlinctl", &marlinConfig)
-	if err != nil {
-		return err
-	}
-	if !viper.IsSet("relay_eth") {
+// AppCmd represents the registry command
+var ConfigResetCmd = &cobra.Command{
+	Use:     "reset",
+	Short:   "Reset to default configs",
+	Long:    `Reset to default configs`,
+	PreRunE: ConfigTest,
+	Run: func(cmd *cobra.Command, args []string) {
+		var marlinConfig types.Project
+		err := viper.UnmarshalKey(types.ProjectID_marlinctl, &marlinConfig)
+		if err != nil {
+			log.Error("Error while reading marlinctl configs: ", err.Error())
+			os.Exit(1)
+		}
 		log.Debug("Setting up default config for running relay_eth.")
 		updPol, ok1 := marlinConfig.AdditionalInfo["defaultprojectupdatepolicy"]
 		defRun, ok2 := marlinConfig.AdditionalInfo["defaultprojectruntime"]
 		if ok1 && ok2 {
-			setupConfiguration(false,
+			err = SetupConfiguration(false,
 				false,
 				updPol.(string),
 				defRun.(string),
 				"latest")
+			if err != nil {
+				log.Error("Error while resetting project to default config values ", err.Error())
+				os.Exit(1)
+			} else {
+				log.Info("Successfully reset project to default config values")
+			}
 		}
-	} else {
-		log.Debug("Project config found. Not creating defaults.")
-	}
-	return nil
+		if viper.IsSet(cmn.ProjectID + "_modified") {
+			err := util.RemoveConfigEntry(cmn.ProjectID + "_modified")
+			if err != nil {
+				log.Error("Error while removing modifications relating to the project from config file: " + err.Error())
+				os.Exit(1)
+			}
+		}
+	},
 }
 
-func setupConfiguration(enableBeta bool, forceRuntime bool, updatePolicy string, runtime string, version string) error {
+func SetupConfiguration(enableBeta bool, forceRuntime bool, updatePolicy string, runtime string, version string) error {
 	if !util.IsValidUpdatePolicy(updatePolicy) {
 		return errors.New("Unknown update policy: " + updatePolicy)
 	}
 
 	var projectConfig types.Project
 
-	err := viper.UnmarshalKey(projectId, &projectConfig)
+	err := viper.UnmarshalKey(cmn.ProjectID, &projectConfig)
 	if err != nil {
 		return err
 	}
@@ -84,7 +89,7 @@ func setupConfiguration(enableBeta bool, forceRuntime bool, updatePolicy string,
 	var currentVersion = "0.0.0"
 
 	if version != "latest" {
-		versions, err := registry.GlobalRegistry.GetVersions(projectId, releaseSubscriptions, version, updatePolicy, runtime)
+		versions, err := registry.GlobalRegistry.GetVersions(cmn.ProjectID, releaseSubscriptions, version, updatePolicy, runtime)
 		if err != nil {
 			log.Error("Error while fetching from global registry: ", err)
 			os.Exit(1)
@@ -103,13 +108,14 @@ func setupConfiguration(enableBeta bool, forceRuntime bool, updatePolicy string,
 		}
 	}
 
-	viper.Set(projectId, types.Project{
+	viper.Set(cmn.ProjectID, types.Project{
 		Subscription:   releaseSubscriptions,
 		UpdatePolicy:   updatePolicy,
 		CurrentVersion: currentVersion,
-		Storage:        viper.GetString("homedir") + "/projects/" + projectId,
+		Storage:        viper.GetString("homedir") + "/projects/" + cmn.ProjectID,
 		Runtime:        runtime,
 		ForcedRuntime:  false,
+		AdditionalInfo: nil,
 	})
 
 	return viper.WriteConfig()

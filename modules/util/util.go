@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/md5"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -26,6 +25,7 @@ import (
 	"github.com/schollz/progressbar/v3"
 	git "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
+	"gopkg.in/yaml.v2"
 )
 
 func GetUser() (*user.User, error) {
@@ -48,12 +48,21 @@ func GetUser() (*user.User, error) {
 }
 
 func RemoveConfigEntry(key string) error {
+	// viper yaml parser is bad -> it makes nil entries do weird things like
+	// map[interface{}]interface{}. Need a better yaml parser.
+	// Using Beats authors' workaround given here: https://github.com/go-yaml/yaml/issues/139
+	// Make sure whenever you call this function, viper is in sync with disk
+	// NVM - this yaml issue is also solved automatically with marshalling
+	// IT IS WEIRD. ISSUES MAY OCCUR AT A LATER DAY
+
 	configMap := viper.AllSettings()
 	delete(configMap, key)
-	encodedConfig, err := json.MarshalIndent(configMap, "", " ")
+
+	encodedConfig, err := yaml.Marshal(configMap)
 	if err != nil {
 		return err
 	}
+
 	err = viper.ReadConfig(bytes.NewReader(encodedConfig))
 	if err != nil {
 		return err
@@ -349,6 +358,14 @@ func IsValidUpdatePolicy(updatePolicy string) bool {
 	return false
 }
 
+func IsValidSubscription(subscription string) bool {
+	var subscriptions = map[string]bool{"public": true, "beta": true, "alpha": true, "dev": true}
+	if found, ok := subscriptions[subscription]; found && ok {
+		return true
+	}
+	return false
+}
+
 func DecodeVersionString(verString string) (int, int, int, string, int, error) {
 	dashSplit := strings.Split(verString, "-")
 	if len(dashSplit) < 1 {
@@ -439,4 +456,19 @@ func ExpandTilde(path string) string {
 		path = filepath.Join(dir, path[2:])
 	}
 	return path
+}
+
+func PrintPrettyDiff(message string) {
+	lines := strings.Split(message, "\n")
+	for _, l := range lines {
+		if len(l) < 1 {
+			continue
+		} else if l[0] == []byte("-")[0] {
+			fmt.Println(text.FgRed.Sprintf(l))
+		} else if l[0] == []byte("+")[0] {
+			fmt.Println(text.FgGreen.Sprintf(l))
+		} else {
+			fmt.Println(l)
+		}
+	}
 }
