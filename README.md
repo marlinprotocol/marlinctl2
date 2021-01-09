@@ -12,6 +12,14 @@ $ git clone https://github.com/marlinprotocol/marlinctl2.git
 
 Prerequisites: go >= 1.15.1, make, supervisord, supervisorctl
 
+NOTE: master may be in dev and may not reflect public release states. Build at you own risk.
+If you wish to run stable editions, please use the following:
+```
+wget http://public.artifacts.marlin.pro/projects/marlinctl/2.0.0/marlinctl-2.0.0-linux-amd64
+chmod +x marlinctl-2.0.0-linux-amd64
+mv marlinctl-2.0.0-linux-amd64 marlinctl 
+cp marlinctl /usr/local/bin/
+```
 To build, run
 ```
 $ make
