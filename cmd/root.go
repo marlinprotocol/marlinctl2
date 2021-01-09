@@ -73,7 +73,7 @@ It can spawn up beacons, gateways, relays on various platforms and runtimes.`,
 		currentTime := time.Now().Unix()
 		lastSyncTime := viper.GetTime("last_registry_sync").Unix()
 
-		if skipRegistrySync == false && (currentTime-lastSyncTime) > 15*60*60 || forcefulRegistrySync {
+		if skipRegistrySync == false && (currentTime-lastSyncTime) > 15*60 || forcefulRegistrySync {
 			err = registry.GlobalRegistry.Sync()
 			if err != nil {
 				log.Error("Error while syncing registry: " + err.Error())

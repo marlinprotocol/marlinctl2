@@ -17,8 +17,16 @@ limitations under the License.
 package appcommands
 
 import (
+	"encoding/json"
+	"os"
+
+	"github.com/google/go-cmp/cmp"
 	"github.com/marlinprotocol/ctl2/modules/runner"
+	"github.com/marlinprotocol/ctl2/modules/util"
+	"github.com/marlinprotocol/ctl2/types"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 type CommandDetails struct {
@@ -46,6 +54,7 @@ type app struct {
 	ConfigDiffCmd   CommandDetails
 	ConfigModifyCmd CommandDetails
 	ConfigResetCmd  CommandDetails
+	ConfigApplyCmd  CommandDetails
 }
 
 // Write Defaults logic
@@ -60,6 +69,11 @@ func GetNewApp(_projectID string,
 	_recreateCmd CommandDetails,
 	_restartCmd CommandDetails,
 	_versionsCmd CommandDetails,
+	_configShowCmd CommandDetails,
+	_configDiffCmd CommandDetails,
+	_configModifyCmd CommandDetails,
+	_configResetCmd CommandDetails,
+	_configApplyCmd CommandDetails,
 ) (app, error) {
 	createdApp := app{
 		ProjectID:      _projectID,
@@ -86,6 +100,21 @@ func GetNewApp(_projectID string,
 
 	createdApp.shallowCopyDescriptions(&createdApp.VersionsCmd, _versionsCmd)
 	createdApp.setupVersionsCommand()
+
+	createdApp.shallowCopyDescriptions(&createdApp.ConfigShowCmd, _configShowCmd)
+	createdApp.setupConfigShowCommand()
+
+	createdApp.shallowCopyDescriptions(&createdApp.ConfigDiffCmd, _configDiffCmd)
+	createdApp.setupConfigDiffCommand()
+
+	createdApp.shallowCopyDescriptions(&createdApp.ConfigModifyCmd, _configModifyCmd)
+	createdApp.setupConfigModifyCommand()
+
+	createdApp.shallowCopyDescriptions(&createdApp.ConfigResetCmd, _configResetCmd)
+	createdApp.setupConfigResetCommand()
+
+	createdApp.shallowCopyDescriptions(&createdApp.ConfigApplyCmd, _configApplyCmd)
+	createdApp.setupConfigApplyCommand()
 
 	return createdApp, nil
 }
@@ -401,4 +430,288 @@ func (a *app) setupVersionsCommand() {
 	}
 
 	a.VersionsCmd.ArgStore = make(map[string]interface{})
+}
+
+// Config Show command
+func (a *app) setupConfigShowCommand() {
+	a.ConfigShowCmd.Cmd = &cobra.Command{
+		Use:   a.ConfigShowCmd.Use,
+		Short: a.ConfigShowCmd.DescShort,
+		Long:  a.ConfigShowCmd.DescLong,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			additionalTest := a.ConfigShowCmd.AdditionalPreRunTest
+			err := a.setupDefaultConfigIfNotExists()
+			if err != nil {
+				return err
+			} else if err == nil && additionalTest != nil {
+				return additionalTest(cmd, args)
+			}
+			return nil
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			// Run additional argstore syncing procedures
+			if a.ConfigShowCmd.ArgStoreSyncer != nil {
+				a.ConfigShowCmd.ArgStoreSyncer()
+			}
+
+			// Run application
+			projConfig := a.getProjectConfigOrDie()
+			s, err := json.MarshalIndent(projConfig, "", "  ")
+			if err != nil {
+				log.Error("Error while decoding json: ", err.Error())
+				os.Exit(1)
+			}
+			log.Info("Current config:")
+			util.PrintPrettyDiff(string(s))
+		},
+	}
+
+	a.ConfigShowCmd.ArgStore = make(map[string]interface{})
+}
+
+// Config Diff command
+func (a *app) setupConfigDiffCommand() {
+	a.ConfigDiffCmd.Cmd = &cobra.Command{
+		Use:   a.ConfigDiffCmd.Use,
+		Short: a.ConfigDiffCmd.DescShort,
+		Long:  a.ConfigDiffCmd.DescLong,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			additionalTest := a.ConfigDiffCmd.AdditionalPreRunTest
+			err := a.setupDefaultConfigIfNotExists()
+			if err != nil {
+				return err
+			} else if err == nil && additionalTest != nil {
+				return additionalTest(cmd, args)
+			}
+			return nil
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			// Run additional argstore syncing procedures
+			if a.ConfigDiffCmd.ArgStoreSyncer != nil {
+				a.ConfigDiffCmd.ArgStoreSyncer()
+			}
+
+			// Run application
+			if !viper.IsSet(a.ProjectID + "_modified") {
+				log.Error("No modifications on disk to show diff with")
+				os.Exit(1)
+			}
+			projConfig := a.getProjectConfigOrDie()
+			s, err := json.MarshalIndent(projConfig, "", "  ")
+			if err != nil {
+				log.Error("Error while decoding json: ", err.Error())
+				os.Exit(1)
+			}
+			projConfigMod := a.getProjectConfigModOrDie()
+			smod, err := json.MarshalIndent(projConfigMod, "", "  ")
+			if err != nil {
+				log.Error("Error while decoding json (mod): ", err.Error())
+				os.Exit(1)
+			}
+			log.Info("Difference:")
+			util.PrintPrettyDiff(cmp.Diff(string(s), string(smod)))
+		},
+	}
+
+	a.ConfigDiffCmd.ArgStore = make(map[string]interface{})
+}
+
+// Config Modify command
+func (a *app) setupConfigModifyCommand() {
+	a.ConfigModifyCmd.Cmd = &cobra.Command{
+		Use:   a.ConfigModifyCmd.Use,
+		Short: a.ConfigModifyCmd.DescShort,
+		Long:  a.ConfigModifyCmd.DescLong,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			additionalTest := a.ConfigModifyCmd.AdditionalPreRunTest
+			err := a.setupDefaultConfigIfNotExists()
+			if err != nil {
+				return err
+			} else if err == nil && additionalTest != nil {
+				return additionalTest(cmd, args)
+			}
+			return nil
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			// Run additional argstore syncing procedures
+			if a.ConfigModifyCmd.ArgStoreSyncer != nil {
+				a.ConfigModifyCmd.ArgStoreSyncer()
+			}
+
+			// Extract runtime variables
+			subscriptions := a.ConfigModifyCmd.getStringSliceFromArgStoreOrDie("subscriptions")
+			updatePolicy := a.ConfigModifyCmd.getStringFromArgStoreOrDie("update-policy")
+			currentVersion := a.ConfigModifyCmd.getStringFromArgStoreOrDie("current-version")
+			storage := a.ConfigModifyCmd.getStringFromArgStoreOrDie("storage")
+			runtime := a.ConfigModifyCmd.getStringFromArgStoreOrDie("runtime")
+			forceRuntime := a.ConfigModifyCmd.getBoolFromArgStoreOrDie("force-runtime")
+
+			// Run application
+			projectConfigMod := a.getProjectConfigModOrProjectConfigBase()
+
+			if len(subscriptions) > 0 {
+				for _, v := range subscriptions {
+					if !util.IsValidSubscription(v) {
+						log.Error("Not a valid subscription line: ", v)
+						os.Exit(1)
+					}
+				}
+				projectConfigMod.Subscription = subscriptions
+			}
+
+			if updatePolicy != "" {
+				if !util.IsValidUpdatePolicy(updatePolicy) {
+					log.Error("Not a valid update policy: ", updatePolicy)
+					os.Exit(1)
+				}
+				projectConfigMod.UpdatePolicy = updatePolicy
+			}
+
+			if currentVersion != "" {
+				_, _, _, _, _, err := util.DecodeVersionString(currentVersion)
+				if err != nil {
+					log.Error("Error decoding version string: ", err.Error())
+					os.Exit(1)
+				}
+				projectConfigMod.CurrentVersion = currentVersion
+			}
+
+			if storage != "" {
+				projectConfigMod.Storage = storage
+			}
+
+			if runtime != "" {
+				suitableRuntimes := util.GetRuntimes()
+				if !forceRuntime {
+					if suitable, ok := suitableRuntimes[runtime]; !ok || !suitable {
+						log.Error("Runtime provided for configuration: " + runtime +
+							" may not be supported by marlinctl or is not supported by your system." +
+							" If you think this is incorrect, override this check using --force-runtime.")
+						os.Exit(1)
+					} else {
+						log.Debug("Runtime provided for configuration: " + runtime +
+							" seems to be supported. Going ahead with configuring this.")
+					}
+				} else {
+					log.Warning("Skipped runtime suitability check due to forced runtime")
+				}
+				projectConfigMod.Runtime = runtime
+				projectConfigMod.ForcedRuntime = forceRuntime
+			}
+
+			viper.Set(a.ProjectID+"_modified", projectConfigMod)
+
+			err := viper.WriteConfig()
+			if err != nil {
+				log.Error("Error while writing staging configs to disk: ", err.Error())
+				os.Exit(1)
+			}
+			log.Info("Modifications registered")
+		},
+	}
+
+	a.ConfigModifyCmd.ArgStore = make(map[string]interface{})
+
+	a.ConfigModifyCmd.ArgStore["subscriptions"] = a.ConfigModifyCmd.Cmd.Flags().StringSliceP("subscriptions", "s", []string{}, "Release channels to subscribe to")
+	a.ConfigModifyCmd.ArgStore["update-policy"] = a.ConfigModifyCmd.Cmd.Flags().StringP("update-policy", "u", "", "Update policy to set")
+	a.ConfigModifyCmd.ArgStore["current-version"] = a.ConfigModifyCmd.Cmd.Flags().StringP("current-version", "c", "", "Current version to set for executables")
+	a.ConfigModifyCmd.ArgStore["storage"] = a.ConfigModifyCmd.Cmd.Flags().StringP("storage", "l", "", "Storage location")
+	a.ConfigModifyCmd.ArgStore["runtime"] = a.ConfigModifyCmd.Cmd.Flags().StringP("runtime", "r", "", "Runtime to use")
+	a.ConfigModifyCmd.ArgStore["force-runtime"] = a.ConfigModifyCmd.Cmd.Flags().BoolP("force-runtime", "f", false, "Forcefully set runtime")
+}
+
+// Config Reset command
+func (a *app) setupConfigResetCommand() {
+	a.ConfigResetCmd.Cmd = &cobra.Command{
+		Use:   a.ConfigResetCmd.Use,
+		Short: a.ConfigResetCmd.DescShort,
+		Long:  a.ConfigResetCmd.DescLong,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			additionalTest := a.ConfigResetCmd.AdditionalPreRunTest
+			err := a.setupDefaultConfigIfNotExists()
+			if err != nil {
+				return err
+			} else if err == nil && additionalTest != nil {
+				return additionalTest(cmd, args)
+			}
+			return nil
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			// Run additional argstore syncing procedures
+			if a.ConfigResetCmd.ArgStoreSyncer != nil {
+				a.ConfigResetCmd.ArgStoreSyncer()
+			}
+
+			// Run application
+			err := util.RemoveConfigEntry(a.ProjectID)
+			if err != nil {
+				log.Error("Error while removing project config entry: ", a.ProjectID)
+				os.Exit(1)
+			}
+			err = util.RemoveConfigEntry(a.ProjectID + "_modified")
+			if err != nil {
+				log.Error("Error while removing project config entry: ", a.ProjectID+"_modified")
+				os.Exit(1)
+			}
+			err = a.setupDefaultConfigIfNotExists()
+			if err != nil {
+				log.Error("Error while setting up default config on disk: ", err)
+				os.Exit(1)
+			}
+		},
+	}
+
+	a.ConfigResetCmd.ArgStore = make(map[string]interface{})
+}
+
+// Config Apply command
+func (a *app) setupConfigApplyCommand() {
+	a.ConfigApplyCmd.Cmd = &cobra.Command{
+		Use:   a.ConfigApplyCmd.Use,
+		Short: a.ConfigApplyCmd.DescShort,
+		Long:  a.ConfigApplyCmd.DescLong,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			additionalTest := a.ConfigApplyCmd.AdditionalPreRunTest
+			err := a.setupDefaultConfigIfNotExists()
+			if err != nil {
+				return err
+			} else if err == nil && additionalTest != nil {
+				return additionalTest(cmd, args)
+			}
+			return nil
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			// Run additional argstore syncing procedures
+			if a.ConfigApplyCmd.ArgStoreSyncer != nil {
+				a.ConfigApplyCmd.ArgStoreSyncer()
+			}
+
+			// Run application
+			if !viper.IsSet(a.ProjectID + "_modified") {
+				log.Error("No modifications on disk to apply")
+				os.Exit(1)
+			}
+			var projectConfig types.Project
+			err := viper.UnmarshalKey(a.ProjectID+"_modified", &projectConfig)
+			if err != nil {
+				log.Error("Error while reading project configs: ", err.Error())
+				os.Exit(1)
+			}
+
+			viper.Set(a.ProjectID, projectConfig)
+
+			err = viper.WriteConfig()
+			if err != nil {
+				log.Error("Error while writing configs to disk: ", err.Error())
+				os.Exit(1)
+			}
+			err = util.RemoveConfigEntry(a.ProjectID + "_modified")
+			if err != nil {
+				log.Error("Error while removing project config entry: ", a.ProjectID+"_modified")
+				os.Exit(1)
+			}
+		},
+	}
+
+	a.ConfigApplyCmd.ArgStore = make(map[string]interface{})
 }

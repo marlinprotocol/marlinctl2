@@ -74,6 +74,35 @@ func (a *app) getProjectConfigOrDie() types.Project {
 	return projectConfig
 }
 
+func (a *app) getProjectConfigModOrDie() types.Project {
+	var projectConfig types.Project
+	err := viper.UnmarshalKey(a.ProjectID+"_modified", &projectConfig)
+	if err != nil {
+		log.Error("Error while reading project config: ", err)
+		os.Exit(1)
+	}
+	return projectConfig
+}
+
+func (a *app) getProjectConfigModOrProjectConfigBase() types.Project {
+	var projectConfig types.Project
+	if viper.IsSet(a.ProjectID + "_modified") {
+		err := viper.UnmarshalKey(a.ProjectID+"_modified", &projectConfig)
+		if err != nil {
+			log.Error("Error while reading project config (mod): ", err)
+			os.Exit(1)
+		}
+	} else {
+		err := viper.UnmarshalKey(a.ProjectID, &projectConfig)
+		if err != nil {
+			log.Error("Error while reading project config: ", err)
+			os.Exit(1)
+		}
+	}
+
+	return projectConfig
+}
+
 func (a *app) getVersionToRunOrDie(updatePolicy string, version string) registry.ProjectVersion {
 	versionToRun, err := registry.GlobalRegistry.GetVersionToRun(a.ProjectID, updatePolicy, version)
 	if err != nil {
@@ -214,6 +243,16 @@ func (c *CommandDetails) getStringFromArgStoreOrDie(key string) string {
 		os.Exit(1)
 	}
 	return ""
+}
+
+func (c *CommandDetails) getStringSliceFromArgStoreOrDie(key string) []string {
+	if v, ok := c.ArgStore[key]; ok {
+		return *(v.(*[]string))
+	} else {
+		log.Error("Cannot find key " + key + " in argstore. Aborting")
+		os.Exit(1)
+	}
+	return []string{}
 }
 
 func (c *CommandDetails) getBoolFromArgStoreOrDie(key string) bool {

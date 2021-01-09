@@ -41,7 +41,13 @@ func init() {
 		appcommands.CommandDetails{Use: "status", DescShort: "Show current status of currently running relay instances", DescLong: "Show current status of currently running relay instances"},
 		appcommands.CommandDetails{Use: "recreate", DescShort: "Recreate end to end relay (eth) instances", DescLong: "Recreate end to end relay (eth) instances"},
 		appcommands.CommandDetails{Use: "restart", DescShort: "Restart services for relay (eth) instances", DescLong: "Restart services for relay (eth) instances"},
-		appcommands.CommandDetails{Use: "versions", DescShort: "Show available versions for use", DescLong: "Show available versions for use"})
+		appcommands.CommandDetails{Use: "versions", DescShort: "Show available versions for use", DescLong: "Show available versions for use"},
+
+		appcommands.CommandDetails{Use: "show", DescShort: "Show current configuration residing on disk", DescLong: "Show current configuration residing on disk"},
+		appcommands.CommandDetails{Use: "diff", DescShort: "Show soft modifications to config staged for apply", DescLong: "Show soft modifications to config staged for apply"},
+		appcommands.CommandDetails{Use: "modify", DescShort: "Modify configs on disk", DescLong: "Modify configs on disk"},
+		appcommands.CommandDetails{Use: "reset", DescShort: "Reset Configurations on disk", DescLong: "Reset Configurations on disk"},
+		appcommands.CommandDetails{Use: "apply", DescShort: "Apply modifications to config", DescLong: "Apply modifications to config"})
 	if err != nil {
 		log.Error("Error while creating relay_eth application command tree")
 		os.Exit(1)
@@ -55,4 +61,11 @@ func init() {
 	EthCmd.AddCommand(app.RestartCmd.Cmd)
 	EthCmd.AddCommand(app.VersionsCmd.Cmd)
 
+	configCmd := &cobra.Command{Use: "config", Short: "Configurations of project set on disk", Long: "Configurations of project set on disk"}
+	EthCmd.AddCommand(configCmd)
+	configCmd.AddCommand(app.ConfigShowCmd.Cmd)
+	configCmd.AddCommand(app.ConfigDiffCmd.Cmd)
+	configCmd.AddCommand(app.ConfigModifyCmd.Cmd)
+	configCmd.AddCommand(app.ConfigResetCmd.Cmd)
+	configCmd.AddCommand(app.ConfigApplyCmd.Cmd)
 }

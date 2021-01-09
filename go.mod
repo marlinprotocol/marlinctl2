@@ -3,6 +3,7 @@ module github.com/marlinprotocol/ctl2
 go 1.15
 
 require (
+	github.com/Workiva/go-datastructures v1.0.52
 	github.com/getlantern/deepcopy v0.0.0-20160317154340-7f45deb8130a
 	github.com/go-openapi/strfmt v0.19.11 // indirect
 	github.com/google/go-cmp v0.5.2
