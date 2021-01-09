@@ -41,7 +41,7 @@ import (
 
 var cfgFile string
 var logLevel string
-var skipRegistrySync bool
+var skipRegistrySync, forcefulRegistrySync bool
 var skipMarlinctlUpdateCheck bool
 
 // RootCmd represents the base command when called without any subcommands
@@ -70,12 +70,23 @@ It can spawn up beacons, gateways, relays on various platforms and runtimes.`,
 		}
 		registry.SetupGlobalRegistry(configuredRegistries)
 
-		if !skipRegistrySync {
+		currentTime := time.Now().Unix()
+		lastSyncTime := viper.GetTime("last_registry_sync").Unix()
+
+		if skipRegistrySync == false && (currentTime-lastSyncTime) > 15*60*60 || forcefulRegistrySync {
 			err = registry.GlobalRegistry.Sync()
 			if err != nil {
 				log.Error("Error while syncing registry: " + err.Error())
 				os.Exit(1)
 			}
+			viper.Set("last_registry_sync", time.Now())
+			err := viper.WriteConfig()
+			if err != nil {
+				log.Error("Error while writing sync time to state: " + err.Error())
+				os.Exit(1)
+			}
+		} else {
+			log.Debug("Skipping registry sync procedure. Metrics: curr: ", currentTime, " lst: ", lastSyncTime, " skip,force: ", skipRegistrySync, " ", forcefulRegistrySync)
 		}
 
 		if !skipMarlinctlUpdateCheck {
@@ -84,7 +95,10 @@ It can spawn up beacons, gateways, relays on various platforms and runtimes.`,
 				log.Error("Error while upgrading marlinctl: " + err.Error())
 				os.Exit(1)
 			}
+		} else {
+			log.Debug("Skipping marlinctl update check")
 		}
+
 		err = util.ChownRmarlinctlDir()
 		if err != nil {
 			log.Error("Error while chowning .marlin " + err.Error())
@@ -113,6 +127,7 @@ func init() {
 	RootCmd.AddCommand(relay.RelayCmd)
 
 	RootCmd.PersistentFlags().BoolVar(&skipRegistrySync, "skip-registry-sync", false, "skip registry sync during run")
+	RootCmd.PersistentFlags().BoolVar(&forcefulRegistrySync, "forceful-registry-sync", false, "forceful registry sync. Do not use if you don't know what this is for.")
 	RootCmd.PersistentFlags().BoolVar(&skipMarlinctlUpdateCheck, "skip-update-check", false, "skip update check during run")
 	RootCmd.PersistentFlags().StringVar(&logLevel, "loglevel", "info", "marlinctl loglevel (default is INFO)")
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.marlin/ctl/state.yaml)")

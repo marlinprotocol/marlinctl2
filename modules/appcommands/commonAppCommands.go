@@ -131,7 +131,7 @@ func (a *app) setupCreateCommand() {
 			a.doPreRunSanityOrDie(runner)
 			a.doPrepareOrDie(runner)
 			a.doCreateOrDie(runner, runtimeArgs)
-			if version == "" {
+			if version != "" {
 				projConfig.CurrentVersion = version
 				a.doUpdateCurrentVersionOrDie(projConfig)
 			}
