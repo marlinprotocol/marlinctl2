@@ -46,7 +46,6 @@ var CreateCmd = &cobra.Command{
 			runtimeArgs["Name"] = raName
 			runtimeArgs["AbciVersion"] = raAbciVersion
 			runtimeArgs["SyncMode"] = raSyncMode
-
 		}
 		var projectConfig types.Project
 		err := viper.UnmarshalKey(cmn.ProjectID, &projectConfig)

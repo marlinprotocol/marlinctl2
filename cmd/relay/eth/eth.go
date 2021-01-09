@@ -16,8 +16,13 @@ limitations under the License.
 package eth
 
 import (
-	"github.com/marlinprotocol/ctl2/cmd/relay/eth/actions"
-	"github.com/marlinprotocol/ctl2/cmd/relay/eth/config"
+	// "github.com/marlinprotocol/ctl2/cmd/relay/eth/actions"
+	// "github.com/marlinprotocol/ctl2/cmd/relay/eth/config"
+	"os"
+
+	"github.com/marlinprotocol/ctl2/modules/appcommands"
+	projectRunners "github.com/marlinprotocol/ctl2/modules/runner/relay_eth"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -29,12 +34,25 @@ var EthCmd = &cobra.Command{
 }
 
 func init() {
-	EthCmd.AddCommand(actions.CreateCmd)
-	EthCmd.AddCommand(actions.RestartCmd)
-	EthCmd.AddCommand(actions.RecreateCmd)
-	EthCmd.AddCommand(actions.StatusCmd)
-	EthCmd.AddCommand(actions.DestroyCmd)
-	EthCmd.AddCommand(actions.VersionsCmd)
-	EthCmd.AddCommand(actions.LogsCmd)
-	EthCmd.AddCommand(config.ConfigCmd)
+	app, err := appcommands.GetNewApp("relay_eth", projectRunners.GetRunnerInstance,
+		appcommands.CommandDetails{Use: "create", DescShort: "Create relay for ethereum blockchain", DescLong: "Create relay for ethereum blockchain"},
+		appcommands.CommandDetails{Use: "destroy", DescShort: "Destroy relay for ethereum blockchain", DescLong: "Destroy relay for ethereum blockchain"},
+		appcommands.CommandDetails{Use: "logs", DescShort: "Tail logs for running relay (eth) instances", DescLong: "Tail logs for running relay (eth) instances"},
+		appcommands.CommandDetails{Use: "status", DescShort: "Show current status of currently running relay instances", DescLong: "Show current status of currently running relay instances"},
+		appcommands.CommandDetails{Use: "recreate", DescShort: "Recreate end to end relay (eth) instances", DescLong: "Recreate end to end relay (eth) instances"},
+		appcommands.CommandDetails{Use: "restart", DescShort: "Restart services for relay (eth) instances", DescLong: "Restart services for relay (eth) instances"},
+		appcommands.CommandDetails{Use: "versions", DescShort: "Show available versions for use", DescLong: "Show available versions for use"})
+	if err != nil {
+		log.Error("Error while creating relay_eth application command tree")
+		os.Exit(1)
+	}
+
+	EthCmd.AddCommand(app.CreateCmd.Cmd)
+	EthCmd.AddCommand(app.DestroyCmd.Cmd)
+	EthCmd.AddCommand(app.LogsCmd.Cmd)
+	EthCmd.AddCommand(app.StatusCmd.Cmd)
+	EthCmd.AddCommand(app.RecreateCmd.Cmd)
+	EthCmd.AddCommand(app.RestartCmd.Cmd)
+	EthCmd.AddCommand(app.VersionsCmd.Cmd)
+
 }

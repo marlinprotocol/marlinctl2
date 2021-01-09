@@ -45,6 +45,7 @@ func GetRunnerInstance(runnerId string, version string, storage string, runnerDa
 	}
 }
 
+// deprecated
 func GetResourceFileLocation(storage string, instanceId string) string {
 	return storage + "/common/project_relay_eth_instance" + instanceId + ".resource"
 }
