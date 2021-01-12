@@ -36,7 +36,6 @@ type CommandDetails struct {
 	Cmd                  *cobra.Command
 	AdditionalPreRunTest func(cmd *cobra.Command, args []string) error
 	ArgStore             map[string]interface{}
-	ArgStoreSyncer       func()
 }
 
 type app struct {
@@ -136,11 +135,6 @@ func (a *app) setupCreateCommand() {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			// Run additional argstore syncing procedures
-			if a.CreateCmd.ArgStoreSyncer != nil {
-				a.CreateCmd.ArgStoreSyncer()
-			}
-
 			// Extract runtime variables
 			version := a.CreateCmd.getStringFromArgStoreOrDie("version")
 			instanceID := a.CreateCmd.getStringFromArgStoreOrDie("instance-id")
@@ -157,6 +151,10 @@ func (a *app) setupCreateCommand() {
 				false,
 				skipChecksum,
 				instanceID)
+
+			// MESSY SUBSTITUTIONS
+			a.relayEthCreateSubstitutions(versionToRun.RunnerId)
+
 			a.doPreRunSanityOrDie(runner)
 			a.doPrepareOrDie(runner)
 			a.doCreateOrDie(runner, runtimeArgs)
@@ -192,10 +190,6 @@ func (a *app) setupDestroyCommand() {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			// Run additional argstore syncing procedures
-			if a.DestroyCmd.ArgStoreSyncer != nil {
-				a.DestroyCmd.ArgStoreSyncer()
-			}
 
 			// Extract runtime variables
 			instanceID := a.CreateCmd.getStringFromArgStoreOrDie("instance-id")
@@ -238,10 +232,6 @@ func (a *app) setupLogsCommand() {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			// Run additional argstore syncing procedures
-			if a.LogsCmd.ArgStoreSyncer != nil {
-				a.LogsCmd.ArgStoreSyncer()
-			}
 
 			// Extract runtime variables
 			instanceID := a.LogsCmd.getStringFromArgStoreOrDie("instance-id")
@@ -283,10 +273,6 @@ func (a *app) setupStatusCommand() {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			// Run additional argstore syncing procedures
-			if a.StatusCmd.ArgStoreSyncer != nil {
-				a.StatusCmd.ArgStoreSyncer()
-			}
 
 			// Extract runtime variables
 			instanceID := a.StatusCmd.getStringFromArgStoreOrDie("instance-id")
@@ -328,10 +314,6 @@ func (a *app) setupRecreateCommand() {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			// Run additional argstore syncing procedures
-			if a.RecreateCmd.ArgStoreSyncer != nil {
-				a.RecreateCmd.ArgStoreSyncer()
-			}
 
 			// Extract runtime variables
 			instanceID := a.RecreateCmd.getStringFromArgStoreOrDie("instance-id")
@@ -373,10 +355,6 @@ func (a *app) setupRestartCommand() {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			// Run additional argstore syncing procedures
-			if a.RestartCmd.ArgStoreSyncer != nil {
-				a.RestartCmd.ArgStoreSyncer()
-			}
 
 			// Extract runtime variables
 			instanceID := a.RestartCmd.getStringFromArgStoreOrDie("instance-id")
@@ -418,10 +396,6 @@ func (a *app) setupVersionsCommand() {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			// Run additional argstore syncing procedures
-			if a.VersionsCmd.ArgStoreSyncer != nil {
-				a.VersionsCmd.ArgStoreSyncer()
-			}
 
 			// Run application
 			projConfig := a.getProjectConfigOrDie()
@@ -449,10 +423,6 @@ func (a *app) setupConfigShowCommand() {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			// Run additional argstore syncing procedures
-			if a.ConfigShowCmd.ArgStoreSyncer != nil {
-				a.ConfigShowCmd.ArgStoreSyncer()
-			}
 
 			// Run application
 			projConfig := a.getProjectConfigOrDie()
@@ -486,10 +456,6 @@ func (a *app) setupConfigDiffCommand() {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			// Run additional argstore syncing procedures
-			if a.ConfigDiffCmd.ArgStoreSyncer != nil {
-				a.ConfigDiffCmd.ArgStoreSyncer()
-			}
 
 			// Run application
 			if !viper.IsSet(a.ProjectID + "_modified") {
@@ -533,10 +499,6 @@ func (a *app) setupConfigModifyCommand() {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			// Run additional argstore syncing procedures
-			if a.ConfigModifyCmd.ArgStoreSyncer != nil {
-				a.ConfigModifyCmd.ArgStoreSyncer()
-			}
 
 			// Extract runtime variables
 			subscriptions := a.ConfigModifyCmd.getStringSliceFromArgStoreOrDie("subscriptions")
@@ -637,10 +599,6 @@ func (a *app) setupConfigResetCommand() {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			// Run additional argstore syncing procedures
-			if a.ConfigResetCmd.ArgStoreSyncer != nil {
-				a.ConfigResetCmd.ArgStoreSyncer()
-			}
 
 			// Run application
 			err := util.RemoveConfigEntry(a.ProjectID)
@@ -681,10 +639,6 @@ func (a *app) setupConfigApplyCommand() {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			// Run additional argstore syncing procedures
-			if a.ConfigApplyCmd.ArgStoreSyncer != nil {
-				a.ConfigApplyCmd.ArgStoreSyncer()
-			}
 
 			// Run application
 			if !viper.IsSet(a.ProjectID + "_modified") {

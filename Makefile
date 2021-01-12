@@ -8,10 +8,11 @@ BUILDCOMMIT=$(shell git rev-parse HEAD)
 BUILDLINE=$(shell git rev-parse --abbrev-ref HEAD)
 CURRENTTIME=$(shell date -u '+%d-%m-%Y_%H-%M-%S')@UTC
 CFGTEMPLATE=$(shell cat version/marlincfg_texttemplate.yaml | sed ':a;N;$!ba;s/\n/\\n/g')
+CTL2VERSION=$(MARLINCTL2BUILDVERSIONSTRING)
 
 release:
 	$(GOBUILD) -ldflags="\
-	-X github.com/marlinprotocol/ctl2/version.ApplicationVersion=2.0.0 \
+	-X github.com/marlinprotocol/ctl2/version.ApplicationVersion=$(CTL2VERSION) \
 	-X github.com/marlinprotocol/ctl2/version.buildCommit=$(BUILDLINE)@$(BUILDCOMMIT) \
 	-X github.com/marlinprotocol/ctl2/version.buildTime=$(CURRENTTIME) \
 	-linkmode=external" \
