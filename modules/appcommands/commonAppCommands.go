@@ -153,13 +153,14 @@ func (a *app) setupCreateCommand() {
 				instanceID)
 
 			// MESSY SUBSTITUTIONS
+			a.beaconCreateSusbstitutions(versionToRun.RunnerId)
 			a.relayEthCreateSubstitutions(versionToRun.RunnerId)
 
 			a.doPreRunSanityOrDie(runner)
 			a.doPrepareOrDie(runner)
 			a.doCreateOrDie(runner, runtimeArgs)
-			if version != "" {
-				projConfig.CurrentVersion = version
+			if version == "" {
+				projConfig.CurrentVersion = versionToRun.Version
 				a.doUpdateCurrentVersionOrDie(projConfig)
 			}
 		},

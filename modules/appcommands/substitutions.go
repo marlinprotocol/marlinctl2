@@ -26,3 +26,22 @@ func (a *app) relayEthCreateSubstitutions(runnerID string) {
 		a.CreateCmd.ArgStore["runtime-args"] = runtimeArgs
 	}
 }
+
+// --------------------- BEACON ------------------------------------
+
+func (a *app) beaconCreateSusbstitutions(runnerID string) {
+	if a.ProjectID != "beacon" {
+		return
+	}
+
+	runtimeArgs := a.CreateCmd.getStringToStringFromArgStoreOrDie("runtime-args")
+	if len(runtimeArgs) == 0 {
+		runtimeArgs["DiscoveryAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("discovery-addr")
+		runtimeArgs["HeartbeatAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("heartbeat-addr")
+		runtimeArgs["BootstrapAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("bootstrap-addr")
+		runtimeArgs["KeystorePath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("keystore-path"))
+		runtimeArgs["KeystorePassPath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("keystore-pass-path"))
+
+		a.CreateCmd.ArgStore["runtime-args"] = runtimeArgs
+	}
+}

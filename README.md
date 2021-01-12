@@ -1,6 +1,23 @@
-# Marlinctl 2.0.0
+# marlinctl2
 
 Marlinctl 2.0 provides an improved process management command line interface for setting up the different components of the Marlin network.
+
+# Stable releases
+
+If you wish to run stable releases compiled by marlin team, please use our public release artifacts. Following is our latest release artifact for you.
+```
+wget http://public.artifacts.marlin.pro/projects/marlinctl/2.0.0/marlinctl-2.0.0-linux-amd64 --output-document=/usr/local/bin/marlinctl
+sudo chmod +x /usr/local/bin/marlinctl
+```
+If you run `marlinctl -v && md5sum /usr/local/bin/marlinctl`, it should return the following valid results for latest release:
+```
+marlinctl version 2.0.0 build master@ea6097ddcacf62be617fbc605e64c19db426fd1f
+Compiled on: 03-01-2021_09-18-09@UTC
+bec6caaa7c6336485964165b9e29edfd  marlinctl-2.0.0-linux-amd64
+```
+
+Always try running the latest version of marlinctl. Marlinctl will auto-update by default if new versions are found upstream.
+
 
 # Cloning
 
@@ -10,20 +27,13 @@ $ git clone https://github.com/marlinprotocol/marlinctl2.git
 
 # Building
 
+Only for development purposes, not for release builds unless by marlin team.
+
 Prerequisites: go >= 1.15.1, make, supervisord, supervisorctl
 
-NOTE: master may be in dev and may not reflect public release states. Build at you own risk.
-If you wish to run stable editions, please use the following:
+To build marlinctl2 tagged with version 2.0.0 from repository, run
 ```
-wget http://public.artifacts.marlin.pro/projects/marlinctl/2.0.0/marlinctl-2.0.0-linux-amd64
-chmod +x marlinctl-2.0.0-linux-amd64
-mv marlinctl-2.0.0-linux-amd64 marlinctl 
-cp marlinctl /usr/local/bin/
-```
-To build, run
-```
-$ make
-$ make install
+$ sh mk.sh 2.0.0
 ```
 A `marlinctl` executable should be built inside the `build` directory
 
