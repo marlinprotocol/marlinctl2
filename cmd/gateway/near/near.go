@@ -13,32 +13,32 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package iris
+package near
 
 import (
 	"os"
 
 	"github.com/marlinprotocol/ctl2/modules/appcommands"
-	projectRunners "github.com/marlinprotocol/ctl2/modules/runner/gateway_iris"
+	projectRunners "github.com/marlinprotocol/ctl2/modules/runner/gateway_near"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
 // AppCmd represents the registry command
-var IrisCmd = &cobra.Command{
-	Use:   "iris",
-	Short: "Iris Gateway",
-	Long:  `Iris Gateway`,
+var NearCmd = &cobra.Command{
+	Use:   "near",
+	Short: "Near Gateway",
+	Long:  `Near Gateway`,
 }
 
 func init() {
-	app, err := appcommands.GetNewApp("gateway_iris", projectRunners.GetRunnerInstance,
-		appcommands.CommandDetails{Use: "create", DescShort: "Create gateway for irisnet blockchain", DescLong: "Create gateway for irisnet blockchain"},
-		appcommands.CommandDetails{Use: "destroy", DescShort: "Destroy gateway for irisnet blockchain", DescLong: "Destroy gateway for irisnet blockchain"},
-		appcommands.CommandDetails{Use: "logs", DescShort: "Tail logs for running gateway (irisnet) instances", DescLong: "Tail logs for running gateway (irisnet) instances"},
-		appcommands.CommandDetails{Use: "status", DescShort: "Show status of currently running gateway (irisnet) instances", DescLong: "Show status of currently running gateway (irisnet) instances"},
-		appcommands.CommandDetails{Use: "recreate", DescShort: "Recreate end to end gateway (irisnet) instances", DescLong: "Recreate end to end gateway (irisnet) instances"},
-		appcommands.CommandDetails{Use: "restart", DescShort: "Restart services for gateway (irisnet) instances", DescLong: "Restart services for gateway (irisnet) instances"},
+	app, err := appcommands.GetNewApp("gateway_near", projectRunners.GetRunnerInstance,
+		appcommands.CommandDetails{Use: "create", DescShort: "Create gateway for near blockchain", DescLong: "Create gateway for near blockchain"},
+		appcommands.CommandDetails{Use: "destroy", DescShort: "Destroy gateway for near blockchain", DescLong: "Destroy gateway for near blockchain"},
+		appcommands.CommandDetails{Use: "logs", DescShort: "Tail logs for running gateway (near) instances", DescLong: "Tail logs for running gateway (near) instances"},
+		appcommands.CommandDetails{Use: "status", DescShort: "Show status of currently running gateway (near) instances", DescLong: "Show status of currently running gateway (near) instances"},
+		appcommands.CommandDetails{Use: "recreate", DescShort: "Recreate end to end gateway (near) instances", DescLong: "Recreate end to end gateway (near) instances"},
+		appcommands.CommandDetails{Use: "restart", DescShort: "Restart services for gateway (near) instances", DescLong: "Restart services for gateway (near) instances"},
 		appcommands.CommandDetails{Use: "versions", DescShort: "Show available versions for use", DescLong: "Show available versions for use"},
 
 		appcommands.CommandDetails{Use: "show", DescShort: "Show current configuration residing on disk", DescLong: "Show current configuration residing on disk"},
@@ -51,16 +51,16 @@ func init() {
 		os.Exit(1)
 	}
 
-	IrisCmd.AddCommand(app.CreateCmd.Cmd)
-	IrisCmd.AddCommand(app.DestroyCmd.Cmd)
-	IrisCmd.AddCommand(app.LogsCmd.Cmd)
-	IrisCmd.AddCommand(app.StatusCmd.Cmd)
-	IrisCmd.AddCommand(app.RecreateCmd.Cmd)
-	IrisCmd.AddCommand(app.RestartCmd.Cmd)
-	IrisCmd.AddCommand(app.VersionsCmd.Cmd)
+	NearCmd.AddCommand(app.CreateCmd.Cmd)
+	NearCmd.AddCommand(app.DestroyCmd.Cmd)
+	NearCmd.AddCommand(app.LogsCmd.Cmd)
+	NearCmd.AddCommand(app.StatusCmd.Cmd)
+	NearCmd.AddCommand(app.RecreateCmd.Cmd)
+	NearCmd.AddCommand(app.RestartCmd.Cmd)
+	NearCmd.AddCommand(app.VersionsCmd.Cmd)
 
 	configCmd := &cobra.Command{Use: "config", Short: "Configurations of project set on disk", Long: "Configurations of project set on disk"}
-	IrisCmd.AddCommand(configCmd)
+	NearCmd.AddCommand(configCmd)
 	configCmd.AddCommand(app.ConfigShowCmd.Cmd)
 	configCmd.AddCommand(app.ConfigDiffCmd.Cmd)
 	configCmd.AddCommand(app.ConfigModifyCmd.Cmd)
