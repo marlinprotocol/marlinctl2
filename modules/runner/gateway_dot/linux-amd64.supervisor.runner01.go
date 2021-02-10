@@ -142,7 +142,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 		process_name={{.GatewayProgram}}
 		user={{.GatewayUser}}
 		directory={{.GatewayRunDir}}
-		command={{.GatewayExecutablePath}} --bridge-address {{.InternalListenAddr}} --keystore-path {{.ChainIdentity}} --listen-addr {{.ListenAddr}}
+		command={{.GatewayExecutablePath}} --bridge-addr {{.InternalListenAddr}} --keystore-path {{.ChainIdentity}} --listen-addr {{.ListenAddr}}
 		priority=100
 		numprocs=1
 		numprocs_start=1
