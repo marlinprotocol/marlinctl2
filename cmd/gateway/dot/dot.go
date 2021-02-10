@@ -77,7 +77,7 @@ func init() {
 	app.CreateCmd.ArgStore["bridge-listen-addr"] = app.CreateCmd.Cmd.Flags().StringP("bridge-listen-address", "l", "127.0.0.1:20901", "Bridge listen address")
 	app.CreateCmd.ArgStore["bridge-keystore-path"] = app.CreateCmd.Cmd.Flags().StringP("bridge-keystore-path", "k", "/etc/dot-keystore-path", "Keystore Path")
 	app.CreateCmd.ArgStore["bridge-keystore-pass-path"] = app.CreateCmd.Cmd.Flags().StringP("bridge-keystore-pass-path", "v", "/etc/dot-keystore-pass-path", "Keystore pass path")
-	app.CreateCmd.ArgStore["bridge-contracts"] = app.CreateCmd.Cmd.Flags().StringP("bridge-contracts", "c", "kovan", "mainnet/kovan")
+	app.CreateCmd.ArgStore["bridge-contracts"] = app.CreateCmd.Cmd.Flags().StringP("bridge-contracts", "c", "mainnet", "mainnet/kovan")
 
 	// ----------------------------------------------------------------------------------
 }
