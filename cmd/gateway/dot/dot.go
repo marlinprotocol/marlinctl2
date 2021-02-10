@@ -70,7 +70,7 @@ func init() {
 	// Extra flag additions for gateway_dot -----------------------------------------------
 
 	app.CreateCmd.ArgStore["gateway-keystore-path"] = app.CreateCmd.Cmd.Flags().StringP("gateway-keystore-path", "a", "gateway_dot.key", "Gateway's keystore path")
-	app.CreateCmd.ArgStore["gateway-listen-port"] = app.CreateCmd.Cmd.Flags().StringP("gateway-listen-port", "g", "127.0.0.1:20900", "Port on which gateway listens for connections from peer")
+	app.CreateCmd.ArgStore["gateway-listen-port"] = app.CreateCmd.Cmd.Flags().StringP("gateway-listen-port", "g", "20900", "Port on which gateway listens for connections from peer")
 	app.CreateCmd.ArgStore["bridge-discovery-addr"] = app.CreateCmd.Cmd.Flags().StringP("bridge-discovery-addr", "d", "0.0.0.0:20702", "Bridge discovery address")
 	app.CreateCmd.ArgStore["bridge-pubsub-addr"] = app.CreateCmd.Cmd.Flags().StringP("bridge-pubsub-addr", "p", "0.0.0.0:20700", "Bridge pubsub address")
 	app.CreateCmd.ArgStore["bridge-bootstrap-addr"] = app.CreateCmd.Cmd.Flags().StringP("bridge-bootstrap-addr", "b", "127.0.0.1:8002", "Bridge bootstrap address")
