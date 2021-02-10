@@ -55,9 +55,8 @@ func (a *app) gatewayDotCreateSubstitutions(runnerID string) {
 
 	runtimeArgs := a.CreateCmd.getStringToStringFromArgStoreOrDie("runtime-args")
 	if len(runtimeArgs) == 0 {
-
 		runtimeArgs["GatewayKeystorePath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("gateway-keystore-path"))
-		runtimeArgs["GatewayListenPort"] = a.CreateCmd.getStringFromArgStoreOrDie("gateway-listen-port")
+		runtimeArgs["GatewayListenAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("gateway-listen-addr")
 		runtimeArgs["BridgeDiscoveryAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("bridge-discovery-addr")
 		runtimeArgs["BridgePubsubAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("bridge-pubsub-addr")
 		runtimeArgs["BridgeBootstrapAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("bridge-bootstrap-addr")

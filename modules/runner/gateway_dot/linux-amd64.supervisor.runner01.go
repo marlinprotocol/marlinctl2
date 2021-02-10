@@ -142,7 +142,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 		process_name={{.GatewayProgram}}
 		user={{.GatewayUser}}
 		directory={{.GatewayRunDir}}
-		command={{.GatewayExecutablePath}} --bridge-address {{.BridgeListenAddr}} --keystore-path {{.GatewayKeystorePath}} --listen-port {{.GatewayListenPort}}
+		command={{.GatewayExecutablePath}} --bridge-address {{.BridgeListenAddr}} --keystore-path {{.GatewayKeystorePath}} --listen-addr {{.GatewayListenAddr}}
 		priority=100
 		numprocs=1
 		numprocs_start=1
@@ -478,7 +478,7 @@ func (r *linux_amd64_supervisor_runner01) Logs() error {
 
 type resource struct {
 	Runner, Version, StartTime                                                                                                                                                                               string
-	GatewayProgram, GatewayUser, GatewayRunDir, GatewayExecutablePath, GatewayKeystorePath, GatewayListenPort                                                                                                string
+	GatewayProgram, GatewayUser, GatewayRunDir, GatewayExecutablePath, GatewayKeystorePath, GatewayListenAddr                                                                                                string
 	BridgeProgram, BridgeUser, BridgeRunDir, BridgeExecutablePath, BridgeDiscoveryAddr, BridgePubsubAddr, BridgeBootstrapAddr, BridgeListenAddr, BridgeKeystorePath, BridgeKeystorePassPath, BridgeContracts string
 }
 
