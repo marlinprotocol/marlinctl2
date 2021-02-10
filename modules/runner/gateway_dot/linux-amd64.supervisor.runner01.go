@@ -113,41 +113,6 @@ func (r *linux_amd64_supervisor_runner01) Prepare() error {
 		return err
 	}
 
-	var keyfileDir = r.Storage + "/common"
-	err = util.CreateDirPathIfNotExists(keyfileDir)
-	if err != nil {
-		return err
-	}
-	var keyfileLocation = r.Storage + "/common/keyfile.json"
-	if _, err := os.Stat(keyfileLocation); os.IsNotExist(err) {
-		log.Debug("Creating a new keyfile since none found at " + keyfileLocation)
-		var gatewayLocation = r.Storage + "/" + r.Version + "/" + gatewayName
-		keyFileGenCommand := exec.Command(gatewayLocation, "keyfile", "--chain=cosmos-3", "--generate", "--filelocation="+keyfileLocation)
-		_, err := keyFileGenCommand.Output()
-		if err != nil {
-			return errors.New("Keyfile generation error: " + err.Error())
-		}
-		log.Debug("New Keyfile generated.")
-	}
-	keyfile, err := os.Open(keyfileLocation)
-	if err != nil {
-		return err
-	}
-	defer keyfile.Close()
-	byteValue, _ := ioutil.ReadAll(keyfile)
-	var keyFileData = struct {
-		NodeId string `json:"IdString"`
-	}{}
-	json.Unmarshal(byteValue, &keyFileData)
-
-	log.Info("Keyfile information")
-	util.PrettyPrintKVStruct(keyFileData)
-
-	err = util.ChownRmarlinctlDir()
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -158,8 +123,8 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 
 	substitutions := resource{
 		"linux-amd64.supervisor.runner01", r.Version, time.Now().Format(time.RFC822Z),
-		gatewayProgramName + r.InstanceId, defaultUser, "/", r.Storage + "/" + r.Version + "/" + gatewayName, r.Storage + "/common/keyfile.json", "21900", "127.0.0.1", "21901",
-		bridgeProgramName + r.InstanceId, defaultUser, "/", r.Storage + "/" + r.Version + "/" + bridgeName, "127.0.0.1:8002",
+		gatewayProgramName + r.InstanceId, defaultUser, "/", r.Storage + "/" + r.Version + "/" + gatewayName, "", "",
+		bridgeProgramName + r.InstanceId, defaultUser, "/", r.Storage + "/" + r.Version + "/" + bridgeName, "", "", "", "", "", "", "",
 	}
 
 	for k, v := range runtimeArgs {
@@ -177,7 +142,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 		process_name={{.GatewayProgram}}
 		user={{.GatewayUser}}
 		directory={{.GatewayRunDir}}
-		command={{.GatewayExecutablePath}} dataconnect --keyfile {{.GatewayKeyfile}} --listenportpeer {{.GatewayListenPortPeer}} --marlinip {{.GatewayMarlinIp}} --marlinport {{.GatewayMarlinPort}}
+		command={{.GatewayExecutablePath}} --bridge-address {{.BridgeListenAddr}} --keystore-path {{.GatewayKeystorePath}} --listen-port {{.GatewayListenPort}}
 		priority=100
 		numprocs=1
 		numprocs_start=1
@@ -198,7 +163,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 		process_name={{.BridgeProgram}}
 		user={{.BridgeUser}}
 		directory={{.BridgeRunDir}}
-		command={{.BridgeExecutablePath}} -b"{{.BridgeBootstrapAddr}}"
+		command={{.BridgeExecutablePath}} --discovery-addr {{.BridgeDiscoveryAddr}} --pubsub-addr {{.BridgePubsubAddr}} --beacon-addr {{.BridgeBootstrapAddr}} --listen-addr {{.BridgeListenAddr}} --keystore-path {{.BridgeKeystorePath}} --keystore-pass-path {{.BridgeKeystorePassPath}} --contracts {{.BridgeContracts}}  
 		priority=100
 		numprocs=1
 		numprocs_start=1
@@ -435,21 +400,6 @@ func (r *linux_amd64_supervisor_runner01) Status() error {
 	log.Info("Project configuration")
 	util.PrettyPrintKVStruct(projectConfig)
 
-	var keyfileLocation = r.Storage + "/common/keyfile.json"
-	keyfile, err := os.Open(keyfileLocation)
-	if err != nil {
-		return err
-	}
-	defer keyfile.Close()
-	byteValue, _ := ioutil.ReadAll(keyfile)
-	var keyFileData = struct {
-		NodeId string `json:"IdString"`
-	}{}
-	json.Unmarshal(byteValue, &keyFileData)
-
-	log.Info("Keyfile information")
-	util.PrettyPrintKVStruct(keyFileData)
-
 	log.Info("Resource information")
 	util.PrettyPrintKVStruct(resData)
 
@@ -527,9 +477,9 @@ func (r *linux_amd64_supervisor_runner01) Logs() error {
 }
 
 type resource struct {
-	Runner, Version, StartTime                                                                                                                   string
-	GatewayProgram, GatewayUser, GatewayRunDir, GatewayExecutablePath, GatewayKeyfile, GatewayListenPortPeer, GatewayMarlinIp, GatewayMarlinPort string
-	BridgeProgram, BridgeUser, BridgeRunDir, BridgeExecutablePath, BridgeBootstrapAddr                                                           string
+	Runner, Version, StartTime                                                                                                                                                                               string
+	GatewayProgram, GatewayUser, GatewayRunDir, GatewayExecutablePath, GatewayKeystorePath, GatewayListenPort                                                                                                string
+	BridgeProgram, BridgeUser, BridgeRunDir, BridgeExecutablePath, BridgeDiscoveryAddr, BridgePubsubAddr, BridgeBootstrapAddr, BridgeListenAddr, BridgeKeystorePath, BridgeKeystorePassPath, BridgeContracts string
 }
 
 func (r *linux_amd64_supervisor_runner01) fetchResourceInformation(fileLocation string) (bool, resource, error) {

@@ -45,3 +45,27 @@ func (a *app) beaconCreateSusbstitutions(runnerID string) {
 		a.CreateCmd.ArgStore["runtime-args"] = runtimeArgs
 	}
 }
+
+// --------------------- GATEWAY_DOT -------------------------------
+
+func (a *app) gatewayDotCreateSubstitutions(runnerID string) {
+	if a.ProjectID != "gateway_dot" {
+		return
+	}
+
+	runtimeArgs := a.CreateCmd.getStringToStringFromArgStoreOrDie("runtime-args")
+	if len(runtimeArgs) == 0 {
+
+		runtimeArgs["GatewayKeystorePath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("gateway-keystore-path"))
+		runtimeArgs["GatewayListenPort"] = a.CreateCmd.getStringFromArgStoreOrDie("gateway-listen-port")
+		runtimeArgs["BridgeDiscoveryAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("bridge-discovery-addr")
+		runtimeArgs["BridgePubsubAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("bridge-pubsub-addr")
+		runtimeArgs["BridgeBootstrapAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("bridge-bootstrap-addr")
+		runtimeArgs["BridgeListenAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("bridge-listen-addr")
+		runtimeArgs["BridgeKeystorePath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("bridge-keystore-path"))
+		runtimeArgs["BridgeKeystorePassPath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("bridge-keystore-pass-path"))
+		runtimeArgs["BridgeContracts"] = a.CreateCmd.getStringFromArgStoreOrDie("discovery-addr")
+
+		a.CreateCmd.ArgStore["runtime-args"] = runtimeArgs
+	}
+}

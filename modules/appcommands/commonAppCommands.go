@@ -155,6 +155,7 @@ func (a *app) setupCreateCommand() {
 			// MESSY SUBSTITUTIONS
 			a.beaconCreateSusbstitutions(versionToRun.RunnerId)
 			a.relayEthCreateSubstitutions(versionToRun.RunnerId)
+			a.gatewayDotCreateSubstitutions(versionToRun.RunnerId)
 
 			a.doPreRunSanityOrDie(runner)
 			a.doPrepareOrDie(runner)

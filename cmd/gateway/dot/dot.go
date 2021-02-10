@@ -69,15 +69,15 @@ func init() {
 
 	// Extra flag additions for gateway_iris -----------------------------------------------
 
-	// app.CreateCmd.ArgStore["discovery-addrs"] = app.CreateCmd.Cmd.Flags().StringP("discovery-addrs", "a", "127.0.0.1:8002", "Discovery address of relay")
-	// app.CreateCmd.ArgStore["heartbeat-addrs"] = app.CreateCmd.Cmd.Flags().StringP("heartbeat-addrs", "g", "127.0.0.1:8003", "Heartbeat address of relay")
-	// app.CreateCmd.ArgStore["datadir"] = app.CreateCmd.Cmd.Flags().StringP("datadir", "d", "~/.ethereum/", "Data directory")
-	// app.CreateCmd.ArgStore["discovery-port"] = app.CreateCmd.Cmd.Flags().StringP("discovery-port", "f", "", "Discovery port")
-	// app.CreateCmd.ArgStore["pubsub-port"] = app.CreateCmd.Cmd.Flags().StringP("pubsub-port", "p", "", "PubSub port")
-	// app.CreateCmd.ArgStore["address"] = app.CreateCmd.Cmd.Flags().StringP("address", "b", "", "Address")
-	// app.CreateCmd.ArgStore["name"] = app.CreateCmd.Cmd.Flags().StringP("name", "n", "", "Name of relay")
-	// app.CreateCmd.ArgStore["abci-version"] = app.CreateCmd.Cmd.Flags().StringP("abci-version", "c", "", "ABCI version")
-	// app.CreateCmd.ArgStore["sync-mode"] = app.CreateCmd.Cmd.Flags().StringP("sync-mode", "m", "light", "Sync mode of GETH")
+	app.CreateCmd.ArgStore["gateway-keystore-path"] = app.CreateCmd.Cmd.Flags().StringP("gateway-keystore-path", "a", "gateway_dot.key", "Gateway's keystore path")
+	app.CreateCmd.ArgStore["gateway-listen-port"] = app.CreateCmd.Cmd.Flags().StringP("gateway-listen-port", "g", "127.0.0.1:20900", "Port on which gateway listens for connections from peer")
+	app.CreateCmd.ArgStore["bridge-discovery-addr"] = app.CreateCmd.Cmd.Flags().StringP("bridge-discovery-addr", "d", "0.0.0.0:20702", "Bridge discovery address")
+	app.CreateCmd.ArgStore["bridge-pubsub-addr"] = app.CreateCmd.Cmd.Flags().StringP("bridge-pubsub-addr", "p", "0.0.0.0:20700", "Bridge pubsub address")
+	app.CreateCmd.ArgStore["bridge-bootstrap-addr"] = app.CreateCmd.Cmd.Flags().StringP("bridge-bootstrap-addr", "b", "127.0.0.1:8002", "Bridge bootstrap address")
+	app.CreateCmd.ArgStore["bridge-listen-addr"] = app.CreateCmd.Cmd.Flags().StringP("bridge-listen-address", "l", "127.0.0.1:20901", "Bridge listen address")
+	app.CreateCmd.ArgStore["bridge-keystore-path"] = app.CreateCmd.Cmd.Flags().StringP("bridge-keystore-path", "k", "/etc/dot-keystore-path", "Keystore Path")
+	app.CreateCmd.ArgStore["bridge-keystore-pass-path"] = app.CreateCmd.Cmd.Flags().StringP("bridge-keystore-pass-path", "v", "/etc/dot-keystore-pass-path", "Keystore pass path")
+	app.CreateCmd.ArgStore["bridge-contracts"] = app.CreateCmd.Cmd.Flags().StringP("bridge-contracts", "c", "kovan", "mainnet/kovan")
 
 	// ----------------------------------------------------------------------------------
 }
