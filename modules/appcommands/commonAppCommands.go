@@ -156,6 +156,7 @@ func (a *app) setupCreateCommand() {
 			a.beaconCreateSusbstitutions(versionToRun.RunnerId)
 			a.relayEthCreateSubstitutions(versionToRun.RunnerId)
 			a.gatewayDotCreateSubstitutions(versionToRun.RunnerId)
+			a.gatewayNearCreateSubstitutions(versionToRun.RunnerId)
 
 			a.doPreRunSanityOrDie(runner)
 			a.doPrepareOrDie(runner)

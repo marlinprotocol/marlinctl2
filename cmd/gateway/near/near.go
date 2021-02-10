@@ -47,7 +47,7 @@ func init() {
 		appcommands.CommandDetails{Use: "reset", DescShort: "Reset Configurations on disk", DescLong: "Reset Configurations on disk"},
 		appcommands.CommandDetails{Use: "apply", DescShort: "Apply modifications to config", DescLong: "Apply modifications to config"})
 	if err != nil {
-		log.Error("Error while creating gateway_iris application command tree")
+		log.Error("Error while creating gateway_near application command tree")
 		os.Exit(1)
 	}
 
@@ -67,17 +67,20 @@ func init() {
 	configCmd.AddCommand(app.ConfigResetCmd.Cmd)
 	configCmd.AddCommand(app.ConfigApplyCmd.Cmd)
 
-	// Extra flag additions for gateway_iris -----------------------------------------------
+	// Extra flag additions for gateway_near -----------------------------------------------
 
-	// app.CreateCmd.ArgStore["discovery-addrs"] = app.CreateCmd.Cmd.Flags().StringP("discovery-addrs", "a", "127.0.0.1:8002", "Discovery address of relay")
-	// app.CreateCmd.ArgStore["heartbeat-addrs"] = app.CreateCmd.Cmd.Flags().StringP("heartbeat-addrs", "g", "127.0.0.1:8003", "Heartbeat address of relay")
-	// app.CreateCmd.ArgStore["datadir"] = app.CreateCmd.Cmd.Flags().StringP("datadir", "d", "~/.ethereum/", "Data directory")
-	// app.CreateCmd.ArgStore["discovery-port"] = app.CreateCmd.Cmd.Flags().StringP("discovery-port", "f", "", "Discovery port")
-	// app.CreateCmd.ArgStore["pubsub-port"] = app.CreateCmd.Cmd.Flags().StringP("pubsub-port", "p", "", "PubSub port")
-	// app.CreateCmd.ArgStore["address"] = app.CreateCmd.Cmd.Flags().StringP("address", "b", "", "Address")
-	// app.CreateCmd.ArgStore["name"] = app.CreateCmd.Cmd.Flags().StringP("name", "n", "", "Name of relay")
-	// app.CreateCmd.ArgStore["abci-version"] = app.CreateCmd.Cmd.Flags().StringP("abci-version", "c", "", "ABCI version")
-	// app.CreateCmd.ArgStore["sync-mode"] = app.CreateCmd.Cmd.Flags().StringP("sync-mode", "m", "light", "Sync mode of GETH")
+	// ROSHAN This is where you define cli flags for gateway_near. On RHS you have cobra registrations for flags
+	// on left you have argstore where you set the values retrieved from cli. After these are read into argstore,
+	// substitution moves it into runtimeArgs making it ready for running the application (see substitutions.go)
+	app.CreateCmd.ArgStore["chain-identity"] = app.CreateCmd.Cmd.Flags().StringP("chain-identity", "a", "gateway_dot.key", "Gateway's keystore path")
+	app.CreateCmd.ArgStore["listen-addr"] = app.CreateCmd.Cmd.Flags().StringP("listen-addr", "g", "/ip4/127.0.0.1/tcp/20900", "Address on which gateway listens for connections from peer")
+	app.CreateCmd.ArgStore["discovery-addr"] = app.CreateCmd.Cmd.Flags().StringP("discovery-addr", "d", "0.0.0.0:20702", "Bridge discovery address")
+	app.CreateCmd.ArgStore["pubsub-addr"] = app.CreateCmd.Cmd.Flags().StringP("pubsub-addr", "p", "0.0.0.0:20700", "Bridge pubsub address")
+	app.CreateCmd.ArgStore["bootstrap-addr"] = app.CreateCmd.Cmd.Flags().StringP("bootstrap-addr", "b", "", "Bridge bootstrap address")
+	app.CreateCmd.ArgStore["internal-listen-addr"] = app.CreateCmd.Cmd.Flags().StringP("internal-listen-address", "l", "127.0.0.1:20901", "Bridge listen address")
+	app.CreateCmd.ArgStore["keystore-path"] = app.CreateCmd.Cmd.Flags().StringP("keystore-path", "k", "", "Keystore Path")
+	app.CreateCmd.ArgStore["keystore-pass-path"] = app.CreateCmd.Cmd.Flags().StringP("keystore-pass-path", "y", "", "Keystore pass path")
+	app.CreateCmd.ArgStore["contracts"] = app.CreateCmd.Cmd.Flags().StringP("contracts", "c", "mainnet", "mainnet/kovan")
 
 	// ----------------------------------------------------------------------------------
 }

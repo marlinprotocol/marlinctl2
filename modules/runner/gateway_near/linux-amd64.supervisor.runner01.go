@@ -25,8 +25,6 @@ import (
 type linux_amd64_supervisor_runner01_runnerdata struct {
 	Gateway         string
 	GatewayChecksum string
-	Bridge          string
-	BridgeChecksum  string
 }
 
 type linux_amd64_supervisor_runner01 struct {
@@ -39,13 +37,10 @@ type linux_amd64_supervisor_runner01 struct {
 
 const (
 	gatewayName               = "gateway_near_linux-amd64"
-	bridgeName                = "bridge_near_linux-amd64"
 	gatewayProgramName        = "gatewaynear"
-	bridgeProgramName         = "bridgenear"
 	defaultUser               = "root"
 	supervisorConfFiles       = "/etc/supervisor/conf.d"
 	gatewaySupervisorConfFile = "gatewaynear"
-	bridgeSupervisorConfFile  = "bridgenear"
 	logRootDir                = "/var/log/supervisor"
 	oldLogRootDir             = "/var/log/old_logs"
 	projectName               = "gateway_near"
@@ -69,7 +64,6 @@ func (r *linux_amd64_supervisor_runner01) Download() error {
 	}
 
 	var gatewayLocation = dirPath + "/" + gatewayName
-	var bridgeLocation = dirPath + "/" + bridgeName
 
 	if _, err := os.Stat(gatewayLocation); os.IsNotExist(err) {
 		log.Info("Fetching gateway from upstream for version ", r.Version)
@@ -83,24 +77,8 @@ func (r *linux_amd64_supervisor_runner01) Download() error {
 			log.Debug("Successully verified gateway's integrity")
 		}
 	}
-	if _, err := os.Stat(bridgeLocation); os.IsNotExist(err) {
-		log.Info("Fetching bridge from upstream for version ", r.Version)
-		util.DownloadFile(bridgeLocation, r.RunnerData.Bridge)
-	}
-	if !r.SkipChecksum {
-		err := util.VerifyChecksum(bridgeLocation, r.RunnerData.BridgeChecksum)
-		if err != nil {
-			return errors.New("Error while verifying bridge checksum: " + err.Error())
-		} else {
-			log.Debug("Successully verified bridge's integrity")
-		}
-	}
 
 	err = os.Chmod(gatewayLocation, 0755)
-	if err != nil {
-		return err
-	}
-	err = os.Chmod(bridgeLocation, 0755)
 	if err != nil {
 		return err
 	}
@@ -112,36 +90,6 @@ func (r *linux_amd64_supervisor_runner01) Prepare() error {
 	if err != nil {
 		return err
 	}
-
-	var keyfileDir = r.Storage + "/common"
-	err = util.CreateDirPathIfNotExists(keyfileDir)
-	if err != nil {
-		return err
-	}
-	var keyfileLocation = r.Storage + "/common/keyfile.json"
-	if _, err := os.Stat(keyfileLocation); os.IsNotExist(err) {
-		log.Debug("Creating a new keyfile since none found at " + keyfileLocation)
-		var gatewayLocation = r.Storage + "/" + r.Version + "/" + gatewayName
-		keyFileGenCommand := exec.Command(gatewayLocation, "keyfile", "--chain=cosmos-3", "--generate", "--filelocation="+keyfileLocation)
-		_, err := keyFileGenCommand.Output()
-		if err != nil {
-			return errors.New("Keyfile generation error: " + err.Error())
-		}
-		log.Debug("New Keyfile generated.")
-	}
-	keyfile, err := os.Open(keyfileLocation)
-	if err != nil {
-		return err
-	}
-	defer keyfile.Close()
-	byteValue, _ := ioutil.ReadAll(keyfile)
-	var keyFileData = struct {
-		NodeId string `json:"IdString"`
-	}{}
-	json.Unmarshal(byteValue, &keyFileData)
-
-	log.Info("Keyfile information")
-	util.PrettyPrintKVStruct(keyFileData)
 
 	err = util.ChownRmarlinctlDir()
 	if err != nil {
@@ -156,10 +104,16 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 		return errors.New("Resource file already exisits, cannot create a new instance: " + GetResourceFileLocation(r.Storage, r.InstanceId))
 	}
 
+	currentUser, err := util.GetUser()
+	if err != nil {
+		return err
+	}
+
+	// ROSHAN: Change substitution for RESOURCE object (definition of struct in file below)
 	substitutions := resource{
 		"linux-amd64.supervisor.runner01", r.Version, time.Now().Format(time.RFC822Z),
-		gatewayProgramName + r.InstanceId, defaultUser, "/", r.Storage + "/" + r.Version + "/" + gatewayName, r.Storage + "/common/keyfile.json", "21900", "127.0.0.1", "21901",
-		bridgeProgramName + r.InstanceId, defaultUser, "/", r.Storage + "/" + r.Version + "/" + bridgeName, "127.0.0.1:8002",
+		gatewayProgramName + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + gatewayName, "", "",
+		"", "", "", "", "", "",
 	}
 
 	for k, v := range runtimeArgs {
@@ -172,6 +126,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 	log.Info("Running configuration")
 	util.PrettyPrintKVStruct(substitutions)
 
+	// ROSHAN: Change for NEAR here
 	gt := template.Must(template.New("gateway-template").Parse(util.TrimSpacesEveryLine(`
 		[program:{{.GatewayProgram}}]
 		process_name={{.GatewayProgram}}
@@ -193,27 +148,6 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 		panic(err)
 	}
 
-	bt := template.Must(template.New("bridge-template").Parse(util.TrimSpacesEveryLine(`
-		[program:{{.BridgeProgram}}]
-		process_name={{.BridgeProgram}}
-		user={{.BridgeUser}}
-		directory={{.BridgeRunDir}}
-		command={{.BridgeExecutablePath}} -b"{{.BridgeBootstrapAddr}}"
-		priority=100
-		numprocs=1
-		numprocs_start=1
-		autostart=true
-		autorestart=true
-	`)))
-	bFile, err := os.Create(supervisorConfFiles + "/" + bridgeSupervisorConfFile + r.InstanceId + ".conf")
-	if err != nil {
-		return err
-	}
-	defer bFile.Close()
-	if err := bt.Execute(bFile, substitutions); err != nil {
-		panic(err)
-	}
-
 	_, err = exec.Command("supervisorctl", "reread").Output()
 	if err != nil {
 		return errors.New("Error while supervisorctl reread: " + err.Error())
@@ -223,12 +157,6 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 	if err != nil {
 		return errors.New("Error while supervisorctl update: " + err.Error())
 	}
-
-	_, err = exec.Command("supervisorctl", "start", substitutions.BridgeProgram).Output()
-	if err != nil {
-		return errors.New("Error while starting bridge: " + err.Error())
-	}
-	log.Debug("Trigerred bridge run")
 
 	_, err = exec.Command("supervisorctl", "start", substitutions.GatewayProgram).Output()
 	if err != nil {
@@ -248,7 +176,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 		statusLines := strings.Split(string(status), "\n")
 		var anyStatusLine = false
 		for _, v := range statusLines {
-			if match, err := regexp.MatchString(gatewayProgramName+r.InstanceId+"|"+bridgeProgramName+r.InstanceId, v); err == nil && match {
+			if match, err := regexp.MatchString(gatewayProgramName+r.InstanceId, v); err == nil && match {
 				vSplit := strings.Split(v, " ")
 				supervisorStatus[vSplit[0]] = strings.Trim(strings.Join(vSplit[1:], " "), " ")
 				anyStatusLine = true
@@ -276,12 +204,11 @@ func (r *linux_amd64_supervisor_runner01) Restart() error {
 	}
 
 	_, err1 := exec.Command("supervisorctl", "restart", resData.GatewayProgram).Output()
-	_, err2 := exec.Command("supervisorctl", "restart", resData.BridgeProgram).Output()
 
-	if err1 == nil && err2 == nil {
+	if err1 == nil {
 		log.Info("Triggered restart")
 	} else {
-		log.Warning("Triggered restart, however supervisor did return some errors. ", err1.Error(), " ", err2.Error())
+		log.Warning("Triggered restart, however supervisor did return some errors. ", err1.Error())
 	}
 
 	return nil
@@ -346,15 +273,6 @@ func (r *linux_amd64_supervisor_runner01) Destroy() error {
 	}
 	log.Debug("Trigerred gateway stop")
 
-	returned, err = exec.Command("supervisorctl", "stop", resData.BridgeProgram).Output()
-	if err != nil {
-		alreadyDead, err2 := regexp.MatchString("not running", string(returned))
-		if !alreadyDead || err2 != nil {
-			return errors.New("Error while stopping bridge: " + err.Error())
-		}
-	}
-	log.Debug("Trigerred bridge stop")
-
 	log.Info("Waiting 5 seconds for SIGTERM to take effect")
 	time.Sleep(5 * time.Second)
 
@@ -363,15 +281,9 @@ func (r *linux_amd64_supervisor_runner01) Destroy() error {
 
 func (r *linux_amd64_supervisor_runner01) PostRun() error {
 	var gatewayConfig = supervisorConfFiles + "/" + gatewaySupervisorConfFile + r.InstanceId + ".conf"
-	var bridgeConfig = supervisorConfFiles + "/" + bridgeSupervisorConfFile + r.InstanceId + ".conf"
 
 	if _, err := os.Stat(gatewayConfig); !os.IsNotExist(err) {
 		if err := os.Remove(gatewayConfig); err != nil {
-			return err
-		}
-	}
-	if _, err := os.Stat(bridgeConfig); !os.IsNotExist(err) {
-		if err := os.Remove(bridgeConfig); err != nil {
 			return err
 		}
 	}
@@ -382,7 +294,7 @@ func (r *linux_amd64_supervisor_runner01) PostRun() error {
 	}
 	err = filepath.Walk(logRootDir, func(path string, f os.FileInfo, _ error) error {
 		if !f.IsDir() {
-			r, err := regexp.MatchString(gatewayProgramName+r.InstanceId+".*|"+bridgeProgramName+r.InstanceId+".*", f.Name())
+			r, err := regexp.MatchString(gatewayProgramName+r.InstanceId+".*", f.Name())
 			if err == nil && r {
 				err2 := os.Rename(logRootDir+"/"+f.Name(), oldLogRootDir+"/previous_run_"+f.Name())
 				if err2 != nil {
@@ -435,21 +347,6 @@ func (r *linux_amd64_supervisor_runner01) Status() error {
 	log.Info("Project configuration")
 	util.PrettyPrintKVStruct(projectConfig)
 
-	var keyfileLocation = r.Storage + "/common/keyfile.json"
-	keyfile, err := os.Open(keyfileLocation)
-	if err != nil {
-		return err
-	}
-	defer keyfile.Close()
-	byteValue, _ := ioutil.ReadAll(keyfile)
-	var keyFileData = struct {
-		NodeId string `json:"IdString"`
-	}{}
-	json.Unmarshal(byteValue, &keyFileData)
-
-	log.Info("Keyfile information")
-	util.PrettyPrintKVStruct(keyFileData)
-
 	log.Info("Resource information")
 	util.PrettyPrintKVStruct(resData)
 
@@ -463,7 +360,7 @@ func (r *linux_amd64_supervisor_runner01) Status() error {
 	statusLines := strings.Split(string(status), "\n")
 	var anyStatusLine = false
 	for _, v := range statusLines {
-		if match, err := regexp.MatchString(gatewayProgramName+r.InstanceId+"|"+bridgeProgramName+r.InstanceId, v); err == nil && match {
+		if match, err := regexp.MatchString(gatewayProgramName+r.InstanceId, v); err == nil && match {
 			vSplit := strings.Split(v, " ")
 			supervisorStatus[vSplit[0]] = strings.Trim(strings.Join(vSplit[1:], " "), " ")
 			anyStatusLine = true
@@ -493,9 +390,7 @@ func (r *linux_amd64_supervisor_runner01) Logs() error {
 	err = filepath.Walk(logRootDir, func(path string, f os.FileInfo, _ error) error {
 		if !f.IsDir() {
 			for _, v := range []string{gatewaySupervisorConfFile + r.InstanceId + "-stdout.*",
-				gatewaySupervisorConfFile + r.InstanceId + "-stderr.*",
-				bridgeSupervisorConfFile + r.InstanceId + "-stdout.*",
-				bridgeSupervisorConfFile + r.InstanceId + "-stderr.*"} {
+				gatewaySupervisorConfFile + r.InstanceId + "-stderr.*"} {
 				r, err := regexp.MatchString(v, f.Name())
 				if err == nil && r {
 					fileSubscriptions[v[:len(v)-2]] = logRootDir + f.Name()
@@ -527,9 +422,9 @@ func (r *linux_amd64_supervisor_runner01) Logs() error {
 }
 
 type resource struct {
-	Runner, Version, StartTime                                                                                                                   string
-	GatewayProgram, GatewayUser, GatewayRunDir, GatewayExecutablePath, GatewayKeyfile, GatewayListenPortPeer, GatewayMarlinIp, GatewayMarlinPort string
-	BridgeProgram, BridgeUser, BridgeRunDir, BridgeExecutablePath, BridgeBootstrapAddr                                                           string
+	Runner, Version, StartTime                                                                   string
+	GatewayProgram, GatewayUser, GatewayRunDir, GatewayExecutablePath, ChainIdentity, ListenAddr string
+	DiscoveryAddr, PubsubAddr, BootstrapAddr, KeystorePath, KeystorePassPath, Contracts          string
 }
 
 func (r *linux_amd64_supervisor_runner01) fetchResourceInformation(fileLocation string) (bool, resource, error) {
