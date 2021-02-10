@@ -64,7 +64,7 @@ func (a *app) gatewayDotCreateSubstitutions(runnerID string) {
 		runtimeArgs["BridgeListenAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("bridge-listen-addr")
 		runtimeArgs["BridgeKeystorePath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("bridge-keystore-path"))
 		runtimeArgs["BridgeKeystorePassPath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("bridge-keystore-pass-path"))
-		runtimeArgs["BridgeContracts"] = a.CreateCmd.getStringFromArgStoreOrDie("discovery-addr")
+		runtimeArgs["BridgeContracts"] = a.CreateCmd.getStringFromArgStoreOrDie("bridge-contracts")
 
 		a.CreateCmd.ArgStore["runtime-args"] = runtimeArgs
 	}
