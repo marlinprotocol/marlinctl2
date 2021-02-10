@@ -168,7 +168,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 		process_name={{.BridgeProgram}}
 		user={{.BridgeUser}}
 		directory={{.BridgeRunDir}}
-		command={{.BridgeExecutablePath}} --discovery-addr {{.DiscoveryAddr}} --pubsub-addr {{.PubsubAddr}} --beacon-addr {{.BootstrapAddr}} --listen-addr {{.InternalListenAddr}} --keystore-path {{.KeystorePath}} --keystore-pass-path {{.KeystorePassPath}} --contracts {{.Contracts}}  
+		command={{.BridgeExecutablePath}} --discovery-addr {{.DiscoveryAddr}} --pubsub-addr {{.PubsubAddr}} {{if .BootstrapAddr}} --beacon-addr {{.BootstrapAddr}}{{end}} --listen-addr {{.InternalListenAddr}} {{if .KeystorePath}} --keystore-path {{.KeystorePath}}{{end}} {{if .KeystorePassPath}} --keystore-pass-path {{.KeystorePassPath}} {{end}} --contracts {{.Contracts}}  
 		priority=100
 		numprocs=1
 		numprocs_start=1
