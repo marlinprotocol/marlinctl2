@@ -142,7 +142,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 		process_name={{.GatewayProgram}}
 		user={{.GatewayUser}}
 		directory={{.GatewayRunDir}}
-		command={{.GatewayExecutablePath}} --bridge-address {{.BridgeListenAddr}} --keystore-path {{.GatewayKeystorePath}} --listen-addr {{.GatewayListenAddr}}
+		command={{.GatewayExecutablePath}} --bridge-address {{.InternalListenAddr}} --keystore-path {{.ChainIdentity}} --listen-addr {{.ListenAddr}}
 		priority=100
 		numprocs=1
 		numprocs_start=1
@@ -163,7 +163,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 		process_name={{.BridgeProgram}}
 		user={{.BridgeUser}}
 		directory={{.BridgeRunDir}}
-		command={{.BridgeExecutablePath}} --discovery-addr {{.BridgeDiscoveryAddr}} --pubsub-addr {{.BridgePubsubAddr}} --beacon-addr {{.BridgeBootstrapAddr}} --listen-addr {{.BridgeListenAddr}} --keystore-path {{.BridgeKeystorePath}} --keystore-pass-path {{.BridgeKeystorePassPath}} --contracts {{.BridgeContracts}}  
+		command={{.BridgeExecutablePath}} --discovery-addr {{.DiscoveryAddr}} --pubsub-addr {{.PubsubAddr}} --beacon-addr {{.BootstrapAddr}} --listen-addr {{.InternalListenAddr}} --keystore-path {{.KeystorePath}} --keystore-pass-path {{.KeystorePassPath}} --contracts {{.Contracts}}  
 		priority=100
 		numprocs=1
 		numprocs_start=1
@@ -477,9 +477,9 @@ func (r *linux_amd64_supervisor_runner01) Logs() error {
 }
 
 type resource struct {
-	Runner, Version, StartTime                                                                                                                                                                               string
-	GatewayProgram, GatewayUser, GatewayRunDir, GatewayExecutablePath, GatewayKeystorePath, GatewayListenAddr                                                                                                string
-	BridgeProgram, BridgeUser, BridgeRunDir, BridgeExecutablePath, BridgeDiscoveryAddr, BridgePubsubAddr, BridgeBootstrapAddr, BridgeListenAddr, BridgeKeystorePath, BridgeKeystorePassPath, BridgeContracts string
+	Runner, Version, StartTime                                                                                                                                             string
+	GatewayProgram, GatewayUser, GatewayRunDir, GatewayExecutablePath, ChainIdentity, ListenAddr                                                                           string
+	BridgeProgram, BridgeUser, BridgeRunDir, BridgeExecutablePath, DiscoveryAddr, PubsubAddr, BootstrapAddr, InternalListenAddr, KeystorePath, KeystorePassPath, Contracts string
 }
 
 func (r *linux_amd64_supervisor_runner01) fetchResourceInformation(fileLocation string) (bool, resource, error) {

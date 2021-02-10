@@ -55,15 +55,15 @@ func (a *app) gatewayDotCreateSubstitutions(runnerID string) {
 
 	runtimeArgs := a.CreateCmd.getStringToStringFromArgStoreOrDie("runtime-args")
 	if len(runtimeArgs) == 0 {
-		runtimeArgs["GatewayKeystorePath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("gateway-keystore-path"))
-		runtimeArgs["GatewayListenAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("gateway-listen-addr")
-		runtimeArgs["BridgeDiscoveryAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("bridge-discovery-addr")
-		runtimeArgs["BridgePubsubAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("bridge-pubsub-addr")
-		runtimeArgs["BridgeBootstrapAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("bridge-bootstrap-addr")
-		runtimeArgs["BridgeListenAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("bridge-listen-addr")
-		runtimeArgs["BridgeKeystorePath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("bridge-keystore-path"))
-		runtimeArgs["BridgeKeystorePassPath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("bridge-keystore-pass-path"))
-		runtimeArgs["BridgeContracts"] = a.CreateCmd.getStringFromArgStoreOrDie("bridge-contracts")
+		runtimeArgs["ChainIdentity"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("chain-identity"))
+		runtimeArgs["ListenAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("listen-addr")
+		runtimeArgs["DiscoveryAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("discovery-addr")
+		runtimeArgs["PubsubAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("pubsub-addr")
+		runtimeArgs["BootstrapAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("bootstrap-addr")
+		runtimeArgs["InternalListenAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("internal-listen-addr")
+		runtimeArgs["KeystorePath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("keystore-path"))
+		runtimeArgs["KeystorePassPath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("keystore-pass-path"))
+		runtimeArgs["Contracts"] = a.CreateCmd.getStringFromArgStoreOrDie("contracts")
 
 		a.CreateCmd.ArgStore["runtime-args"] = runtimeArgs
 	}
