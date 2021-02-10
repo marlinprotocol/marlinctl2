@@ -67,7 +67,7 @@ func init() {
 	configCmd.AddCommand(app.ConfigResetCmd.Cmd)
 	configCmd.AddCommand(app.ConfigApplyCmd.Cmd)
 
-	// Extra flag additions for gateway_iris -----------------------------------------------
+	// Extra flag additions for gateway_dot -----------------------------------------------
 
 	app.CreateCmd.ArgStore["gateway-keystore-path"] = app.CreateCmd.Cmd.Flags().StringP("gateway-keystore-path", "a", "gateway_dot.key", "Gateway's keystore path")
 	app.CreateCmd.ArgStore["gateway-listen-port"] = app.CreateCmd.Cmd.Flags().StringP("gateway-listen-port", "g", "127.0.0.1:20900", "Port on which gateway listens for connections from peer")
