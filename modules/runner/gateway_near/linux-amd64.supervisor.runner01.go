@@ -109,7 +109,6 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 		return err
 	}
 
-	// ROSHAN: Change substitution for RESOURCE object (definition of struct in file below)
 	substitutions := resource{
 		"linux-amd64.supervisor.runner01", r.Version, time.Now().Format(time.RFC822Z),
 		gatewayProgramName + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + gatewayName, "", "",
@@ -126,13 +125,12 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 	log.Info("Running configuration")
 	util.PrettyPrintKVStruct(substitutions)
 
-	// ROSHAN: Change for NEAR here
 	gt := template.Must(template.New("gateway-template").Parse(util.TrimSpacesEveryLine(`
 		[program:{{.GatewayProgram}}]
 		process_name={{.GatewayProgram}}
 		user={{.GatewayUser}}
 		directory={{.GatewayRunDir}}
-		command={{.GatewayExecutablePath}} dataconnect --keyfile {{.GatewayKeyfile}} --listenportpeer {{.GatewayListenPortPeer}} --marlinip {{.GatewayMarlinIp}} --marlinport {{.GatewayMarlinPort}}
+		command={{.GatewayExecutablePath}} --discovery-addr {{.DiscoveryAddr}} --pubsub-addr {{.PubsubAddr}} {{if .BootstrapAddr}} --beacon-addr {{.BootstrapAddr}}{{end}} --listen-addr {{.ListenAddr}} {{if .KeystorePath}} --keystore-path {{.KeystorePath}}{{end}} {{if .KeystorePassPath}} --keystore-pass-path {{.KeystorePassPath}} {{end}} --contracts {{.Contracts}}
 		priority=100
 		numprocs=1
 		numprocs_start=1

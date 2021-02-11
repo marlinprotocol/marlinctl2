@@ -75,8 +75,6 @@ func (a *app) gatewayNearCreateSubstitutions(runnerID string) {
 	if a.ProjectID != "gateway_near" {
 		return
 	}
-	// ROSHAN : for all entities you gather explicitly from cli ... they get stored in "ArgStore". This place moves
-	// argstore values to "runtimeArgs". Keys of runtimeArgs are Struct fields of resource object that consumes it later.
 	runtimeArgs := a.CreateCmd.getStringToStringFromArgStoreOrDie("runtime-args")
 	if len(runtimeArgs) == 0 {
 		runtimeArgs["ChainIdentity"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("chain-identity"))
@@ -84,7 +82,6 @@ func (a *app) gatewayNearCreateSubstitutions(runnerID string) {
 		runtimeArgs["DiscoveryAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("discovery-addr")
 		runtimeArgs["PubsubAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("pubsub-addr")
 		runtimeArgs["BootstrapAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("bootstrap-addr")
-		runtimeArgs["InternalListenAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("internal-listen-addr")
 		runtimeArgs["KeystorePath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("keystore-path"))
 		runtimeArgs["KeystorePassPath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("keystore-pass-path"))
 		runtimeArgs["Contracts"] = a.CreateCmd.getStringFromArgStoreOrDie("contracts")
