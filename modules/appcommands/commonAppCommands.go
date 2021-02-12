@@ -157,6 +157,8 @@ func (a *app) setupCreateCommand() {
 			a.relayEthCreateSubstitutions(versionToRun.RunnerId)
 			a.gatewayDotCreateSubstitutions(versionToRun.RunnerId)
 			a.gatewayNearCreateSubstitutions(versionToRun.RunnerId)
+			a.gatewayIrisCreateSubstitutions(versionToRun.RunnerId)
+			a.gatewayCosmosCreateSubstitutions(versionToRun.RunnerId)
 
 			a.doPreRunSanityOrDie(runner)
 			a.doPrepareOrDie(runner)

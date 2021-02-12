@@ -1,11 +1,10 @@
 package gateway
 
 import (
-	_ "github.com/marlinprotocol/ctl2/cmd/gateway/cosmos"
+	"github.com/marlinprotocol/ctl2/cmd/gateway/cosmos"
 	"github.com/marlinprotocol/ctl2/cmd/gateway/dot"
-	_ "github.com/marlinprotocol/ctl2/cmd/gateway/iris"
+	"github.com/marlinprotocol/ctl2/cmd/gateway/iris"
 	"github.com/marlinprotocol/ctl2/cmd/gateway/near"
-	_ "github.com/marlinprotocol/ctl2/cmd/gateway/near"
 	"github.com/spf13/cobra"
 )
 
@@ -16,8 +15,8 @@ var GatewayCmd = &cobra.Command{
 }
 
 func init() {
-	// GatewayCmd.AddCommand(iris.IrisCmd)
-	// GatewayCmd.AddCommand(cosmos.CosmosCmd)
+	GatewayCmd.AddCommand(iris.IrisCmd)
+	GatewayCmd.AddCommand(cosmos.CosmosCmd)
 	GatewayCmd.AddCommand(near.NearCmd)
 	GatewayCmd.AddCommand(dot.DotCmd)
 }
