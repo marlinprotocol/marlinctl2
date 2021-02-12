@@ -69,15 +69,11 @@ func init() {
 
 	// Extra flag additions for gateway_near -----------------------------------------------
 
-	// ROSHAN This is where you define cli flags for gateway_near. On RHS you have cobra registrations for flags
-	// on left you have argstore where you set the values retrieved from cli. After these are read into argstore,
-	// substitution moves it into runtimeArgs making it ready for running the application (see substitutions.go)
-	app.CreateCmd.ArgStore["chain-identity"] = app.CreateCmd.Cmd.Flags().StringP("chain-identity", "a", "gateway_dot.key", "Gateway's keystore path")
-	app.CreateCmd.ArgStore["listen-addr"] = app.CreateCmd.Cmd.Flags().StringP("listen-addr", "g", "/ip4/127.0.0.1/tcp/20900", "Address on which gateway listens for connections from peer")
-	app.CreateCmd.ArgStore["discovery-addr"] = app.CreateCmd.Cmd.Flags().StringP("discovery-addr", "d", "0.0.0.0:20702", "Bridge discovery address")
-	app.CreateCmd.ArgStore["pubsub-addr"] = app.CreateCmd.Cmd.Flags().StringP("pubsub-addr", "p", "0.0.0.0:20700", "Bridge pubsub address")
-	app.CreateCmd.ArgStore["bootstrap-addr"] = app.CreateCmd.Cmd.Flags().StringP("bootstrap-addr", "b", "", "Bridge bootstrap address")
-	app.CreateCmd.ArgStore["internal-listen-addr"] = app.CreateCmd.Cmd.Flags().StringP("internal-listen-address", "l", "127.0.0.1:20901", "Bridge listen address")
+	app.CreateCmd.ArgStore["chain-identity"] = app.CreateCmd.Cmd.Flags().StringP("chain-identity", "a", "gateway_near.key", "Gateway's keystore path")
+	app.CreateCmd.ArgStore["listen-addr"] = app.CreateCmd.Cmd.Flags().StringP("listen-addr", "g", "0.0.0.0:21400", "Address on which gateway listens for connections from peer")
+	app.CreateCmd.ArgStore["discovery-addr"] = app.CreateCmd.Cmd.Flags().StringP("discovery-addr", "d", "0.0.0.0:21202", "Discovery address")
+	app.CreateCmd.ArgStore["pubsub-addr"] = app.CreateCmd.Cmd.Flags().StringP("pubsub-addr", "p", "0.0.0.0:21200", "Pubsub address")
+	app.CreateCmd.ArgStore["bootstrap-addr"] = app.CreateCmd.Cmd.Flags().StringP("bootstrap-addr", "b", "", "Bootstrap address")
 	app.CreateCmd.ArgStore["keystore-path"] = app.CreateCmd.Cmd.Flags().StringP("keystore-path", "k", "", "Keystore Path")
 	app.CreateCmd.ArgStore["keystore-pass-path"] = app.CreateCmd.Cmd.Flags().StringP("keystore-pass-path", "y", "", "Keystore pass path")
 	app.CreateCmd.ArgStore["contracts"] = app.CreateCmd.Cmd.Flags().StringP("contracts", "c", "mainnet", "mainnet/kovan")
