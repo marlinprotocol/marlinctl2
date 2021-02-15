@@ -8,9 +8,9 @@ import (
 
 func GetRunnerInstance(runnerId string, version string, storage string, runnerData interface{}, skipRunnerData bool, skipChecksum bool, instanceId string) (runner.Runner, error) {
 	switch runnerId {
-	case "linux-amd64.supervisor.runner01":
+	case "linux-amd64.supervisor.runner02":
 		if skipRunnerData {
-			return &linux_amd64_supervisor_runner01{
+			return &linux_amd64_supervisor_runner02{
 				Version:      version,
 				Storage:      storage,
 				SkipChecksum: skipChecksum,
@@ -23,13 +23,13 @@ func GetRunnerInstance(runnerId string, version string, storage string, runnerDa
 		gatewayChecksum, ok2 := runnerDataMap["gateway_checksum"]
 
 		if !ok1 || !ok2 {
-			return &linux_amd64_supervisor_runner01{}, errors.New("Incomplete / wrong runner data for version: " + version)
+			return &linux_amd64_supervisor_runner02{}, errors.New("Incomplete / wrong runner data for version: " + version)
 		}
 
-		return &linux_amd64_supervisor_runner01{
+		return &linux_amd64_supervisor_runner02{
 			Version: version,
 			Storage: storage,
-			RunnerData: linux_amd64_supervisor_runner01_runnerdata{
+			RunnerData: linux_amd64_supervisor_runner02_runnerdata{
 				Gateway:         gateway.(string),
 				GatewayChecksum: gatewayChecksum.(string),
 			},
@@ -37,7 +37,7 @@ func GetRunnerInstance(runnerId string, version string, storage string, runnerDa
 			InstanceId:   instanceId,
 		}, nil
 	default:
-		return &linux_amd64_supervisor_runner01{}, errors.New("Unknown runnerId: " + runnerId)
+		return &linux_amd64_supervisor_runner02{}, errors.New("Unknown runnerId: " + runnerId)
 	}
 }
 

@@ -38,17 +38,17 @@ type linux_amd64_supervisor_runner01 struct {
 }
 
 const (
-	relayName               = "relay_eth_linux-amd64"
-	relayProgramName        = "relayeth"
-	gethName                = "geth_linux-amd64"
-	gethProgramName         = "geth"
-	defaultUser             = "root"
-	supervisorConfFiles     = "/etc/supervisor/conf.d"
-	relaySupervisorConfFile = "relayeth"
-	gethSupervisorConfFile  = "geth"
-	logRootDir              = "/var/log/supervisor"
-	oldLogRootDir           = "/var/log/old_logs"
-	projectName             = "relay_eth"
+	runner01relayName               = "relay_eth_linux-amd64"
+	runner01relayProgramName        = "relayeth"
+	runner01gethName                = "geth_linux-amd64"
+	runner01gethProgramName         = "geth"
+	runner01defaultUser             = "root"
+	runner01supervisorConfFiles     = "/etc/supervisor/conf.d"
+	runner01relaySupervisorConfFile = "relayeth"
+	runner01gethSupervisorConfFile  = "geth"
+	runner01logRootDir              = "/var/log/supervisor"
+	runner01oldLogRootDir           = "/var/log/old_logs"
+	runner01projectName             = "relay_eth"
 )
 
 func (r *linux_amd64_supervisor_runner01) PreRunSanity() error {
@@ -68,8 +68,8 @@ func (r *linux_amd64_supervisor_runner01) Download() error {
 		return err
 	}
 
-	var relayethLocation = dirPath + "/" + relayName
-	var gethLocation = dirPath + "/" + gethName
+	var relayethLocation = dirPath + "/" + runner01relayName
+	var gethLocation = dirPath + "/" + runner01gethName
 
 	if _, err := os.Stat(relayethLocation); os.IsNotExist(err) {
 		log.Info("Fetching relayeth from upstream for version ", r.Version)
@@ -130,10 +130,10 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 		return err
 	}
 
-	substitutions := resource{
+	substitutions := runner01resource{
 		"linux-amd64.supervisor.runner01", r.Version, time.Now().Format(time.RFC822Z),
-		relayProgramName + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + relayName, "127.0.0.1:8002", "", "", "", "", "", "",
-		gethProgramName + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + gethName, "light",
+		runner01relayProgramName + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + runner01relayName, "127.0.0.1:8002", "", "", "", "", "", "",
+		runner01gethProgramName + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + runner01gethName, "light",
 	}
 
 	for k, v := range runtimeArgs {
@@ -158,7 +158,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 		autostart=true
 		autorestart=true
 	`)))
-	rFile, err := os.Create(supervisorConfFiles + "/" + relaySupervisorConfFile + r.InstanceId + ".conf")
+	rFile, err := os.Create(runner01supervisorConfFiles + "/" + runner01relaySupervisorConfFile + r.InstanceId + ".conf")
 	if err != nil {
 		return err
 	}
@@ -179,7 +179,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 		autostart=true
 		autorestart=true
 	`)))
-	gFile, err := os.Create(supervisorConfFiles + "/" + gethSupervisorConfFile + r.InstanceId + ".conf")
+	gFile, err := os.Create(runner01supervisorConfFiles + "/" + runner01gethSupervisorConfFile + r.InstanceId + ".conf")
 	if err != nil {
 		return err
 	}
@@ -329,8 +329,8 @@ func (r *linux_amd64_supervisor_runner01) Destroy() error {
 }
 
 func (r *linux_amd64_supervisor_runner01) PostRun() error {
-	var relayethConfig = supervisorConfFiles + "/" + relaySupervisorConfFile + r.InstanceId + ".conf"
-	var gethConfig = supervisorConfFiles + "/" + gethSupervisorConfFile + r.InstanceId + ".conf"
+	var relayethConfig = runner01supervisorConfFiles + "/" + runner01relaySupervisorConfFile + r.InstanceId + ".conf"
+	var gethConfig = runner01supervisorConfFiles + "/" + runner01gethSupervisorConfFile + r.InstanceId + ".conf"
 
 	if _, err := os.Stat(relayethConfig); !os.IsNotExist(err) {
 		if err := os.Remove(relayethConfig); err != nil {
@@ -352,16 +352,16 @@ func (r *linux_amd64_supervisor_runner01) PostRun() error {
 		return errors.New("resource by id " + r.InstanceId + " doesn't exists. Can't destroy")
 	}
 
-	err = util.CreateDirPathIfNotExists(oldLogRootDir)
+	err = util.CreateDirPathIfNotExists(runner01oldLogRootDir)
 	if err != nil {
 		return err
 	}
 
-	err = filepath.Walk(logRootDir, func(path string, f os.FileInfo, _ error) error {
+	err = filepath.Walk(runner01logRootDir, func(path string, f os.FileInfo, _ error) error {
 		if !f.IsDir() {
 			r, err := regexp.MatchString(resData.RelayProgram+".*|"+resData.GethProgram+".*", f.Name())
 			if err == nil && r {
-				err2 := os.Rename(logRootDir+"/"+f.Name(), oldLogRootDir+"/previous_run_"+f.Name())
+				err2 := os.Rename(runner01logRootDir+"/"+f.Name(), runner01oldLogRootDir+"/previous_run_"+f.Name())
 				if err2 != nil {
 					return err2
 				}
@@ -405,7 +405,7 @@ func (r *linux_amd64_supervisor_runner01) Status() error {
 	}
 
 	var projectConfig types.Project
-	err = viper.UnmarshalKey(projectName, &projectConfig)
+	err = viper.UnmarshalKey(runner01projectName, &projectConfig)
 	if err != nil {
 		return err
 	}
@@ -425,7 +425,7 @@ func (r *linux_amd64_supervisor_runner01) Status() error {
 	statusLines := strings.Split(string(status), "\n")
 	var anyStatusLine = false
 	for _, v := range statusLines {
-		if match, err := regexp.MatchString(relayProgramName+r.InstanceId+"|"+gethProgramName+r.InstanceId, v); err == nil && match {
+		if match, err := regexp.MatchString(runner01relayProgramName+r.InstanceId+"|"+runner01gethProgramName+r.InstanceId, v); err == nil && match {
 			vSplit := strings.Split(v, " ")
 			supervisorStatus[vSplit[0]] = strings.Trim(strings.Join(vSplit[1:], " "), " ")
 			anyStatusLine = true
@@ -451,8 +451,8 @@ func (r *linux_amd64_supervisor_runner01) Logs() error {
 	}
 	// Check for resource
 	fileSubscriptions := make(map[string]string)
-	var logRootDir = "/var/log/supervisor/"
-	err = filepath.Walk(logRootDir, func(path string, f os.FileInfo, _ error) error {
+	var runner01logRootDir = "/var/log/supervisor/"
+	err = filepath.Walk(runner01logRootDir, func(path string, f os.FileInfo, _ error) error {
 		if !f.IsDir() {
 			for _, v := range []string{resData.RelayProgram + "-stdout.*",
 				resData.RelayProgram + "-stderr.*",
@@ -460,7 +460,7 @@ func (r *linux_amd64_supervisor_runner01) Logs() error {
 				resData.GethProgram + "-stderr.*"} {
 				r, err := regexp.MatchString(v, f.Name())
 				if err == nil && r {
-					fileSubscriptions[v[:len(v)-2]] = logRootDir + f.Name()
+					fileSubscriptions[v[:len(v)-2]] = runner01logRootDir + f.Name()
 				}
 			}
 		}
@@ -488,29 +488,29 @@ func (r *linux_amd64_supervisor_runner01) Logs() error {
 	return nil
 }
 
-type resource struct {
+type runner01resource struct {
 	Runner, Version, StartTime                                                                                                                   string
 	RelayProgram, RelayUser, RelayRunDir, RelayExecutablePath, DiscoveryAddrs, HeartbeatAddrs, DataDir, PubsubPort, DiscoveryPort, Address, Name string
 	GethProgram, GethUser, GethRunDir, GethExecutablePath, SyncMode                                                                              string
 }
 
-func (r *linux_amd64_supervisor_runner01) fetchResourceInformation(fileLocation string) (bool, resource, error) {
+func (r *linux_amd64_supervisor_runner01) fetchResourceInformation(fileLocation string) (bool, runner01resource, error) {
 	if _, err := os.Stat(fileLocation); os.IsNotExist(err) {
-		return false, resource{}, err
+		return false, runner01resource{}, err
 	}
 
 	file, err := ioutil.ReadFile(fileLocation)
 	if err != nil {
-		return false, resource{}, err
+		return false, runner01resource{}, err
 	}
 
-	var resData = resource{}
+	var resData = runner01resource{}
 	err = json.Unmarshal([]byte(file), &resData)
 
 	return true, resData, err
 }
 
-func (r *linux_amd64_supervisor_runner01) writeResourceToFile(resData resource, fileLocation string) error {
+func (r *linux_amd64_supervisor_runner01) writeResourceToFile(resData runner01resource, fileLocation string) error {
 	lSplice := strings.Split(fileLocation, "/")
 	var dirPath string
 
