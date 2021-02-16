@@ -40,12 +40,12 @@ type linux_amd64_supervisor_runner02 struct {
 const (
 	runner02gatewayName               = "gateway_dot_linux-amd64"
 	runner02bridgeName                = "bridge_dot_linux-amd64"
-	runner02gatewayProgramName        = "gatewaydot"
-	runner02bridgeProgramName         = "bridgedot"
+	runner02gatewayProgramName        = "gateway_dot"
+	runner02bridgeProgramName         = "bridge_dot"
 	runner02defaultUser               = "root"
 	runner02supervisorConfFiles       = "/etc/supervisor/conf.d"
-	runner02gatewaySupervisorConfFile = "gatewaydot"
-	runner02bridgeSupervisorConfFile  = "bridgedot"
+	runner02gatewaySupervisorConfFile = "gateway_dot"
+	runner02bridgeSupervisorConfFile  = "bridge_dot"
 	runner02logRootDir                = "/var/log/supervisor"
 	runner02oldLogRootDir             = "/var/log/old_logs"
 	runner02projectName               = "gateway_dot"
@@ -128,8 +128,8 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 
 	substitutions := runner02resource{
 		"linux-amd64.supervisor.runner01", r.Version, time.Now().Format(time.RFC822Z),
-		runner02gatewayProgramName + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + runner02gatewayName, "", "",
-		runner02bridgeProgramName + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + runner02bridgeName, "", "", "", "", "", "", "",
+		runner02gatewayProgramName + "_" + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + runner02gatewayName, "", "",
+		runner02bridgeProgramName + "_" + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + runner02bridgeName, "", "", "", "", "", "", "",
 	}
 
 	for k, v := range runtimeArgs {
@@ -153,8 +153,10 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 		numprocs_start=1
 		autostart=true
 		autorestart=true
+		stdout_logfile=/var/log/supervisor/{{.GatewayProgram}}-stdout.log
+		stderr_logfile=/var/log/supervisor/{{.GatewayProgram}}-stderr.log
 	`)))
-	gFile, err := os.Create(runner02supervisorConfFiles + "/" + runner02gatewaySupervisorConfFile + r.InstanceId + ".conf")
+	gFile, err := os.Create(runner02supervisorConfFiles + "/" + runner02gatewaySupervisorConfFile + "_" + r.InstanceId + ".conf")
 	if err != nil {
 		return err
 	}
@@ -174,8 +176,10 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 		numprocs_start=1
 		autostart=true
 		autorestart=true
+		stdout_logfile=/var/log/supervisor/{{.BridgeProgram}}-stdout.log
+		stderr_logfile=/var/log/supervisor/{{.BridgeProgram}}-stderr.log
 	`)))
-	bFile, err := os.Create(runner02supervisorConfFiles + "/" + runner02bridgeSupervisorConfFile + r.InstanceId + ".conf")
+	bFile, err := os.Create(runner02supervisorConfFiles + "/" + runner02bridgeSupervisorConfFile + "_" + r.InstanceId + ".conf")
 	if err != nil {
 		return err
 	}
@@ -218,7 +222,7 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 		statusLines := strings.Split(string(status), "\n")
 		var anyStatusLine = false
 		for _, v := range statusLines {
-			if match, err := regexp.MatchString(runner02gatewayProgramName+r.InstanceId+"|"+runner02bridgeProgramName+r.InstanceId, v); err == nil && match {
+			if match, err := regexp.MatchString(runner02gatewayProgramName+"_"+r.InstanceId+"|"+runner02bridgeProgramName+"_"+r.InstanceId, v); err == nil && match {
 				vSplit := strings.Split(v, " ")
 				supervisorStatus[vSplit[0]] = strings.Trim(strings.Join(vSplit[1:], " "), " ")
 				anyStatusLine = true
@@ -332,8 +336,8 @@ func (r *linux_amd64_supervisor_runner02) Destroy() error {
 }
 
 func (r *linux_amd64_supervisor_runner02) PostRun() error {
-	var gatewayConfig = runner02supervisorConfFiles + "/" + runner02gatewaySupervisorConfFile + r.InstanceId + ".conf"
-	var bridgeConfig = runner02supervisorConfFiles + "/" + runner02bridgeSupervisorConfFile + r.InstanceId + ".conf"
+	var gatewayConfig = runner02supervisorConfFiles + "/" + runner02gatewaySupervisorConfFile + "_" + r.InstanceId + ".conf"
+	var bridgeConfig = runner02supervisorConfFiles + "/" + runner02bridgeSupervisorConfFile + "_" + r.InstanceId + ".conf"
 
 	if _, err := os.Stat(gatewayConfig); !os.IsNotExist(err) {
 		if err := os.Remove(gatewayConfig); err != nil {
@@ -346,30 +350,7 @@ func (r *linux_amd64_supervisor_runner02) PostRun() error {
 		}
 	}
 
-	err := util.CreateDirPathIfNotExists(runner02oldLogRootDir)
-	if err != nil {
-		return err
-	}
-	err = filepath.Walk(runner02logRootDir, func(path string, f os.FileInfo, _ error) error {
-		if !f.IsDir() {
-			r, err := regexp.MatchString(runner02gatewayProgramName+r.InstanceId+".*|"+runner02bridgeProgramName+r.InstanceId+".*", f.Name())
-			if err == nil && r {
-				err2 := os.Rename(runner02logRootDir+"/"+f.Name(), runner02oldLogRootDir+"/previous_run_"+f.Name())
-				if err2 != nil {
-					return err2
-				}
-			} else if err != nil {
-				return nil
-			}
-		}
-		return nil
-	})
-
-	if err != nil {
-		return errors.New("Error while marking logs as old: " + err.Error())
-	}
-
-	_, err = exec.Command("supervisorctl", "reread").Output()
+	_, err := exec.Command("supervisorctl", "reread").Output()
 	if err != nil {
 		return errors.New("Error while supervisorctl reread: " + err.Error())
 	}
@@ -409,16 +390,13 @@ func (r *linux_amd64_supervisor_runner02) Status() error {
 	util.PrettyPrintKVStruct(resData)
 
 	status, _ := exec.Command("supervisorctl", "status").Output()
-	// if err != nil {
-	// 	return errors.New("Error while reading supervisor status: " + err.Error())
-	// }
 
 	var supervisorStatus = make(map[string]interface{})
 
 	statusLines := strings.Split(string(status), "\n")
 	var anyStatusLine = false
 	for _, v := range statusLines {
-		if match, err := regexp.MatchString(runner02gatewayProgramName+r.InstanceId+"|"+runner02bridgeProgramName+r.InstanceId, v); err == nil && match {
+		if match, err := regexp.MatchString(runner02gatewayProgramName+"_"+r.InstanceId+"|"+runner02bridgeProgramName+"_"+r.InstanceId, v); err == nil && match {
 			vSplit := strings.Split(v, " ")
 			supervisorStatus[vSplit[0]] = strings.Trim(strings.Join(vSplit[1:], " "), " ")
 			anyStatusLine = true

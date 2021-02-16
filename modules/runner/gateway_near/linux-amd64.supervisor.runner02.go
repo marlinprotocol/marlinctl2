@@ -37,10 +37,10 @@ type linux_amd64_supervisor_runner02 struct {
 
 const (
 	runner02gatewayName               = "gateway_near_linux-amd64"
-	runner02gatewayProgramName        = "gatewaynear"
+	runner02gatewayProgramName        = "gateway_near"
 	runner02defaultUser               = "root"
 	runner02supervisorConfFiles       = "/etc/supervisor/conf.d"
-	runner02gatewaySupervisorConfFile = "gatewaynear"
+	runner02gatewaySupervisorConfFile = "gateway_near"
 	runner02logRootDir                = "/var/log/supervisor"
 	runner02oldLogRootDir             = "/var/log/old_logs"
 	runner02projectName               = "gateway_near"
@@ -109,7 +109,7 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 		return err
 	}
 
-	substitutions := resource{
+	substitutions := runner02resource{
 		"linux-amd64.supervisor.runner02", r.Version, time.Now().Format(time.RFC822Z),
 		runner02gatewayProgramName + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + runner02gatewayName, "", "",
 		"", "", "", "", "", "",
@@ -136,8 +136,10 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 		numprocs_start=1
 		autostart=true
 		autorestart=true
+		stdout_logfile=/var/log/supervisor/{{.GatewayProgram}}-stdout.log
+		stderr_logfile=/var/log/supervisor/{{.GatewayProgram}}-stderr.log
 	`)))
-	gFile, err := os.Create(runner02supervisorConfFiles + "/" + runner02gatewaySupervisorConfFile + r.InstanceId + ".conf")
+	gFile, err := os.Create(runner02supervisorConfFiles + "/" + runner02gatewaySupervisorConfFile + "_" + r.InstanceId + ".conf")
 	if err != nil {
 		return err
 	}
@@ -174,7 +176,7 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 		statusLines := strings.Split(string(status), "\n")
 		var anyStatusLine = false
 		for _, v := range statusLines {
-			if match, err := regexp.MatchString(runner02gatewayProgramName+r.InstanceId, v); err == nil && match {
+			if match, err := regexp.MatchString(runner02gatewayProgramName+"_"+r.InstanceId, v); err == nil && match {
 				vSplit := strings.Split(v, " ")
 				supervisorStatus[vSplit[0]] = strings.Trim(strings.Join(vSplit[1:], " "), " ")
 				anyStatusLine = true
@@ -278,7 +280,7 @@ func (r *linux_amd64_supervisor_runner02) Destroy() error {
 }
 
 func (r *linux_amd64_supervisor_runner02) PostRun() error {
-	var gatewayConfig = runner02supervisorConfFiles + "/" + runner02gatewaySupervisorConfFile + r.InstanceId + ".conf"
+	var gatewayConfig = runner02supervisorConfFiles + "/" + runner02gatewaySupervisorConfFile + "_" + r.InstanceId + ".conf"
 
 	if _, err := os.Stat(gatewayConfig); !os.IsNotExist(err) {
 		if err := os.Remove(gatewayConfig); err != nil {
@@ -286,30 +288,7 @@ func (r *linux_amd64_supervisor_runner02) PostRun() error {
 		}
 	}
 
-	err := util.CreateDirPathIfNotExists(runner02oldLogRootDir)
-	if err != nil {
-		return err
-	}
-	err = filepath.Walk(runner02logRootDir, func(path string, f os.FileInfo, _ error) error {
-		if !f.IsDir() {
-			r, err := regexp.MatchString(runner02gatewayProgramName+r.InstanceId+".*", f.Name())
-			if err == nil && r {
-				err2 := os.Rename(runner02logRootDir+"/"+f.Name(), runner02oldLogRootDir+"/previous_run_"+f.Name())
-				if err2 != nil {
-					return err2
-				}
-			} else if err != nil {
-				return nil
-			}
-		}
-		return nil
-	})
-
-	if err != nil {
-		return errors.New("Error while marking logs as old: " + err.Error())
-	}
-
-	_, err = exec.Command("supervisorctl", "reread").Output()
+	_, err := exec.Command("supervisorctl", "reread").Output()
 	if err != nil {
 		return errors.New("Error while supervisorctl reread: " + err.Error())
 	}
@@ -324,7 +303,7 @@ func (r *linux_amd64_supervisor_runner02) PostRun() error {
 		return errors.New("Error while removing resource file: " + err.Error())
 	}
 
-	log.Info("All relevant processes stopped, resources deleted, supervisor configs removed, logs marked as old")
+	log.Info("All relevant processes stopped, resources deleted, supervisor configs removed")
 	return nil
 }
 
@@ -349,16 +328,13 @@ func (r *linux_amd64_supervisor_runner02) Status() error {
 	util.PrettyPrintKVStruct(resData)
 
 	status, _ := exec.Command("supervisorctl", "status").Output()
-	// if err != nil {
-	// 	return errors.New("Error while reading supervisor status: " + err.Error())
-	// }
 
 	var supervisorStatus = make(map[string]interface{})
 
 	statusLines := strings.Split(string(status), "\n")
 	var anyStatusLine = false
 	for _, v := range statusLines {
-		if match, err := regexp.MatchString(runner02gatewayProgramName+r.InstanceId, v); err == nil && match {
+		if match, err := regexp.MatchString(runner02gatewayProgramName+"_"+r.InstanceId, v); err == nil && match {
 			vSplit := strings.Split(v, " ")
 			supervisorStatus[vSplit[0]] = strings.Trim(strings.Join(vSplit[1:], " "), " ")
 			anyStatusLine = true
@@ -419,29 +395,29 @@ func (r *linux_amd64_supervisor_runner02) Logs() error {
 	return nil
 }
 
-type resource struct {
+type runner02resource struct {
 	Runner, Version, StartTime                                                                   string
 	GatewayProgram, GatewayUser, GatewayRunDir, GatewayExecutablePath, ChainIdentity, ListenAddr string
 	DiscoveryAddr, PubsubAddr, BootstrapAddr, KeystorePath, KeystorePassPath, Contracts          string
 }
 
-func (r *linux_amd64_supervisor_runner02) fetchResourceInformation(fileLocation string) (bool, resource, error) {
+func (r *linux_amd64_supervisor_runner02) fetchResourceInformation(fileLocation string) (bool, runner02resource, error) {
 	if _, err := os.Stat(fileLocation); os.IsNotExist(err) {
-		return false, resource{}, err
+		return false, runner02resource{}, err
 	}
 
 	file, err := ioutil.ReadFile(fileLocation)
 	if err != nil {
-		return false, resource{}, err
+		return false, runner02resource{}, err
 	}
 
-	var resData = resource{}
+	var resData = runner02resource{}
 	err = json.Unmarshal([]byte(file), &resData)
 
 	return true, resData, err
 }
 
-func (r *linux_amd64_supervisor_runner02) writeResourceToFile(resData resource, fileLocation string) error {
+func (r *linux_amd64_supervisor_runner02) writeResourceToFile(resData runner02resource, fileLocation string) error {
 	lSplice := strings.Split(fileLocation, "/")
 	var dirPath string
 

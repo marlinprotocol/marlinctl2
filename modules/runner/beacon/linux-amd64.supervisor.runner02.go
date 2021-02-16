@@ -109,7 +109,7 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 
 	substitutions := runner02resource{
 		"linux-amd64.supervisor.runner02", r.Version, time.Now().Format(time.RFC822Z),
-		runner02beaconProgramName + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + runner02beaconName, "127.0.0.1:8002", "127.0.0.1:8003", "", "", "",
+		runner02beaconProgramName + "_" + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + runner02beaconName, "127.0.0.1:8002", "127.0.0.1:8003", "", "", "",
 	}
 
 	for k, v := range runtimeArgs {
@@ -133,8 +133,10 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 		numprocs_start=1
 		autostart=true
 		autorestart=true
+		stdout_logfile=/var/log/supervisor/{{.BeaconProgram}}-stdout.log
+		stderr_logfile=/var/log/supervisor/{{.BeaconProgram}}-stderr.log
 	`)))
-	gFile, err := os.Create(runner02supervisorConfFiles + "/" + runner02beaconSupervisorConfFile + r.InstanceId + ".conf")
+	gFile, err := os.Create(runner02supervisorConfFiles + "/" + runner02beaconSupervisorConfFile + "_" + r.InstanceId + ".conf")
 	if err != nil {
 		return err
 	}
@@ -271,7 +273,7 @@ func (r *linux_amd64_supervisor_runner02) Destroy() error {
 }
 
 func (r *linux_amd64_supervisor_runner02) PostRun() error {
-	var beaconConfig = runner02supervisorConfFiles + "/" + runner02beaconSupervisorConfFile + r.InstanceId + ".conf"
+	var beaconConfig = runner02supervisorConfFiles + "/" + runner02beaconSupervisorConfFile + "_" + r.InstanceId + ".conf"
 
 	if _, err := os.Stat(beaconConfig); !os.IsNotExist(err) {
 		if err := os.Remove(beaconConfig); err != nil {
@@ -279,38 +281,7 @@ func (r *linux_amd64_supervisor_runner02) PostRun() error {
 		}
 	}
 
-	available, resData, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
-	if err != nil {
-		return err
-	}
-	if !available {
-		return errors.New("resource by id " + r.InstanceId + " doesn't exists. Can't destroy")
-	}
-
-	err = util.CreateDirPathIfNotExists(runner02oldLogRootDir)
-	if err != nil {
-		return err
-	}
-	err = filepath.Walk(runner02logRootDir, func(path string, f os.FileInfo, _ error) error {
-		if !f.IsDir() {
-			r, err := regexp.MatchString(resData.BeaconProgram+".*", f.Name())
-			if err == nil && r {
-				err2 := os.Rename(runner02logRootDir+"/"+f.Name(), runner02oldLogRootDir+"/previous_run_"+f.Name())
-				if err2 != nil {
-					return err2
-				}
-			} else if err != nil {
-				return nil
-			}
-		}
-		return nil
-	})
-
-	if err != nil {
-		return errors.New("Error while marking logs as old: " + err.Error())
-	}
-
-	_, err = exec.Command("supervisorctl", "reread").Output()
+	_, err := exec.Command("supervisorctl", "reread").Output()
 	if err != nil {
 		return errors.New("Error while supervisorctl reread: " + err.Error())
 	}
@@ -325,7 +296,7 @@ func (r *linux_amd64_supervisor_runner02) PostRun() error {
 		return errors.New("Error while removing resource file: " + err.Error())
 	}
 
-	log.Info("All relevant processes stopped, resources deleted, supervisor configs removed, logs marked as old")
+	log.Info("All relevant processes stopped, resources deleted, supervisor configs removed")
 	return nil
 }
 
@@ -350,16 +321,13 @@ func (r *linux_amd64_supervisor_runner02) Status() error {
 	util.PrettyPrintKVStruct(resData)
 
 	status, err := exec.Command("supervisorctl", "status").Output()
-	// if err != nil {
-	// 	return errors.New("Error while reading supervisor status: " + err.Error())
-	// }
 
 	var supervisorStatus = make(map[string]interface{})
 
 	statusLines := strings.Split(string(status), "\n")
 	var anyStatusLine = false
 	for _, v := range statusLines {
-		if match, err := regexp.MatchString(runner02beaconProgramName+r.InstanceId, v); err == nil && match {
+		if match, err := regexp.MatchString(runner02beaconProgramName+"_"+r.InstanceId, v); err == nil && match {
 			vSplit := strings.Split(v, " ")
 			supervisorStatus[vSplit[0]] = strings.Trim(strings.Join(vSplit[1:], " "), " ")
 			anyStatusLine = true

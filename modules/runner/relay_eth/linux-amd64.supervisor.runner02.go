@@ -39,12 +39,12 @@ type linux_amd64_supervisor_runner02 struct {
 
 const (
 	runner02relayName               = "relay_eth_linux-amd64"
-	runner02relayProgramName        = "relayeth"
+	runner02relayProgramName        = "relay_eth"
 	runner02gethName                = "geth_linux-amd64"
 	runner02gethProgramName         = "geth"
 	runner02defaultUser             = "root"
 	runner02supervisorConfFiles     = "/etc/supervisor/conf.d"
-	runner02relaySupervisorConfFile = "relayeth"
+	runner02relaySupervisorConfFile = "relay_eth"
 	runner02gethSupervisorConfFile  = "geth"
 	runner02logRootDir              = "/var/log/supervisor"
 	runner02oldLogRootDir           = "/var/log/old_logs"
@@ -132,8 +132,8 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 
 	substitutions := runner02resource{
 		"linux-amd64.supervisor.runner02", r.Version, time.Now().Format(time.RFC822Z),
-		runner02relayProgramName + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + runner02relayName, "127.0.0.1:8002", "", "", "", "", "", "",
-		runner02gethProgramName + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + runner02gethName, "light",
+		runner02relayProgramName + "_" + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + runner02relayName, "127.0.0.1:8002", "", "", "", "", "", "",
+		runner02gethProgramName + "_" + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + runner02gethName, "light",
 	}
 
 	for k, v := range runtimeArgs {
@@ -157,8 +157,10 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 		numprocs_start=1
 		autostart=true
 		autorestart=true
+		stdout_logfile=/var/log/supervisor/{{.RelayProgram}}-stdout.log
+		stderr_logfile=/var/log/supervisor/{{.RelayProgram}}-stderr.log
 	`)))
-	rFile, err := os.Create(runner02supervisorConfFiles + "/" + runner02relaySupervisorConfFile + r.InstanceId + ".conf")
+	rFile, err := os.Create(runner02supervisorConfFiles + "/" + runner02relaySupervisorConfFile + "_" + r.InstanceId + ".conf")
 	if err != nil {
 		return err
 	}
@@ -178,8 +180,10 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 		numprocs_start=1
 		autostart=true
 		autorestart=true
+		stdout_logfile=/var/log/supervisor/{{.GethProgram}}-stdout.log
+		stderr_logfile=/var/log/supervisor/{{.GethProgram}}-stderr.log
 	`)))
-	gFile, err := os.Create(runner02supervisorConfFiles + "/" + runner02gethSupervisorConfFile + r.InstanceId + ".conf")
+	gFile, err := os.Create(runner02supervisorConfFiles + "/" + runner02gethSupervisorConfFile + "_" + r.InstanceId + ".conf")
 	if err != nil {
 		return err
 	}
@@ -329,8 +333,8 @@ func (r *linux_amd64_supervisor_runner02) Destroy() error {
 }
 
 func (r *linux_amd64_supervisor_runner02) PostRun() error {
-	var relayethConfig = runner02supervisorConfFiles + "/" + runner02relaySupervisorConfFile + r.InstanceId + ".conf"
-	var gethConfig = runner02supervisorConfFiles + "/" + runner02gethSupervisorConfFile + r.InstanceId + ".conf"
+	var relayethConfig = runner02supervisorConfFiles + "/" + runner02relaySupervisorConfFile + "_" + r.InstanceId + ".conf"
+	var gethConfig = runner02supervisorConfFiles + "/" + runner02gethSupervisorConfFile + "_" + r.InstanceId + ".conf"
 
 	if _, err := os.Stat(relayethConfig); !os.IsNotExist(err) {
 		if err := os.Remove(relayethConfig); err != nil {
@@ -344,39 +348,7 @@ func (r *linux_amd64_supervisor_runner02) PostRun() error {
 		}
 	}
 
-	available, resData, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
-	if err != nil {
-		return err
-	}
-	if !available {
-		return errors.New("resource by id " + r.InstanceId + " doesn't exists. Can't destroy")
-	}
-
-	err = util.CreateDirPathIfNotExists(runner02oldLogRootDir)
-	if err != nil {
-		return err
-	}
-
-	err = filepath.Walk(runner02logRootDir, func(path string, f os.FileInfo, _ error) error {
-		if !f.IsDir() {
-			r, err := regexp.MatchString(resData.RelayProgram+".*|"+resData.GethProgram+".*", f.Name())
-			if err == nil && r {
-				err2 := os.Rename(runner02logRootDir+"/"+f.Name(), runner02oldLogRootDir+"/previous_run_"+f.Name())
-				if err2 != nil {
-					return err2
-				}
-			} else if err != nil {
-				return nil
-			}
-		}
-		return nil
-	})
-
-	if err != nil {
-		return errors.New("Error while marking logs as old: " + err.Error())
-	}
-
-	_, err = exec.Command("supervisorctl", "reread").Output()
+	_, err := exec.Command("supervisorctl", "reread").Output()
 	if err != nil {
 		return errors.New("Error while supervisorctl reread: " + err.Error())
 	}
@@ -391,7 +363,7 @@ func (r *linux_amd64_supervisor_runner02) PostRun() error {
 		return errors.New("Error while removing resource file: " + err.Error())
 	}
 
-	log.Info("All relevant processes stopped, resources deleted, supervisor configs removed, logs marked as old")
+	log.Info("All relevant processes stopped, resources deleted, supervisor configs removed")
 	return nil
 }
 
@@ -416,16 +388,13 @@ func (r *linux_amd64_supervisor_runner02) Status() error {
 	util.PrettyPrintKVStruct(resData)
 
 	status, _ := exec.Command("supervisorctl", "status").Output()
-	// if err != nil {
-	// 	return errors.New("Error while reading supervisor status: " + err.Error())
-	// }
 
 	var supervisorStatus = make(map[string]interface{})
 
 	statusLines := strings.Split(string(status), "\n")
 	var anyStatusLine = false
 	for _, v := range statusLines {
-		if match, err := regexp.MatchString(runner02relayProgramName+r.InstanceId+"|"+runner02gethProgramName+r.InstanceId, v); err == nil && match {
+		if match, err := regexp.MatchString(runner02relayProgramName+"_"+r.InstanceId+"|"+runner02gethProgramName+"_"+r.InstanceId, v); err == nil && match {
 			vSplit := strings.Split(v, " ")
 			supervisorStatus[vSplit[0]] = strings.Trim(strings.Join(vSplit[1:], " "), " ")
 			anyStatusLine = true
