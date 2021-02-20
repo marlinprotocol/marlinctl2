@@ -425,10 +425,10 @@ func (r *linux_amd64_supervisor_runner02) Logs() error {
 	var runner02logRootDir = "/var/log/supervisor/"
 	err = filepath.Walk(runner02logRootDir, func(path string, f os.FileInfo, _ error) error {
 		if !f.IsDir() {
-			for _, v := range []string{runner02gatewaySupervisorConfFile + r.InstanceId + "-stdout.*",
-				runner02gatewaySupervisorConfFile + r.InstanceId + "-stderr.*",
-				runner02bridgeSupervisorConfFile + r.InstanceId + "-stdout.*",
-				runner02bridgeSupervisorConfFile + r.InstanceId + "-stderr.*"} {
+			for _, v := range []string{runner02gatewaySupervisorConfFile + "_" + r.InstanceId + "-stdout.*",
+				runner02gatewaySupervisorConfFile + "_" + r.InstanceId + "-stderr.*",
+				runner02bridgeSupervisorConfFile + "_" + r.InstanceId + "-stdout.*",
+				runner02bridgeSupervisorConfFile + "_" + r.InstanceId + "-stderr.*"} {
 				r, err := regexp.MatchString(v, f.Name())
 				if err == nil && r {
 					fileSubscriptions[v[:len(v)-2]] = runner02logRootDir + f.Name()
