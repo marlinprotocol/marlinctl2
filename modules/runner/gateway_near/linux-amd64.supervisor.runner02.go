@@ -111,7 +111,7 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 
 	substitutions := runner02resource{
 		"linux-amd64.supervisor.runner02", r.Version, time.Now().Format(time.RFC822Z),
-		runner02gatewayProgramName + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + runner02gatewayName, "", "",
+		runner02gatewayProgramName + "_" + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + runner02gatewayName, "", "",
 		"", "", "", "", "", "",
 	}
 
@@ -363,8 +363,8 @@ func (r *linux_amd64_supervisor_runner02) Logs() error {
 	var runner02logRootDir = "/var/log/supervisor/"
 	err = filepath.Walk(runner02logRootDir, func(path string, f os.FileInfo, _ error) error {
 		if !f.IsDir() {
-			for _, v := range []string{runner02gatewaySupervisorConfFile + r.InstanceId + "-stdout.*",
-				runner02gatewaySupervisorConfFile + r.InstanceId + "-stderr.*"} {
+			for _, v := range []string{runner02gatewaySupervisorConfFile + "_" + r.InstanceId + "-stdout.*",
+				runner02gatewaySupervisorConfFile + "_" + r.InstanceId + "-stderr.*"} {
 				r, err := regexp.MatchString(v, f.Name())
 				if err == nil && r {
 					fileSubscriptions[v[:len(v)-2]] = runner02logRootDir + f.Name()
