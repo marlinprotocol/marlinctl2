@@ -245,6 +245,16 @@ func (c *CommandDetails) getStringFromArgStoreOrDie(key string) string {
 	return ""
 }
 
+func (c *CommandDetails) getIntFromArgStoreOrDie(key string) int {
+	if v, ok := c.ArgStore[key]; ok {
+		return *(v.(*int))
+	} else {
+		log.Error("Cannot find key " + key + " in argstore. Aborting")
+		os.Exit(1)
+	}
+	return 0
+}
+
 func (c *CommandDetails) getStringSliceFromArgStoreOrDie(key string) []string {
 	if v, ok := c.ArgStore[key]; ok {
 		return *(v.(*[]string))

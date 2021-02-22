@@ -472,3 +472,35 @@ func PrintPrettyDiff(message string) {
 		}
 	}
 }
+
+func GetFileSeekOffsetLastNLines(fname string, lines int) int64 {
+	file, err := os.Open(fname)
+	if err != nil {
+		return 0
+	}
+	defer file.Close()
+
+	buf := make([]byte, 1000*lines)
+	stat, err := os.Stat(fname)
+	start := stat.Size() - int64(1000*lines)
+	if start < 0 {
+		start = 0
+	}
+
+	_, err = file.ReadAt(buf, start)
+
+	linesEncountered := 0
+	offset := stat.Size() - start
+
+	for ; offset >= 0 && linesEncountered <= lines; offset-- {
+		if buf[offset] == '\n' {
+			linesEncountered += 1
+		}
+	}
+
+	offset = offset + start + 2
+	if offset < 0 {
+		return 0
+	}
+	return offset
+}

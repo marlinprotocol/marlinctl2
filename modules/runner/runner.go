@@ -10,5 +10,5 @@ type Runner interface {
 	Destroy() error
 	PostRun() error
 	Status() error
-	Logs() error
+	Logs(lines int) error
 }

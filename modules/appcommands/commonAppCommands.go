@@ -244,6 +244,7 @@ func (a *app) setupLogsCommand() {
 			// Run application
 			projConfig := a.getProjectConfigOrDie()
 			runnerID, version := a.getResourceMetadataOrDie(projConfig, instanceID)
+			last := a.LogsCmd.getIntFromArgStoreOrDie("last")
 			runner := a.getRunnerInstanceOrDie(runnerID,
 				version,
 				projConfig.Storage,
@@ -252,13 +253,14 @@ func (a *app) setupLogsCommand() {
 				true,
 				instanceID)
 			a.doPreRunSanityOrDie(runner)
-			runner.Logs()
+			runner.Logs(last)
 		},
 	}
 
 	a.LogsCmd.ArgStore = make(map[string]interface{})
 
 	a.LogsCmd.ArgStore["instance-id"] = a.LogsCmd.Cmd.Flags().StringP("instance-id", "i", "001", "instance-id of resource to log")
+	a.LogsCmd.ArgStore["last"] = a.LogsCmd.Cmd.Flags().IntP("last", "n", 100, "number of last lines to tail in logfile")
 }
 
 // Status command

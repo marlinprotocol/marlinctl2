@@ -410,7 +410,7 @@ func (r *linux_amd64_supervisor_runner02) Status() error {
 	return nil
 }
 
-func (r *linux_amd64_supervisor_runner02) Logs() error {
+func (r *linux_amd64_supervisor_runner02) Logs(lines int) error {
 	available, resData, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
 	if err != nil {
 		return err
@@ -443,7 +443,8 @@ func (r *linux_amd64_supervisor_runner02) Logs() error {
 	for k, v := range fileSubscriptions {
 		wg.Add(1)
 		go func(filename string, filelocation string) {
-			t, err := tail.TailFile(filelocation, tail.Config{Follow: true})
+			seeklocation := util.GetFileSeekOffsetLastNLines(filelocation, lines)
+			t, err := tail.TailFile(filelocation, tail.Config{Location: &tail.SeekInfo{Offset: seeklocation}, Follow: true, Logger: tail.DiscardingLogger})
 			if err != nil {
 				fmt.Println(err)
 			}
