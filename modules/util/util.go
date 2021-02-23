@@ -490,7 +490,7 @@ func GetFileSeekOffsetLastNLines(fname string, lines int) int64 {
 	_, err = file.ReadAt(buf, start)
 
 	linesEncountered := 0
-	offset := stat.Size() - start
+	offset := stat.Size() - start - 1
 
 	for ; offset >= 0 && linesEncountered <= lines; offset-- {
 		if buf[offset] == '\n' {
