@@ -35,6 +35,7 @@ func (a *app) shallowCopyDescriptions(dst *CommandDetails, src CommandDetails) {
 	dst.Use = src.Use
 	dst.DescShort = src.DescShort
 	dst.DescLong = src.DescLong
+	dst.AdditionalPreRunTest = src.AdditionalPreRunTest
 }
 
 func (a *app) setupDefaultConfigIfNotExists() error {

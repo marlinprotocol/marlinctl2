@@ -18,6 +18,7 @@ package iris
 import (
 	"os"
 
+	"github.com/marlinprotocol/ctl2/cmd/keys/keystore"
 	"github.com/marlinprotocol/ctl2/modules/appcommands"
 	projectRunners "github.com/marlinprotocol/ctl2/modules/runner/gateway_iris"
 	log "github.com/sirupsen/logrus"
@@ -33,11 +34,11 @@ var IrisCmd = &cobra.Command{
 
 func init() {
 	app, err := appcommands.GetNewApp("gateway_iris", projectRunners.GetRunnerInstance,
-		appcommands.CommandDetails{Use: "create", DescShort: "Create gateway for irisnet blockchain", DescLong: "Create gateway for irisnet blockchain"},
+		appcommands.CommandDetails{Use: "create", DescShort: "Create gateway for irisnet blockchain", DescLong: "Create gateway for irisnet blockchain", AdditionalPreRunTest: keystore.KeystoreCheck},
 		appcommands.CommandDetails{Use: "destroy", DescShort: "Destroy gateway for irisnet blockchain", DescLong: "Destroy gateway for irisnet blockchain"},
 		appcommands.CommandDetails{Use: "logs", DescShort: "Tail logs for running gateway (irisnet) instances", DescLong: "Tail logs for running gateway (irisnet) instances"},
 		appcommands.CommandDetails{Use: "status", DescShort: "Show status of currently running gateway (irisnet) instances", DescLong: "Show status of currently running gateway (irisnet) instances"},
-		appcommands.CommandDetails{Use: "recreate", DescShort: "Recreate end to end gateway (irisnet) instances", DescLong: "Recreate end to end gateway (irisnet) instances"},
+		appcommands.CommandDetails{Use: "recreate", DescShort: "Recreate end to end gateway (irisnet) instances", DescLong: "Recreate end to end gateway (irisnet) instances", AdditionalPreRunTest: keystore.KeystoreCheck},
 		appcommands.CommandDetails{Use: "restart", DescShort: "Restart services for gateway (irisnet) instances", DescLong: "Restart services for gateway (irisnet) instances"},
 		appcommands.CommandDetails{Use: "versions", DescShort: "Show available versions for use", DescLong: "Show available versions for use"},
 
@@ -68,13 +69,14 @@ func init() {
 	configCmd.AddCommand(app.ConfigApplyCmd.Cmd)
 
 	// Extra flag additions for gateway_iris -----------------------------------------------
+	keystorePath, keystorePassPath, _ := keystore.GetKeystoreDetails()
 
 	app.CreateCmd.ArgStore["discovery-addr"] = app.CreateCmd.Cmd.Flags().StringP("discovery-addr", "d", "0.0.0.0:21702", "Bridge discovery address")
 	app.CreateCmd.ArgStore["pubsub-addr"] = app.CreateCmd.Cmd.Flags().StringP("pubsub-addr", "p", "0.0.0.0:21700", "Bridge pubsub address")
 	app.CreateCmd.ArgStore["bootstrap-addr"] = app.CreateCmd.Cmd.Flags().StringP("bootstrap-addr", "b", "", "Bridge bootstrap address")
 	app.CreateCmd.ArgStore["internal-listen-addr"] = app.CreateCmd.Cmd.Flags().StringP("internal-listen-address", "l", "127.0.0.1:21901", "Bridge listen address")
-	app.CreateCmd.ArgStore["keystore-path"] = app.CreateCmd.Cmd.Flags().StringP("keystore-path", "k", "", "Keystore Path")
-	app.CreateCmd.ArgStore["keystore-pass-path"] = app.CreateCmd.Cmd.Flags().StringP("keystore-pass-path", "y", "", "Keystore pass path")
+	app.CreateCmd.ArgStore["keystore-path"] = app.CreateCmd.Cmd.Flags().StringP("keystore-path", "k", keystorePath, "Keystore Path")
+	app.CreateCmd.ArgStore["keystore-pass-path"] = app.CreateCmd.Cmd.Flags().StringP("keystore-pass-path", "y", keystorePassPath, "Keystore pass path")
 	app.CreateCmd.ArgStore["contracts"] = app.CreateCmd.Cmd.Flags().StringP("contracts", "c", "mainnet", "mainnet/kovan")
 
 	// ----------------------------------------------------------------------------------

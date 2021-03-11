@@ -18,6 +18,7 @@ package beacon
 import (
 	"os"
 
+	"github.com/marlinprotocol/ctl2/cmd/keys/keystore"
 	"github.com/marlinprotocol/ctl2/modules/appcommands"
 	projectRunners "github.com/marlinprotocol/ctl2/modules/runner/beacon"
 	log "github.com/sirupsen/logrus"
@@ -38,11 +39,11 @@ func init() {
 	// BeaconCmd.AddCommand(actions.VersionsCmd)
 	// BeaconCmd.AddCommand(actions.LogsCmd)
 	app, err := appcommands.GetNewApp("beacon", projectRunners.GetRunnerInstance,
-		appcommands.CommandDetails{Use: "create", DescShort: "Create marlin beacon", DescLong: "Create marlin beacon"},
+		appcommands.CommandDetails{Use: "create", DescShort: "Create marlin beacon", DescLong: "Create marlin beacon", AdditionalPreRunTest: keystore.KeystoreCheck},
 		appcommands.CommandDetails{Use: "destroy", DescShort: "Destroy marlin beacon", DescLong: "Destroy marlin beacon"},
 		appcommands.CommandDetails{Use: "logs", DescShort: "Tail logs for running beacon instances", DescLong: "Tail logs for running beacon instances"},
 		appcommands.CommandDetails{Use: "status", DescShort: "Show current status of currently running marlin beacon instances", DescLong: "Show current status of currently running marlin beacon instances"},
-		appcommands.CommandDetails{Use: "recreate", DescShort: "Recreate end to end marlin beacon instances", DescLong: "Recreate end to end marlin beacon instances"},
+		appcommands.CommandDetails{Use: "recreate", DescShort: "Recreate end to end marlin beacon instances", DescLong: "Recreate end to end marlin beacon instances", AdditionalPreRunTest: keystore.KeystoreCheck},
 		appcommands.CommandDetails{Use: "restart", DescShort: "Restart services for marlin beacon instances", DescLong: "Restart services for marlin beacon instances"},
 		appcommands.CommandDetails{Use: "versions", DescShort: "Show available versions for use", DescLong: "Show available versions for use"},
 
@@ -73,12 +74,13 @@ func init() {
 	configCmd.AddCommand(app.ConfigApplyCmd.Cmd)
 
 	// Extra flag additions for beacon -----------------------------------------------
+	keystorePath, keystorePassPath, _ := keystore.GetKeystoreDetails()
 
 	app.CreateCmd.ArgStore["discovery-addr"] = app.CreateCmd.Cmd.Flags().StringP("discovery-addr", "a", "127.0.0.1:8002", "Discovery address of beacon")
 	app.CreateCmd.ArgStore["heartbeat-addr"] = app.CreateCmd.Cmd.Flags().StringP("heartbeat-addr", "g", "127.0.0.1:8003", "Heartbeat address of beacon")
 	app.CreateCmd.ArgStore["bootstrap-addr"] = app.CreateCmd.Cmd.Flags().StringP("bootstrap-addr", "b", "", "Bootstrap address of beacon")
-	app.CreateCmd.ArgStore["keystore-path"] = app.CreateCmd.Cmd.Flags().StringP("keystore-path", "k", "", "Keystore path")
-	app.CreateCmd.ArgStore["keystore-pass-path"] = app.CreateCmd.Cmd.Flags().StringP("keystore-pass-path", "p", "", "Keystore pass path")
+	app.CreateCmd.ArgStore["keystore-path"] = app.CreateCmd.Cmd.Flags().StringP("keystore-path", "k", keystorePath, "Keystore path")
+	app.CreateCmd.ArgStore["keystore-pass-path"] = app.CreateCmd.Cmd.Flags().StringP("keystore-pass-path", "p", keystorePassPath, "Keystore pass path")
 
 	// ----------------------------------------------------------------------------------
 }

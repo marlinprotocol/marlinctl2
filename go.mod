@@ -3,6 +3,7 @@ module github.com/marlinprotocol/ctl2
 go 1.15
 
 require (
+	github.com/ethereum/go-ethereum v1.10.1
 	github.com/getlantern/deepcopy v0.0.0-20160317154340-7f45deb8130a
 	github.com/go-openapi/strfmt v0.19.11 // indirect
 	github.com/google/go-cmp v0.5.2
@@ -18,5 +19,5 @@ require (
 	gopkg.in/fsnotify.v1 v1.4.7 // indirect
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
-	gopkg.in/yaml.v2 v2.2.8
+	gopkg.in/yaml.v2 v2.3.0
 )

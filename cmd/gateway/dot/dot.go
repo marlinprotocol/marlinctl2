@@ -18,6 +18,7 @@ package dot
 import (
 	"os"
 
+	"github.com/marlinprotocol/ctl2/cmd/keys/keystore"
 	"github.com/marlinprotocol/ctl2/modules/appcommands"
 	projectRunners "github.com/marlinprotocol/ctl2/modules/runner/gateway_dot"
 	log "github.com/sirupsen/logrus"
@@ -33,11 +34,11 @@ var DotCmd = &cobra.Command{
 
 func init() {
 	app, err := appcommands.GetNewApp("gateway_dot", projectRunners.GetRunnerInstance,
-		appcommands.CommandDetails{Use: "create", DescShort: "Create gateway for polkadot blockchain", DescLong: "Create gateway for polkadot blockchain"},
+		appcommands.CommandDetails{Use: "create", DescShort: "Create gateway for polkadot blockchain", DescLong: "Create gateway for polkadot blockchain", AdditionalPreRunTest: keystore.KeystoreCheck},
 		appcommands.CommandDetails{Use: "destroy", DescShort: "Destroy gateway for polkadot blockchain", DescLong: "Destroy gateway for polkadot blockchain"},
 		appcommands.CommandDetails{Use: "logs", DescShort: "Tail logs for running gateway (polkadot) instances", DescLong: "Tail logs for running gateway (polkadot) instances"},
 		appcommands.CommandDetails{Use: "status", DescShort: "Show status of currently running gateway (polkadot) instances", DescLong: "Show status of currently running gateway (polkadot) instances"},
-		appcommands.CommandDetails{Use: "recreate", DescShort: "Recreate end to end gateway (polkadot) instances", DescLong: "Recreate end to end gateway (polkadot) instances"},
+		appcommands.CommandDetails{Use: "recreate", DescShort: "Recreate end to end gateway (polkadot) instances", DescLong: "Recreate end to end gateway (polkadot) instances", AdditionalPreRunTest: keystore.KeystoreCheck},
 		appcommands.CommandDetails{Use: "restart", DescShort: "Restart services for gateway (polkadot) instances", DescLong: "Restart services for gateway (polkadot) instances"},
 		appcommands.CommandDetails{Use: "versions", DescShort: "Show available versions for use", DescLong: "Show available versions for use"},
 
@@ -68,6 +69,7 @@ func init() {
 	configCmd.AddCommand(app.ConfigApplyCmd.Cmd)
 
 	// Extra flag additions for gateway_dot -----------------------------------------------
+	keystorePath, keystorePassPath, _ := keystore.GetKeystoreDetails()
 
 	app.CreateCmd.ArgStore["chain-identity"] = app.CreateCmd.Cmd.Flags().StringP("chain-identity", "a", "gateway_dot.key", "Gateway's keystore path")
 	app.CreateCmd.ArgStore["listen-addr"] = app.CreateCmd.Cmd.Flags().StringP("listen-addr", "g", "/ip4/0.0.0.0/tcp/20900", "Address on which gateway listens for connections from peer")
@@ -75,8 +77,8 @@ func init() {
 	app.CreateCmd.ArgStore["pubsub-addr"] = app.CreateCmd.Cmd.Flags().StringP("pubsub-addr", "p", "0.0.0.0:20700", "Bridge pubsub address")
 	app.CreateCmd.ArgStore["bootstrap-addr"] = app.CreateCmd.Cmd.Flags().StringP("bootstrap-addr", "b", "", "Bridge bootstrap address")
 	app.CreateCmd.ArgStore["internal-listen-addr"] = app.CreateCmd.Cmd.Flags().StringP("internal-listen-address", "l", "127.0.0.1:20901", "Bridge listen address")
-	app.CreateCmd.ArgStore["keystore-path"] = app.CreateCmd.Cmd.Flags().StringP("keystore-path", "k", "", "Keystore Path")
-	app.CreateCmd.ArgStore["keystore-pass-path"] = app.CreateCmd.Cmd.Flags().StringP("keystore-pass-path", "y", "", "Keystore pass path")
+	app.CreateCmd.ArgStore["keystore-path"] = app.CreateCmd.Cmd.Flags().StringP("keystore-path", "k", keystorePath, "Keystore Path")
+	app.CreateCmd.ArgStore["keystore-pass-path"] = app.CreateCmd.Cmd.Flags().StringP("keystore-pass-path", "y", keystorePassPath, "Keystore pass path")
 	app.CreateCmd.ArgStore["contracts"] = app.CreateCmd.Cmd.Flags().StringP("contracts", "c", "mainnet", "mainnet/kovan")
 
 	// ----------------------------------------------------------------------------------
