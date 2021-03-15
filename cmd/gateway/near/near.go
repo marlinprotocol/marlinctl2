@@ -19,6 +19,7 @@ import (
 	"os"
 
 	"github.com/marlinprotocol/ctl2/modules/appcommands"
+	"github.com/marlinprotocol/ctl2/modules/keystore"
 	projectRunners "github.com/marlinprotocol/ctl2/modules/runner/gateway_near"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -45,7 +46,11 @@ func init() {
 		appcommands.CommandDetails{Use: "diff", DescShort: "Show soft modifications to config staged for apply", DescLong: "Show soft modifications to config staged for apply"},
 		appcommands.CommandDetails{Use: "modify", DescShort: "Modify configs on disk", DescLong: "Modify configs on disk"},
 		appcommands.CommandDetails{Use: "reset", DescShort: "Reset Configurations on disk", DescLong: "Reset Configurations on disk"},
-		appcommands.CommandDetails{Use: "apply", DescShort: "Apply modifications to config", DescLong: "Apply modifications to config"})
+		appcommands.CommandDetails{Use: "apply", DescShort: "Apply modifications to config", DescLong: "Apply modifications to config"},
+
+		appcommands.CommandDetails{Use: "create", DescShort: "Create keystore", DescLong: "Create keystore"},
+		appcommands.CommandDetails{Use: "destroy", DescShort: "Destroy keystore", DescLong: "Destroy keystore"},
+	)
 	if err != nil {
 		log.Error("Error while creating gateway_near application command tree")
 		os.Exit(1)
@@ -67,15 +72,24 @@ func init() {
 	configCmd.AddCommand(app.ConfigResetCmd.Cmd)
 	configCmd.AddCommand(app.ConfigApplyCmd.Cmd)
 
+	keystoreCmd := &cobra.Command{Use: "keystore", Short: "Create or Destroy keystore", Long: "Create or Destroy keystore"}
+	NearCmd.AddCommand(keystoreCmd)
+	keystoreCmd.AddCommand(app.KeystoreCreateCmd.Cmd)
+	keystoreCmd.AddCommand(app.KeystoreDestroyCmd.Cmd)
+
 	// Extra flag additions for gateway_near -----------------------------------------------
+	keystorePath, keystorePassPath, err := keystore.GetKeystoreDetails("gateway_near")
+	if err != nil {
+		log.Warning("No Keystore for gateway_iris")
+	}
 
 	app.CreateCmd.ArgStore["chain-identity"] = app.CreateCmd.Cmd.Flags().StringP("chain-identity", "a", "gateway_near.key", "Gateway's keystore path")
 	app.CreateCmd.ArgStore["listen-addr"] = app.CreateCmd.Cmd.Flags().StringP("listen-addr", "g", "0.0.0.0:21400", "Address on which gateway listens for connections from peer")
 	app.CreateCmd.ArgStore["discovery-addr"] = app.CreateCmd.Cmd.Flags().StringP("discovery-addr", "d", "0.0.0.0:21202", "Discovery address")
 	app.CreateCmd.ArgStore["pubsub-addr"] = app.CreateCmd.Cmd.Flags().StringP("pubsub-addr", "p", "0.0.0.0:21200", "Pubsub address")
 	app.CreateCmd.ArgStore["bootstrap-addr"] = app.CreateCmd.Cmd.Flags().StringP("bootstrap-addr", "b", "", "Bootstrap address")
-	app.CreateCmd.ArgStore["keystore-path"] = app.CreateCmd.Cmd.Flags().StringP("keystore-path", "k", "", "Keystore Path")
-	app.CreateCmd.ArgStore["keystore-pass-path"] = app.CreateCmd.Cmd.Flags().StringP("keystore-pass-path", "y", "", "Keystore pass path")
+	app.CreateCmd.ArgStore["keystore-path"] = app.CreateCmd.Cmd.Flags().StringP("keystore-path", "k", keystorePath, "Keystore Path")
+	app.CreateCmd.ArgStore["keystore-pass-path"] = app.CreateCmd.Cmd.Flags().StringP("keystore-pass-path", "y", keystorePassPath, "Keystore pass path")
 	app.CreateCmd.ArgStore["contracts"] = app.CreateCmd.Cmd.Flags().StringP("contracts", "c", "mainnet", "mainnet/kovan")
 
 	// ----------------------------------------------------------------------------------
