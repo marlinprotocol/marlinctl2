@@ -30,7 +30,7 @@ func GetKeystoreDetails(projectId string) (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
-	kstore := ethKeystore.NewKeyStore(home.HomeDir+"/.marlin/ctl/keystore/"+projectId, ethKeystore.StandardScryptN, ethKeystore.StandardScryptP)
+	kstore := ethKeystore.NewKeyStore(home.HomeDir+"/.marlin/ctl/storage/projects/"+projectId+"/common/keystore", ethKeystore.StandardScryptN, ethKeystore.StandardScryptP)
 	if len(kstore.Accounts()) == 0 {
 		return "", "", errors.New("no existing keystore found")
 	}

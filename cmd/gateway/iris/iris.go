@@ -18,8 +18,8 @@ package iris
 import (
 	"os"
 
-	"github.com/marlinprotocol/ctl2/cmd/keystore"
 	"github.com/marlinprotocol/ctl2/modules/appcommands"
+	"github.com/marlinprotocol/ctl2/modules/keystore"
 	projectRunners "github.com/marlinprotocol/ctl2/modules/runner/gateway_iris"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -47,6 +47,7 @@ func init() {
 		appcommands.CommandDetails{Use: "modify", DescShort: "Modify configs on disk", DescLong: "Modify configs on disk"},
 		appcommands.CommandDetails{Use: "reset", DescShort: "Reset Configurations on disk", DescLong: "Reset Configurations on disk"},
 		appcommands.CommandDetails{Use: "apply", DescShort: "Apply modifications to config", DescLong: "Apply modifications to config"},
+
 		appcommands.CommandDetails{Use: "create", DescShort: "Create keystore", DescLong: "Create keystore"},
 		appcommands.CommandDetails{Use: "destroy", DescShort: "Destroy keystore", DescLong: "Destroy keystore"},
 	)

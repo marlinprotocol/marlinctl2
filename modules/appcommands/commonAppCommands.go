@@ -21,7 +21,7 @@ import (
 	"os"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/marlinprotocol/ctl2/cmd/keystore"
+	"github.com/marlinprotocol/ctl2/modules/keystore"
 	"github.com/marlinprotocol/ctl2/modules/runner"
 	"github.com/marlinprotocol/ctl2/modules/util"
 	"github.com/marlinprotocol/ctl2/types"
@@ -709,7 +709,7 @@ func (a *app) setupKeystoreCreateCommand() {
 			keystorePassPath := a.KeystoreCreateCmd.getStringFromArgStoreOrDie("pass-path")
 			home, err := util.GetUser()
 			if err == nil {
-				keystoreDir := home.HomeDir + "/.marlin/ctl/keystore/" + a.ProjectID
+				keystoreDir := home.HomeDir + "/.marlin/ctl/storage/projects/" + a.ProjectID + "/common/keystore"
 				err = keystore.Create(keystoreDir, keystorePassPath)
 			}
 			if err != nil {
@@ -742,7 +742,7 @@ func (a *app) setupKeystoreDestroyCommand() {
 		Run: func(cmd *cobra.Command, args []string) {
 			home, err := util.GetUser()
 			if err == nil {
-				keystoreDir := home.HomeDir + "/.marlin/ctl/keystore/" + a.ProjectID
+				keystoreDir := home.HomeDir + "/.marlin/ctl/storage/projects/" + a.ProjectID + "/common/keystore"
 				err = keystore.Destroy(keystoreDir)
 			}
 			if err != nil {

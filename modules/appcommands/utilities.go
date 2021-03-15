@@ -22,7 +22,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/marlinprotocol/ctl2/cmd/keystore"
+	"github.com/marlinprotocol/ctl2/modules/keystore"
 	"github.com/marlinprotocol/ctl2/modules/registry"
 	"github.com/marlinprotocol/ctl2/modules/runner"
 	"github.com/marlinprotocol/ctl2/modules/util"
