@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/marlinprotocol/ctl2/cmd/keystore"
 	"github.com/marlinprotocol/ctl2/modules/registry"
 	"github.com/marlinprotocol/ctl2/modules/runner"
 	"github.com/marlinprotocol/ctl2/modules/util"
@@ -232,6 +233,13 @@ func (a *app) doUpdateCurrentVersionOrDie(cfg types.Project) {
 	err := viper.WriteConfig()
 	if err != nil {
 		log.Error("Error while updating configuration on disk for project "+a.ProjectID+": ", err)
+		os.Exit(1)
+	}
+}
+
+func (a *app) keystoreSanity() {
+	if err := keystore.KeystoreCheck(a.CreateCmd.Cmd, a.ProjectID); err != nil {
+		log.Error("keystore error: ", err)
 		os.Exit(1)
 	}
 }

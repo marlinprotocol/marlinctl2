@@ -18,7 +18,7 @@ package beacon
 import (
 	"os"
 
-	"github.com/marlinprotocol/ctl2/cmd/keys/keystore"
+	"github.com/marlinprotocol/ctl2/cmd/keystore"
 	"github.com/marlinprotocol/ctl2/modules/appcommands"
 	projectRunners "github.com/marlinprotocol/ctl2/modules/runner/beacon"
 	log "github.com/sirupsen/logrus"
@@ -39,11 +39,11 @@ func init() {
 	// BeaconCmd.AddCommand(actions.VersionsCmd)
 	// BeaconCmd.AddCommand(actions.LogsCmd)
 	app, err := appcommands.GetNewApp("beacon", projectRunners.GetRunnerInstance,
-		appcommands.CommandDetails{Use: "create", DescShort: "Create marlin beacon", DescLong: "Create marlin beacon", AdditionalPreRunTest: keystore.KeystoreCheck},
+		appcommands.CommandDetails{Use: "create", DescShort: "Create marlin beacon", DescLong: "Create marlin beacon"},
 		appcommands.CommandDetails{Use: "destroy", DescShort: "Destroy marlin beacon", DescLong: "Destroy marlin beacon"},
 		appcommands.CommandDetails{Use: "logs", DescShort: "Tail logs for running beacon instances", DescLong: "Tail logs for running beacon instances"},
 		appcommands.CommandDetails{Use: "status", DescShort: "Show current status of currently running marlin beacon instances", DescLong: "Show current status of currently running marlin beacon instances"},
-		appcommands.CommandDetails{Use: "recreate", DescShort: "Recreate end to end marlin beacon instances", DescLong: "Recreate end to end marlin beacon instances", AdditionalPreRunTest: keystore.KeystoreCheck},
+		appcommands.CommandDetails{Use: "recreate", DescShort: "Recreate end to end marlin beacon instances", DescLong: "Recreate end to end marlin beacon instances"},
 		appcommands.CommandDetails{Use: "restart", DescShort: "Restart services for marlin beacon instances", DescLong: "Restart services for marlin beacon instances"},
 		appcommands.CommandDetails{Use: "versions", DescShort: "Show available versions for use", DescLong: "Show available versions for use"},
 
@@ -51,7 +51,10 @@ func init() {
 		appcommands.CommandDetails{Use: "diff", DescShort: "Show soft modifications to config staged for apply", DescLong: "Show soft modifications to config staged for apply"},
 		appcommands.CommandDetails{Use: "modify", DescShort: "Modify configs on disk", DescLong: "Modify configs on disk"},
 		appcommands.CommandDetails{Use: "reset", DescShort: "Reset Configurations on disk", DescLong: "Reset Configurations on disk"},
-		appcommands.CommandDetails{Use: "apply", DescShort: "Apply modifications to config", DescLong: "Apply modifications to config"})
+		appcommands.CommandDetails{Use: "apply", DescShort: "Apply modifications to config", DescLong: "Apply modifications to config"},
+		appcommands.CommandDetails{Use: "create", DescShort: "Create keystore", DescLong: "Create keystore"},
+		appcommands.CommandDetails{Use: "destroy", DescShort: "Destroy keystore", DescLong: "Destroy keystore"},
+	)
 	if err != nil {
 		log.Error("Error while creating beacon application command tree")
 		os.Exit(1)
@@ -73,8 +76,16 @@ func init() {
 	configCmd.AddCommand(app.ConfigResetCmd.Cmd)
 	configCmd.AddCommand(app.ConfigApplyCmd.Cmd)
 
+	keystoreCmd := &cobra.Command{Use: "keystore", Short: "Create or Destroy keystore", Long: "Create or Destroy keystore"}
+	BeaconCmd.AddCommand(keystoreCmd)
+	keystoreCmd.AddCommand(app.KeystoreCreateCmd.Cmd)
+	keystoreCmd.AddCommand(app.KeystoreDestroyCmd.Cmd)
+
 	// Extra flag additions for beacon -----------------------------------------------
-	keystorePath, keystorePassPath, _ := keystore.GetKeystoreDetails()
+	keystorePath, keystorePassPath, err := keystore.GetKeystoreDetails("beacon")
+	if err != nil {
+		log.Warning("No Keystore for beacon")
+	}
 
 	app.CreateCmd.ArgStore["discovery-addr"] = app.CreateCmd.Cmd.Flags().StringP("discovery-addr", "a", "127.0.0.1:8002", "Discovery address of beacon")
 	app.CreateCmd.ArgStore["heartbeat-addr"] = app.CreateCmd.Cmd.Flags().StringP("heartbeat-addr", "g", "127.0.0.1:8003", "Heartbeat address of beacon")

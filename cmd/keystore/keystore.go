@@ -24,34 +24,22 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// AppCmd represents the registry command
-var KeystoreCmd = &cobra.Command{
-	Use:   "keystore",
-	Short: "Create or destroy keystore",
-	Long:  `Create or destroy Keystore`,
-}
-
-func init() {
-	KeystoreCmd.AddCommand(createCmd)
-	KeystoreCmd.AddCommand(destroyCmd)
-}
-
 // returns keystore and keystorePass file path if exists at default location, else return error
-func GetKeystoreDetails() (string, string, error) {
+func GetKeystoreDetails(projectId string) (string, string, error) {
 	home, err := util.GetUser()
 	if err != nil {
 		return "", "", err
 	}
-	kstore := ethKeystore.NewKeyStore(home.HomeDir+"/.marlin/ctl/keys/keystore", ethKeystore.StandardScryptN, ethKeystore.StandardScryptP)
+	kstore := ethKeystore.NewKeyStore(home.HomeDir+"/.marlin/ctl/keystore/"+projectId, ethKeystore.StandardScryptN, ethKeystore.StandardScryptP)
 	if len(kstore.Accounts()) == 0 {
 		return "", "", errors.New("no existing keystore found")
 	}
 	return kstore.Accounts()[0].URL.Path, kstore.Accounts()[0].URL.Path + "-pass", nil
 }
 
-func KeystoreCheck(cmd *cobra.Command, args []string) error {
+func KeystoreCheck(cmd *cobra.Command, projectId string) error {
 	if !cmd.Flags().Changed("keystore-path") {
-		_, _, err := GetKeystoreDetails()
+		_, _, err := GetKeystoreDetails(projectId)
 		if err != nil {
 			log.Error(err)
 			log.Error("Please either create a new keystore or provide existing")

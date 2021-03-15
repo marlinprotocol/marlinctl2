@@ -18,7 +18,7 @@ package dot
 import (
 	"os"
 
-	"github.com/marlinprotocol/ctl2/cmd/keys/keystore"
+	"github.com/marlinprotocol/ctl2/cmd/keystore"
 	"github.com/marlinprotocol/ctl2/modules/appcommands"
 	projectRunners "github.com/marlinprotocol/ctl2/modules/runner/gateway_dot"
 	log "github.com/sirupsen/logrus"
@@ -34,11 +34,11 @@ var DotCmd = &cobra.Command{
 
 func init() {
 	app, err := appcommands.GetNewApp("gateway_dot", projectRunners.GetRunnerInstance,
-		appcommands.CommandDetails{Use: "create", DescShort: "Create gateway for polkadot blockchain", DescLong: "Create gateway for polkadot blockchain", AdditionalPreRunTest: keystore.KeystoreCheck},
+		appcommands.CommandDetails{Use: "create", DescShort: "Create gateway for polkadot blockchain", DescLong: "Create gateway for polkadot blockchain"},
 		appcommands.CommandDetails{Use: "destroy", DescShort: "Destroy gateway for polkadot blockchain", DescLong: "Destroy gateway for polkadot blockchain"},
 		appcommands.CommandDetails{Use: "logs", DescShort: "Tail logs for running gateway (polkadot) instances", DescLong: "Tail logs for running gateway (polkadot) instances"},
 		appcommands.CommandDetails{Use: "status", DescShort: "Show status of currently running gateway (polkadot) instances", DescLong: "Show status of currently running gateway (polkadot) instances"},
-		appcommands.CommandDetails{Use: "recreate", DescShort: "Recreate end to end gateway (polkadot) instances", DescLong: "Recreate end to end gateway (polkadot) instances", AdditionalPreRunTest: keystore.KeystoreCheck},
+		appcommands.CommandDetails{Use: "recreate", DescShort: "Recreate end to end gateway (polkadot) instances", DescLong: "Recreate end to end gateway (polkadot) instances"},
 		appcommands.CommandDetails{Use: "restart", DescShort: "Restart services for gateway (polkadot) instances", DescLong: "Restart services for gateway (polkadot) instances"},
 		appcommands.CommandDetails{Use: "versions", DescShort: "Show available versions for use", DescLong: "Show available versions for use"},
 
@@ -46,7 +46,10 @@ func init() {
 		appcommands.CommandDetails{Use: "diff", DescShort: "Show soft modifications to config staged for apply", DescLong: "Show soft modifications to config staged for apply"},
 		appcommands.CommandDetails{Use: "modify", DescShort: "Modify configs on disk", DescLong: "Modify configs on disk"},
 		appcommands.CommandDetails{Use: "reset", DescShort: "Reset Configurations on disk", DescLong: "Reset Configurations on disk"},
-		appcommands.CommandDetails{Use: "apply", DescShort: "Apply modifications to config", DescLong: "Apply modifications to config"})
+		appcommands.CommandDetails{Use: "apply", DescShort: "Apply modifications to config", DescLong: "Apply modifications to config"},
+		appcommands.CommandDetails{Use: "create", DescShort: "Create keystore", DescLong: "Create keystore"},
+		appcommands.CommandDetails{Use: "destroy", DescShort: "Destroy keystore", DescLong: "Destroy keystore"},
+	)
 	if err != nil {
 		log.Error("Error while creating gateway_dot application command tree")
 		os.Exit(1)
@@ -68,8 +71,16 @@ func init() {
 	configCmd.AddCommand(app.ConfigResetCmd.Cmd)
 	configCmd.AddCommand(app.ConfigApplyCmd.Cmd)
 
+	keystoreCmd := &cobra.Command{Use: "keystore", Short: "Create or Destroy keystore", Long: "Create or Destroy keystore"}
+	DotCmd.AddCommand(keystoreCmd)
+	keystoreCmd.AddCommand(app.KeystoreCreateCmd.Cmd)
+	keystoreCmd.AddCommand(app.KeystoreDestroyCmd.Cmd)
+
 	// Extra flag additions for gateway_dot -----------------------------------------------
-	keystorePath, keystorePassPath, _ := keystore.GetKeystoreDetails()
+	keystorePath, keystorePassPath, err := keystore.GetKeystoreDetails("gateway_dot")
+	if err != nil {
+		log.Warning("No Keystore for gateway_dot")
+	}
 
 	app.CreateCmd.ArgStore["chain-identity"] = app.CreateCmd.Cmd.Flags().StringP("chain-identity", "a", "gateway_dot.key", "Gateway's keystore path")
 	app.CreateCmd.ArgStore["listen-addr"] = app.CreateCmd.Cmd.Flags().StringP("listen-addr", "g", "/ip4/0.0.0.0/tcp/20900", "Address on which gateway listens for connections from peer")
