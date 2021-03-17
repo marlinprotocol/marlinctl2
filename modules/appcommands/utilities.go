@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/marlinprotocol/ctl2/modules/keystore"
 	"github.com/marlinprotocol/ctl2/modules/registry"
 	"github.com/marlinprotocol/ctl2/modules/runner"
 	"github.com/marlinprotocol/ctl2/modules/util"
@@ -35,6 +36,7 @@ func (a *app) shallowCopyDescriptions(dst *CommandDetails, src CommandDetails) {
 	dst.Use = src.Use
 	dst.DescShort = src.DescShort
 	dst.DescLong = src.DescLong
+	dst.AdditionalPreRunTest = src.AdditionalPreRunTest
 }
 
 func (a *app) setupDefaultConfigIfNotExists() error {
@@ -235,6 +237,13 @@ func (a *app) doUpdateCurrentVersionOrDie(cfg types.Project) {
 	}
 }
 
+func (a *app) keystoreSanity() {
+	if err := keystore.KeystoreCheck(a.CreateCmd.Cmd, a.ProjectID); err != nil {
+		log.Error("keystore error: ", err)
+		os.Exit(1)
+	}
+}
+
 func (c *CommandDetails) getStringFromArgStoreOrDie(key string) string {
 	if v, ok := c.ArgStore[key]; ok {
 		return *(v.(*string))
@@ -243,6 +252,16 @@ func (c *CommandDetails) getStringFromArgStoreOrDie(key string) string {
 		os.Exit(1)
 	}
 	return ""
+}
+
+func (c *CommandDetails) getIntFromArgStoreOrDie(key string) int {
+	if v, ok := c.ArgStore[key]; ok {
+		return *(v.(*int))
+	} else {
+		log.Error("Cannot find key " + key + " in argstore. Aborting")
+		os.Exit(1)
+	}
+	return 0
 }
 
 func (c *CommandDetails) getStringSliceFromArgStoreOrDie(key string) []string {

@@ -1,4 +1,4 @@
-package gateway_iris
+package gateway_near
 
 import (
 	"errors"
@@ -21,10 +21,8 @@ func GetRunnerInstance(runnerId string, version string, storage string, runnerDa
 
 		gateway, ok1 := runnerDataMap["gateway"]
 		gatewayChecksum, ok2 := runnerDataMap["gateway_checksum"]
-		bridge, ok3 := runnerDataMap["bridge"]
-		bridgeChecksum, ok4 := runnerDataMap["bridge_checksum"]
 
-		if !ok1 || !ok2 || !ok3 || !ok4 {
+		if !ok1 || !ok2 {
 			return &linux_amd64_supervisor_runner02{}, errors.New("Incomplete / wrong runner data for version: " + version)
 		}
 
@@ -34,8 +32,6 @@ func GetRunnerInstance(runnerId string, version string, storage string, runnerDa
 			RunnerData: linux_amd64_supervisor_runner02_runnerdata{
 				Gateway:         gateway.(string),
 				GatewayChecksum: gatewayChecksum.(string),
-				Bridge:          bridge.(string),
-				BridgeChecksum:  bridgeChecksum.(string),
 			},
 			SkipChecksum: skipChecksum,
 			InstanceId:   instanceId,
@@ -46,5 +42,5 @@ func GetRunnerInstance(runnerId string, version string, storage string, runnerDa
 }
 
 func GetResourceFileLocation(storage string, instanceId string) string {
-	return storage + "/common/project_gateway_iris_instance" + instanceId + ".resource"
+	return storage + "/common/project_gateway_near_instance" + instanceId + ".resource"
 }

@@ -36,8 +36,36 @@ func GetRunnerInstance(runnerId string, version string, storage string, runnerDa
 			SkipChecksum: skipChecksum,
 			InstanceId:   instanceId,
 		}, nil
+	case "linux-amd64.supervisor.runner02":
+		if skipRunnerData {
+			return &linux_amd64_supervisor_runner02{
+				Version:      version,
+				Storage:      storage,
+				SkipChecksum: skipChecksum,
+				InstanceId:   instanceId,
+			}, nil
+		}
+		runnerDataMap := runnerData.(map[string]interface{})
+
+		beacon, ok1 := runnerDataMap["beacon"]
+		beaconChecksum, ok2 := runnerDataMap["beacon_checksum"]
+
+		if !ok1 || !ok2 {
+			return &linux_amd64_supervisor_runner02{}, errors.New("Incomplete / wrong runner data for version: " + version)
+		}
+
+		return &linux_amd64_supervisor_runner02{
+			Version: version,
+			Storage: storage,
+			RunnerData: linux_amd64_supervisor_runner02_runnerdata{
+				Beacon:         beacon.(string),
+				BeaconChecksum: beaconChecksum.(string),
+			},
+			SkipChecksum: skipChecksum,
+			InstanceId:   instanceId,
+		}, nil
 	default:
-		return &linux_amd64_supervisor_runner01{}, errors.New("Unknown runnerId: " + runnerId)
+		return &linux_amd64_supervisor_runner02{}, errors.New("Unknown runnerId: " + runnerId)
 	}
 }
 

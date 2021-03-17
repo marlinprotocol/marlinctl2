@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
@@ -16,9 +17,11 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"syscall"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/jedib0t/go-pretty/table"
 	"github.com/jedib0t/go-pretty/text"
@@ -471,4 +474,52 @@ func PrintPrettyDiff(message string) {
 			fmt.Println(l)
 		}
 	}
+}
+
+func GetFileSeekOffsetLastNLines(fname string, lines int) int64 {
+	file, err := os.Open(fname)
+	if err != nil {
+		return 0
+	}
+	defer file.Close()
+
+	buf := make([]byte, 1000*lines)
+	stat, err := os.Stat(fname)
+	start := stat.Size() - int64(1000*lines)
+	if start < 0 {
+		start = 0
+	}
+
+	_, err = file.ReadAt(buf, start)
+
+	linesEncountered := 0
+	offset := stat.Size() - start - 1
+
+	for ; offset >= 0 && linesEncountered <= lines; offset-- {
+		if buf[offset] == '\n' {
+			linesEncountered += 1
+		}
+	}
+
+	offset = offset + start + 2
+	if offset < 0 {
+		return 0
+	}
+	return offset
+}
+
+func ReadInputPasswordLine() (string, error) {
+	textBytes, err := terminal.ReadPassword(int(syscall.Stdin))
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSuffix(string(textBytes), "\n"), nil
+}
+
+func ReadStringFromFile(filePath string) (string, error) {
+	passBytes, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSuffix(string(passBytes), "\n"), nil
 }

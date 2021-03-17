@@ -1,4 +1,4 @@
-package gateway_iris
+package gateway_cosmos
 
 import (
 	"errors"
@@ -46,5 +46,5 @@ func GetRunnerInstance(runnerId string, version string, storage string, runnerDa
 }
 
 func GetResourceFileLocation(storage string, instanceId string) string {
-	return storage + "/common/project_gateway_iris_instance" + instanceId + ".resource"
+	return storage + "/common/project_gateway_cosmos_instance" + instanceId + ".resource"
 }

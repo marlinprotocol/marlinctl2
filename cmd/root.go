@@ -36,6 +36,7 @@ import (
 
 	"github.com/inconshreveable/go-update"
 	"github.com/marlinprotocol/ctl2/cmd/beacon"
+	"github.com/marlinprotocol/ctl2/cmd/gateway"
 	"github.com/marlinprotocol/ctl2/cmd/relay"
 )
 
@@ -122,7 +123,7 @@ func Execute() {
 }
 
 func init() {
-	// RootCmd.AddCommand(gateway.GatewayCmd)
+	RootCmd.AddCommand(gateway.GatewayCmd)
 	RootCmd.AddCommand(beacon.BeaconCmd)
 	RootCmd.AddCommand(relay.RelayCmd)
 

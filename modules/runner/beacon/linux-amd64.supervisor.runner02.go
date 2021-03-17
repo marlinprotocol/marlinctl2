@@ -22,31 +22,31 @@ import (
 	"github.com/spf13/viper"
 )
 
-type linux_amd64_supervisor_runner01_runnerdata struct {
+type linux_amd64_supervisor_runner02_runnerdata struct {
 	Beacon         string
 	BeaconChecksum string
 }
 
-type linux_amd64_supervisor_runner01 struct {
+type linux_amd64_supervisor_runner02 struct {
 	Version      string
 	Storage      string
 	InstanceId   string
-	RunnerData   linux_amd64_supervisor_runner01_runnerdata
+	RunnerData   linux_amd64_supervisor_runner02_runnerdata
 	SkipChecksum bool
 }
 
 const (
-	runner01beaconName               = "beacon_linux-amd64"
-	runner01beaconProgramName        = "beacon"
-	runner01defaultUser              = "root"
-	runner01supervisorConfFiles      = "/etc/supervisor/conf.d"
-	runner01beaconSupervisorConfFile = "beacon"
-	runner01logRootDir               = "/var/log/supervisor"
-	runner01oldLogRootDir            = "/var/log/old_logs"
-	runner01projectName              = "beacon"
+	runner02beaconName               = "beacon_linux-amd64"
+	runner02beaconProgramName        = "beacon"
+	runner02defaultUser              = "root"
+	runner02supervisorConfFiles      = "/etc/supervisor/conf.d"
+	runner02beaconSupervisorConfFile = "beacon"
+	runner02logRootDir               = "/var/log/supervisor"
+	runner02oldLogRootDir            = "/var/log/old_logs"
+	runner02projectName              = "beacon"
 )
 
-func (r *linux_amd64_supervisor_runner01) PreRunSanity() error {
+func (r *linux_amd64_supervisor_runner02) PreRunSanity() error {
 	if !util.IsSupervisorAvailable() {
 		return errors.New("System does not support supervisor")
 	}
@@ -56,14 +56,14 @@ func (r *linux_amd64_supervisor_runner01) PreRunSanity() error {
 	return nil
 }
 
-func (r *linux_amd64_supervisor_runner01) Download() error {
+func (r *linux_amd64_supervisor_runner02) Download() error {
 	var dirPath = r.Storage + "/" + r.Version
 	err := util.CreateDirPathIfNotExists(dirPath)
 	if err != nil {
 		return err
 	}
 
-	var beaconLocation = dirPath + "/" + runner01beaconName
+	var beaconLocation = dirPath + "/" + runner02beaconName
 
 	if _, err := os.Stat(beaconLocation); os.IsNotExist(err) {
 		log.Info("Fetching beacon from upstream for version ", r.Version)
@@ -85,7 +85,7 @@ func (r *linux_amd64_supervisor_runner01) Download() error {
 	return nil
 }
 
-func (r *linux_amd64_supervisor_runner01) Prepare() error {
+func (r *linux_amd64_supervisor_runner02) Prepare() error {
 	err := r.Download()
 	if err != nil {
 		return err
@@ -97,7 +97,7 @@ func (r *linux_amd64_supervisor_runner01) Prepare() error {
 	return nil
 }
 
-func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) error {
+func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) error {
 	if _, err := os.Stat(GetResourceFileLocation(r.Storage, r.InstanceId)); err == nil {
 		return errors.New("Resource file already exisits, cannot create a new instance: " + GetResourceFileLocation(r.Storage, r.InstanceId))
 	}
@@ -107,9 +107,9 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 		return err
 	}
 
-	substitutions := runner01resource{
-		"linux-amd64.supervisor.runner01", r.Version, time.Now().Format(time.RFC822Z),
-		runner01beaconProgramName + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + runner01beaconName, "127.0.0.1:8002", "127.0.0.1:8003", "", "", "",
+	substitutions := runner02resource{
+		"linux-amd64.supervisor.runner02", r.Version, time.Now().Format(time.RFC822Z),
+		runner02beaconProgramName + "_" + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + runner02beaconName, "127.0.0.1:8002", "127.0.0.1:8003", "", "", "",
 	}
 
 	for k, v := range runtimeArgs {
@@ -133,8 +133,10 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 		numprocs_start=1
 		autostart=true
 		autorestart=true
+		stdout_logfile=/var/log/supervisor/{{.BeaconProgram}}-stdout.log
+		stderr_logfile=/var/log/supervisor/{{.BeaconProgram}}-stderr.log
 	`)))
-	gFile, err := os.Create(runner01supervisorConfFiles + "/" + runner01beaconSupervisorConfFile + r.InstanceId + ".conf")
+	gFile, err := os.Create(runner02supervisorConfFiles + "/" + runner02beaconSupervisorConfFile + "_" + r.InstanceId + ".conf")
 	if err != nil {
 		return err
 	}
@@ -188,7 +190,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 	return nil
 }
 
-func (r *linux_amd64_supervisor_runner01) Restart() error {
+func (r *linux_amd64_supervisor_runner02) Restart() error {
 	available, resData, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
 	if err != nil {
 		return err
@@ -208,7 +210,7 @@ func (r *linux_amd64_supervisor_runner01) Restart() error {
 	return nil
 }
 
-func (r *linux_amd64_supervisor_runner01) Recreate() error {
+func (r *linux_amd64_supervisor_runner02) Recreate() error {
 	available, resData, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
 	if err != nil {
 		return err
@@ -249,7 +251,7 @@ func (r *linux_amd64_supervisor_runner01) Recreate() error {
 	return nil
 }
 
-func (r *linux_amd64_supervisor_runner01) Destroy() error {
+func (r *linux_amd64_supervisor_runner02) Destroy() error {
 	available, resData, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
 	if err != nil {
 		return err
@@ -270,8 +272,8 @@ func (r *linux_amd64_supervisor_runner01) Destroy() error {
 	return nil
 }
 
-func (r *linux_amd64_supervisor_runner01) PostRun() error {
-	var beaconConfig = runner01supervisorConfFiles + "/" + runner01beaconSupervisorConfFile + r.InstanceId + ".conf"
+func (r *linux_amd64_supervisor_runner02) PostRun() error {
+	var beaconConfig = runner02supervisorConfFiles + "/" + runner02beaconSupervisorConfFile + "_" + r.InstanceId + ".conf"
 
 	if _, err := os.Stat(beaconConfig); !os.IsNotExist(err) {
 		if err := os.Remove(beaconConfig); err != nil {
@@ -279,38 +281,7 @@ func (r *linux_amd64_supervisor_runner01) PostRun() error {
 		}
 	}
 
-	available, resData, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
-	if err != nil {
-		return err
-	}
-	if !available {
-		return errors.New("resource by id " + r.InstanceId + " doesn't exists. Can't destroy")
-	}
-
-	err = util.CreateDirPathIfNotExists(runner01oldLogRootDir)
-	if err != nil {
-		return err
-	}
-	err = filepath.Walk(runner01logRootDir, func(path string, f os.FileInfo, _ error) error {
-		if !f.IsDir() {
-			r, err := regexp.MatchString(resData.BeaconProgram+".*", f.Name())
-			if err == nil && r {
-				err2 := os.Rename(runner01logRootDir+"/"+f.Name(), runner01oldLogRootDir+"/previous_run_"+f.Name())
-				if err2 != nil {
-					return err2
-				}
-			} else if err != nil {
-				return nil
-			}
-		}
-		return nil
-	})
-
-	if err != nil {
-		return errors.New("Error while marking logs as old: " + err.Error())
-	}
-
-	_, err = exec.Command("supervisorctl", "reread").Output()
+	_, err := exec.Command("supervisorctl", "reread").Output()
 	if err != nil {
 		return errors.New("Error while supervisorctl reread: " + err.Error())
 	}
@@ -325,11 +296,11 @@ func (r *linux_amd64_supervisor_runner01) PostRun() error {
 		return errors.New("Error while removing resource file: " + err.Error())
 	}
 
-	log.Info("All relevant processes stopped, resources deleted, supervisor configs removed, logs marked as old")
+	log.Info("All relevant processes stopped, resources deleted, supervisor configs removed")
 	return nil
 }
 
-func (r *linux_amd64_supervisor_runner01) Status() error {
+func (r *linux_amd64_supervisor_runner02) Status() error {
 	available, resData, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
 	if err != nil {
 		return err
@@ -339,7 +310,7 @@ func (r *linux_amd64_supervisor_runner01) Status() error {
 	}
 
 	var projectConfig types.Project
-	err = viper.UnmarshalKey(runner01projectName, &projectConfig)
+	err = viper.UnmarshalKey(runner02projectName, &projectConfig)
 	if err != nil {
 		return err
 	}
@@ -350,16 +321,13 @@ func (r *linux_amd64_supervisor_runner01) Status() error {
 	util.PrettyPrintKVStruct(resData)
 
 	status, err := exec.Command("supervisorctl", "status").Output()
-	// if err != nil {
-	// 	return errors.New("Error while reading supervisor status: " + err.Error())
-	// }
 
 	var supervisorStatus = make(map[string]interface{})
 
 	statusLines := strings.Split(string(status), "\n")
 	var anyStatusLine = false
 	for _, v := range statusLines {
-		if match, err := regexp.MatchString(runner01beaconProgramName+r.InstanceId, v); err == nil && match {
+		if match, err := regexp.MatchString(runner02beaconProgramName+"_"+r.InstanceId, v); err == nil && match {
 			vSplit := strings.Split(v, " ")
 			supervisorStatus[vSplit[0]] = strings.Trim(strings.Join(vSplit[1:], " "), " ")
 			anyStatusLine = true
@@ -375,7 +343,7 @@ func (r *linux_amd64_supervisor_runner01) Status() error {
 	return nil
 }
 
-func (r *linux_amd64_supervisor_runner01) Logs(lines int) error {
+func (r *linux_amd64_supervisor_runner02) Logs(lines int) error {
 	available, resData, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
 	if err != nil {
 		return err
@@ -385,14 +353,14 @@ func (r *linux_amd64_supervisor_runner01) Logs(lines int) error {
 	}
 	// Check for resource
 	fileSubscriptions := make(map[string]string)
-	var runner01logRootDir = "/var/log/supervisor/"
-	err = filepath.Walk(runner01logRootDir, func(path string, f os.FileInfo, _ error) error {
+	var runner02logRootDir = "/var/log/supervisor/"
+	err = filepath.Walk(runner02logRootDir, func(path string, f os.FileInfo, _ error) error {
 		if !f.IsDir() {
 			for _, v := range []string{resData.BeaconProgram + "-stdout.*",
 				resData.BeaconProgram + "-stderr.*"} {
 				r, err := regexp.MatchString(v, f.Name())
 				if err == nil && r {
-					fileSubscriptions[v[:len(v)-2]] = runner01logRootDir + f.Name()
+					fileSubscriptions[v[:len(v)-2]] = runner02logRootDir + f.Name()
 				}
 			}
 		}
@@ -421,28 +389,28 @@ func (r *linux_amd64_supervisor_runner01) Logs(lines int) error {
 	return nil
 }
 
-type runner01resource struct {
+type runner02resource struct {
 	Runner, Version, StartTime                                                                                                                 string
 	BeaconProgram, BeaconUser, BeaconRunDir, BeaconExecutablePath, DiscoveryAddr, HeartbeatAddr, BootstrapAddr, KeystorePath, KeystorePassPath string
 }
 
-func (r *linux_amd64_supervisor_runner01) fetchResourceInformation(fileLocation string) (bool, runner01resource, error) {
+func (r *linux_amd64_supervisor_runner02) fetchResourceInformation(fileLocation string) (bool, runner02resource, error) {
 	if _, err := os.Stat(fileLocation); os.IsNotExist(err) {
-		return false, runner01resource{}, err
+		return false, runner02resource{}, err
 	}
 
 	file, err := ioutil.ReadFile(fileLocation)
 	if err != nil {
-		return false, runner01resource{}, err
+		return false, runner02resource{}, err
 	}
 
-	var resData = runner01resource{}
+	var resData = runner02resource{}
 	err = json.Unmarshal([]byte(file), &resData)
 
 	return true, resData, err
 }
 
-func (r *linux_amd64_supervisor_runner01) writeResourceToFile(resData runner01resource, fileLocation string) error {
+func (r *linux_amd64_supervisor_runner02) writeResourceToFile(resData runner02resource, fileLocation string) error {
 	lSplice := strings.Split(fileLocation, "/")
 	var dirPath string
 

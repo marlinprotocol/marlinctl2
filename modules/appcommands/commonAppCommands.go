@@ -18,9 +18,11 @@ package appcommands
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/marlinprotocol/ctl2/modules/keystore"
 	"github.com/marlinprotocol/ctl2/modules/runner"
 	"github.com/marlinprotocol/ctl2/modules/util"
 	"github.com/marlinprotocol/ctl2/types"
@@ -42,18 +44,20 @@ type app struct {
 	ProjectID      string
 	RunnerProvider func(runnerId string, version string, storage string, runnerData interface{}, skipRunnerData bool, skipChecksum bool, instanceId string) (runner.Runner, error)
 
-	CreateCmd       CommandDetails
-	DestroyCmd      CommandDetails
-	LogsCmd         CommandDetails
-	StatusCmd       CommandDetails
-	RecreateCmd     CommandDetails
-	RestartCmd      CommandDetails
-	VersionsCmd     CommandDetails
-	ConfigShowCmd   CommandDetails
-	ConfigDiffCmd   CommandDetails
-	ConfigModifyCmd CommandDetails
-	ConfigResetCmd  CommandDetails
-	ConfigApplyCmd  CommandDetails
+	CreateCmd          CommandDetails
+	DestroyCmd         CommandDetails
+	LogsCmd            CommandDetails
+	StatusCmd          CommandDetails
+	RecreateCmd        CommandDetails
+	RestartCmd         CommandDetails
+	VersionsCmd        CommandDetails
+	ConfigShowCmd      CommandDetails
+	ConfigDiffCmd      CommandDetails
+	ConfigModifyCmd    CommandDetails
+	ConfigResetCmd     CommandDetails
+	ConfigApplyCmd     CommandDetails
+	KeystoreCreateCmd  CommandDetails
+	KeystoreDestroyCmd CommandDetails
 }
 
 // Write Defaults logic
@@ -73,6 +77,8 @@ func GetNewApp(_projectID string,
 	_configModifyCmd CommandDetails,
 	_configResetCmd CommandDetails,
 	_configApplyCmd CommandDetails,
+	_keystoreCreateCmd CommandDetails,
+	_keystoreDestroyCmd CommandDetails,
 ) (app, error) {
 	createdApp := app{
 		ProjectID:      _projectID,
@@ -115,6 +121,12 @@ func GetNewApp(_projectID string,
 	createdApp.shallowCopyDescriptions(&createdApp.ConfigApplyCmd, _configApplyCmd)
 	createdApp.setupConfigApplyCommand()
 
+	createdApp.shallowCopyDescriptions(&createdApp.KeystoreCreateCmd, _keystoreCreateCmd)
+	createdApp.setupKeystoreCreateCommand()
+
+	createdApp.shallowCopyDescriptions(&createdApp.KeystoreDestroyCmd, _keystoreDestroyCmd)
+	createdApp.setupKeystoreDestroyCommand()
+
 	return createdApp, nil
 }
 
@@ -135,6 +147,8 @@ func (a *app) setupCreateCommand() {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
+
+			a.keystoreSanity()
 			// Extract runtime variables
 			version := a.CreateCmd.getStringFromArgStoreOrDie("version")
 			instanceID := a.CreateCmd.getStringFromArgStoreOrDie("instance-id")
@@ -155,6 +169,10 @@ func (a *app) setupCreateCommand() {
 			// MESSY SUBSTITUTIONS
 			a.beaconCreateSusbstitutions(versionToRun.RunnerId)
 			a.relayEthCreateSubstitutions(versionToRun.RunnerId)
+			a.gatewayDotCreateSubstitutions(versionToRun.RunnerId)
+			a.gatewayNearCreateSubstitutions(versionToRun.RunnerId)
+			a.gatewayIrisCreateSubstitutions(versionToRun.RunnerId)
+			a.gatewayCosmosCreateSubstitutions(versionToRun.RunnerId)
 
 			a.doPreRunSanityOrDie(runner)
 			a.doPrepareOrDie(runner)
@@ -240,6 +258,7 @@ func (a *app) setupLogsCommand() {
 			// Run application
 			projConfig := a.getProjectConfigOrDie()
 			runnerID, version := a.getResourceMetadataOrDie(projConfig, instanceID)
+			last := a.LogsCmd.getIntFromArgStoreOrDie("last")
 			runner := a.getRunnerInstanceOrDie(runnerID,
 				version,
 				projConfig.Storage,
@@ -248,13 +267,14 @@ func (a *app) setupLogsCommand() {
 				true,
 				instanceID)
 			a.doPreRunSanityOrDie(runner)
-			runner.Logs()
+			runner.Logs(last)
 		},
 	}
 
 	a.LogsCmd.ArgStore = make(map[string]interface{})
 
 	a.LogsCmd.ArgStore["instance-id"] = a.LogsCmd.Cmd.Flags().StringP("instance-id", "i", "001", "instance-id of resource to log")
+	a.LogsCmd.ArgStore["last"] = a.LogsCmd.Cmd.Flags().IntP("last", "n", 100, "number of last lines to tail in logfile")
 }
 
 // Status command
@@ -669,4 +689,85 @@ func (a *app) setupConfigApplyCommand() {
 	}
 
 	a.ConfigApplyCmd.ArgStore = make(map[string]interface{})
+}
+
+func (a *app) setupKeystoreCreateCommand() {
+	a.KeystoreCreateCmd.Cmd = &cobra.Command{
+		Use:   a.KeystoreCreateCmd.Use,
+		Short: a.KeystoreCreateCmd.DescShort,
+		Long:  a.KeystoreCreateCmd.DescLong,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			additionalTest := a.KeystoreCreateCmd.AdditionalPreRunTest
+			err := a.setupDefaultConfigIfNotExists()
+			if err != nil {
+				return err
+			} else if err == nil && additionalTest != nil {
+				return additionalTest(cmd, args)
+			}
+			return nil
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			var passphrase string
+			if !a.KeystoreCreateCmd.Cmd.Flags().Changed("pass-path") {
+				// read from stdin
+				fmt.Println("Enter passphrase:")
+				var err error
+				passphrase, err = util.ReadInputPasswordLine()
+				if err != nil {
+					log.Error("Error while reading passphrase", err)
+					os.Exit(1)
+				}
+			} else {
+				keystorePassPath := a.KeystoreCreateCmd.getStringFromArgStoreOrDie("pass-path")
+				var err error
+				passphrase, err = util.ReadStringFromFile(keystorePassPath)
+				if err != nil {
+					log.Error("Error while reading passphrase file", err)
+					os.Exit(1)
+				}
+			}
+
+			home, err := util.GetUser()
+			if err == nil {
+				keystoreDir := home.HomeDir + "/.marlin/ctl/storage/projects/" + a.ProjectID + "/common/keystore"
+				err = keystore.Create(keystoreDir, passphrase)
+			}
+			if err != nil {
+				log.Error("Error while creating keystore for project "+a.ProjectID+": ", err)
+				os.Exit(1)
+			}
+		},
+	}
+
+	a.KeystoreCreateCmd.ArgStore = make(map[string]interface{})
+	a.KeystoreCreateCmd.ArgStore["pass-path"] = a.KeystoreCreateCmd.Cmd.Flags().StringP("pass-path", "p", "", "path to the passphrase file")
+}
+
+func (a *app) setupKeystoreDestroyCommand() {
+	a.KeystoreDestroyCmd.Cmd = &cobra.Command{
+		Use:   a.KeystoreDestroyCmd.Use,
+		Short: a.KeystoreDestroyCmd.DescShort,
+		Long:  a.KeystoreDestroyCmd.DescLong,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			additionalTest := a.KeystoreDestroyCmd.AdditionalPreRunTest
+			err := a.setupDefaultConfigIfNotExists()
+			if err != nil {
+				return err
+			} else if err == nil && additionalTest != nil {
+				return additionalTest(cmd, args)
+			}
+			return nil
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			home, err := util.GetUser()
+			if err == nil {
+				keystoreDir := home.HomeDir + "/.marlin/ctl/storage/projects/" + a.ProjectID + "/common/keystore"
+				err = keystore.Destroy(keystoreDir)
+			}
+			if err != nil {
+				log.Error("Error while destroying keystore for project "+a.ProjectID+": ", err)
+				os.Exit(1)
+			}
+		},
+	}
 }
