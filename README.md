@@ -1,8 +1,10 @@
-# marlinctl2
+# marlinctl
 
-Marlinctl 2.0 provides an improved process management command line interface for setting up the different components of the Marlin network.
+Marlinctl 2.X provides an improved process management command line interface for setting up the different components of the Marlin network.
 
 # Stable releases
+
+Current stable release: 2.1.0
 
 If you wish to run stable releases compiled by marlin team, please use our public release artifacts. Following is our latest release artifact for you.
 ```
