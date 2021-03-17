@@ -1,7 +1,6 @@
 package util
 
 import (
-	"bufio"
 	"bytes"
 	"crypto/md5"
 	"encoding/hex"
@@ -18,9 +17,11 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"syscall"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/jedib0t/go-pretty/table"
 	"github.com/jedib0t/go-pretty/text"
@@ -507,14 +508,12 @@ func GetFileSeekOffsetLastNLines(fname string, lines int) int64 {
 	return offset
 }
 
-func ReadInputLine() (string, error) {
-	reader := bufio.NewReader(os.Stdin)
-	text, err := reader.ReadString('\n')
+func ReadInputPasswordLine() (string, error) {
+	textBytes, err := terminal.ReadPassword(int(syscall.Stdin))
 	if err != nil {
 		return "", err
 	}
-
-	return strings.TrimSuffix(text, "\n"), nil
+	return strings.TrimSuffix(string(textBytes), "\n"), nil
 }
 
 func ReadStringFromFile(filePath string) (string, error) {

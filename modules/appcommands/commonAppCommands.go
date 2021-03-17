@@ -712,7 +712,7 @@ func (a *app) setupKeystoreCreateCommand() {
 				// read from stdin
 				fmt.Println("Enter passphrase:")
 				var err error
-				passphrase, err = util.ReadInputLine()
+				passphrase, err = util.ReadInputPasswordLine()
 				if err != nil {
 					log.Error("Error while reading passphrase", err)
 					os.Exit(1)
