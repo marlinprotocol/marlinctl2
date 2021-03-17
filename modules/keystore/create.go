@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	ethKeystore "github.com/ethereum/go-ethereum/accounts/keystore"
+	"github.com/marlinprotocol/ctl2/modules/util"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -55,5 +56,9 @@ func Create(keystoreDirPath string, keystorePassPath string) error {
 		}
 		return err
 	}
+	if err := util.ChownRmarlinctlDir(); err != nil {
+		return err
+	}
+
 	return nil
 }
