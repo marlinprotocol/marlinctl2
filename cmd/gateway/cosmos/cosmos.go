@@ -78,10 +78,7 @@ func init() {
 	keystoreCmd.AddCommand(app.KeystoreDestroyCmd.Cmd)
 
 	// Extra flag additions for gateway_cosmos -----------------------------------------------
-	keystorePath, keystorePassPath, err := keystore.GetKeystoreDetails("gateway_cosmos")
-	if err != nil {
-		log.Warning("No Keystore for gateway_cosmos")
-	}
+	keystorePath, keystorePassPath, _ := keystore.GetKeystoreDetails("gateway_cosmos")
 
 	app.CreateCmd.ArgStore["discovery-addr"] = app.CreateCmd.Cmd.Flags().StringP("discovery-addr", "d", "0.0.0.0:22002", "Bridge discovery address")
 	app.CreateCmd.ArgStore["pubsub-addr"] = app.CreateCmd.Cmd.Flags().StringP("pubsub-addr", "p", "0.0.0.0:22000", "Bridge pubsub address")

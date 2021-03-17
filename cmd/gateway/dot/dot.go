@@ -78,10 +78,7 @@ func init() {
 	keystoreCmd.AddCommand(app.KeystoreDestroyCmd.Cmd)
 
 	// Extra flag additions for gateway_dot -----------------------------------------------
-	keystorePath, keystorePassPath, err := keystore.GetKeystoreDetails("gateway_dot")
-	if err != nil {
-		log.Warning("No Keystore for gateway_dot")
-	}
+	keystorePath, keystorePassPath, _ := keystore.GetKeystoreDetails("gateway_dot")
 
 	app.CreateCmd.ArgStore["chain-identity"] = app.CreateCmd.Cmd.Flags().StringP("chain-identity", "a", "gateway_dot.key", "Gateway's keystore path")
 	app.CreateCmd.ArgStore["listen-addr"] = app.CreateCmd.Cmd.Flags().StringP("listen-addr", "g", "/ip4/0.0.0.0/tcp/20900", "Address on which gateway listens for connections from peer")

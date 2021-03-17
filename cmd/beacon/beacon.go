@@ -83,10 +83,7 @@ func init() {
 	keystoreCmd.AddCommand(app.KeystoreDestroyCmd.Cmd)
 
 	// Extra flag additions for beacon -----------------------------------------------
-	keystorePath, keystorePassPath, err := keystore.GetKeystoreDetails("beacon")
-	if err != nil {
-		log.Warning("No Keystore for beacon")
-	}
+	keystorePath, keystorePassPath, _ := keystore.GetKeystoreDetails("beacon")
 
 	app.CreateCmd.ArgStore["discovery-addr"] = app.CreateCmd.Cmd.Flags().StringP("discovery-addr", "a", "127.0.0.1:8002", "Discovery address of beacon")
 	app.CreateCmd.ArgStore["heartbeat-addr"] = app.CreateCmd.Cmd.Flags().StringP("heartbeat-addr", "g", "127.0.0.1:8003", "Heartbeat address of beacon")
