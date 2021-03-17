@@ -18,38 +18,29 @@ package keystore
 import (
 	"errors"
 	"io/ioutil"
-	"strings"
 
 	ethKeystore "github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/marlinprotocol/ctl2/modules/util"
 	log "github.com/sirupsen/logrus"
 )
 
-func Create(keystoreDirPath string, keystorePassPath string) error {
-
-	// read the password file
-	passBytes, err := ioutil.ReadFile(keystorePassPath)
-	if err != nil {
-		return errors.New("cannot read keystore password file at path " + keystorePassPath)
-	}
+func Create(keystoreDirPath string, passphrase string) error {
 
 	kstore := ethKeystore.NewKeyStore(keystoreDirPath, ethKeystore.StandardScryptN, ethKeystore.StandardScryptP)
 	if len(kstore.Accounts()) != 0 {
 		return errors.New("Keystore already exists")
 	}
-	passphrase := string(passBytes)
-	passphrase = strings.TrimSuffix(passphrase, "\n")
 
-	_, err = kstore.NewAccount(passphrase)
+	_, err := kstore.NewAccount(passphrase)
 	if err != nil {
 		return errors.New("error while creating new account")
 	}
 
 	log.Info("created new keysore with address ", kstore.Accounts()[0].Address)
 
-	if err := ioutil.WriteFile(kstore.Accounts()[0].URL.Path+"-pass", passBytes, 0644); err != nil {
+	if err := ioutil.WriteFile(kstore.Accounts()[0].URL.Path+"-pass", []byte(passphrase), 0644); err != nil {
 		log.Error("error in writing password file ", err)
-		if err := kstore.Delete(kstore.Accounts()[0], string(passBytes)); err != nil {
+		if err := kstore.Delete(kstore.Accounts()[0], passphrase); err != nil {
 			log.Error("error while deleting previous keystore", err)
 		} else {
 			log.Info("Deleted keystore. Please create again")

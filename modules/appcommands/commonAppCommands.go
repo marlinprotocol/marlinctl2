@@ -18,6 +18,7 @@ package appcommands
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 
 	"github.com/google/go-cmp/cmp"
@@ -706,11 +707,30 @@ func (a *app) setupKeystoreCreateCommand() {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			keystorePassPath := a.KeystoreCreateCmd.getStringFromArgStoreOrDie("pass-path")
+			var passphrase string
+			if !a.KeystoreCreateCmd.Cmd.Flags().Changed("pass-path") {
+				// read from stdin
+				fmt.Println("Enter passphrase:")
+				var err error
+				passphrase, err = util.ReadInputLine()
+				if err != nil {
+					log.Error("Error while reading passphrase", err)
+					os.Exit(1)
+				}
+			} else {
+				keystorePassPath := a.KeystoreCreateCmd.getStringFromArgStoreOrDie("pass-path")
+				var err error
+				passphrase, err = util.ReadStringFromFile(keystorePassPath)
+				if err != nil {
+					log.Error("Error while reading passphrase file", err)
+					os.Exit(1)
+				}
+			}
+
 			home, err := util.GetUser()
 			if err == nil {
 				keystoreDir := home.HomeDir + "/.marlin/ctl/storage/projects/" + a.ProjectID + "/common/keystore"
-				err = keystore.Create(keystoreDir, keystorePassPath)
+				err = keystore.Create(keystoreDir, passphrase)
 			}
 			if err != nil {
 				log.Error("Error while creating keystore for project "+a.ProjectID+": ", err)
@@ -721,7 +741,6 @@ func (a *app) setupKeystoreCreateCommand() {
 
 	a.KeystoreCreateCmd.ArgStore = make(map[string]interface{})
 	a.KeystoreCreateCmd.ArgStore["pass-path"] = a.KeystoreCreateCmd.Cmd.Flags().StringP("pass-path", "p", "", "path to the passphrase file")
-	a.KeystoreCreateCmd.Cmd.MarkFlagRequired("pass-path")
 }
 
 func (a *app) setupKeystoreDestroyCommand() {

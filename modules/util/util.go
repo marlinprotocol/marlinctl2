@@ -1,12 +1,14 @@
 package util
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/md5"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
@@ -503,4 +505,22 @@ func GetFileSeekOffsetLastNLines(fname string, lines int) int64 {
 		return 0
 	}
 	return offset
+}
+
+func ReadInputLine() (string, error) {
+	reader := bufio.NewReader(os.Stdin)
+	text, err := reader.ReadString('\n')
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimSuffix(text, "\n"), nil
+}
+
+func ReadStringFromFile(filePath string) (string, error) {
+	passBytes, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSuffix(string(passBytes), "\n"), nil
 }
