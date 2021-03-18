@@ -6,12 +6,18 @@ Marlinctl 2.X provides an improved process management command line interface for
 
 Current stable release: 2.1.0
 
-If you wish to run stable releases compiled by marlin team, please use our public release artifacts. Following is marlinctl 2.0.0 for you. (marlinctl 2.0.0 will automatically upgrade to any new versions of marlinctl upon running any command later).
+If you wish to run stable releases compiled by marlin team, please use our public release artifacts. Following is marlinctl 2.0.0 for you.
 ```
 wget http://public.artifacts.marlin.pro/projects/marlinctl/2.0.0/marlinctl-2.0.0-linux-amd64 --output-document=/usr/local/bin/marlinctl
 sudo chmod +x /usr/local/bin/marlinctl
 ```
 If you run `marlinctl -v && md5sum /usr/local/bin/marlinctl`, it should return the following valid results for latest release:
+```
+marlinctl version 2.0.0 build master@ea6097ddcacf62be617fbc605e64c19db426fd1f
+Compiled on: 03-01-2021_09-18-09@UTC
+bec6caaa7c6336485964165b9e29edfd  marlinctl-2.0.0-linux-amd64
+```
+The newest marlinctl version will show the following version string however. If the following version is higher than the version described above, your marlinctl will upgrade to the following in some time after a few command invocations (Try operations like `sudo marlinctl beacon versions` to invoke an upgrade if you want to manually trigger upgrade).
 ```
 marlinctl version 2.1.0 build master@99152b066bdb648c415a3d7de1310221268d2117
 Compiled on: 18-03-2021_09-02-50@UTC
