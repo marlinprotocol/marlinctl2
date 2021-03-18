@@ -19,9 +19,8 @@ bec6caaa7c6336485964165b9e29edfd  marlinctl-2.0.0-linux-amd64
 ```
 The newest marlinctl will show the following version string however. If the following is higher than the version described above, your marlinctl will upgrade to the following in some time after a few command invocations (Try operations like `sudo marlinctl beacon versions` to invoke an upgrade if you want to manually trigger upgrade).
 ```
-marlinctl version 2.1.0 build master@99152b066bdb648c415a3d7de1310221268d2117
-Compiled on: 18-03-2021_09-02-50@UTC
-1631778fa78a11485ed4953302024717  marlinctl-2.1.0-linux-amd64
+marlinctl version 2.1.1 build master@bad505b0e6cfc8078be0573d3ed32c79af477ef2
+Compiled on: 18-03-2021_16-36-18@UTC
 ```
 
 Always try running the latest version of marlinctl. Marlinctl will auto-update by default if new versions are found upstream.
