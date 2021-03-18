@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"runtime"
 	"strconv"
 	"strings"
@@ -91,10 +92,26 @@ It can spawn up beacons, gateways, relays on various platforms and runtimes.`,
 		}
 
 		if !skipMarlinctlUpdateCheck {
-			err = checkMarlinctlUpdates()
+			hasUpgraded, err := checkMarlinctlUpdates()
 			if err != nil {
 				log.Error("Error while upgrading marlinctl: " + err.Error())
 				os.Exit(1)
+			}
+			if hasUpgraded {
+				log.Info("Starting upgraded marlinctl")
+				cmd := exec.Command(os.Args[0], os.Args[1:]...)
+				cmd.Stdout = os.Stdout
+				cmd.Stderr = os.Stderr
+
+				err = cmd.Start()
+				if err != nil {
+					fmt.Println("Unable to start updated cli. Retry running same command ", err)
+				}
+				err = cmd.Wait()
+				if err != nil {
+					fmt.Println("error occured: ", err)
+				}
+				os.Exit(2)
 			}
 		} else {
 			log.Debug("Skipping marlinctl update check")
@@ -259,16 +276,16 @@ func setupDefaultConfig() error {
 	return nil
 }
 
-func checkMarlinctlUpdates() error {
+func checkMarlinctlUpdates() (bool, error) {
 	ver, err := registry.GlobalRegistry.GetVersionToRun("marlinctl", "", "")
 	if err != nil {
-		return err
+		return false, err
 	}
 	if version.ApplicationVersion == ver.Version {
 		log.Debug("Latest marlinctl described upstream is current marlinctl's version. No updates to do.")
-		return nil
+		return false, nil
 	}
-	log.Debug("MarlinCTL needs to upgrade, going from ", version.ApplicationVersion, " to ", ver.Version)
+	log.Info("MarlinCTL needs to upgrade, going from ", version.ApplicationVersion, " to ", ver.Version)
 
 	executableURL := ver.RunnerData.(map[string]interface{})["executable"].(string)
 	executableChecksum := ver.RunnerData.(map[string]interface{})["checksum"].(string)
@@ -278,28 +295,28 @@ func checkMarlinctlUpdates() error {
 
 	err = util.DownloadFile(tempDownloadLoc, executableURL)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	err = util.VerifyChecksum(tempDownloadLoc, executableChecksum)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	log.Debug("Patching start")
 
 	updateFile, err := os.Open(tempDownloadLoc)
 	if err != nil {
-		return nil
+		return false, nil
 	}
 	defer updateFile.Close()
 
 	err = update.Apply(updateFile, update.Options{})
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	log.Debug("Patching complete")
 
-	return nil
+	return true, nil
 }
