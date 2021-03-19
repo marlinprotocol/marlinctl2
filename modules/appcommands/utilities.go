@@ -238,9 +238,11 @@ func (a *app) doUpdateCurrentVersionOrDie(cfg types.Project) {
 }
 
 func (a *app) keystoreSanity() {
-	if err := keystore.KeystoreCheck(a.CreateCmd.Cmd, a.ProjectID); err != nil {
-		log.Error("keystore error: ", err)
-		os.Exit(1)
+	if a.ProjectID == "beacon" || a.ProjectID == "gateway_dot" || a.ProjectID == "gateway_near" {
+		if err := keystore.KeystoreCheck(a.CreateCmd.Cmd, a.ProjectID); err != nil {
+			log.Error("keystore error: ", err)
+			os.Exit(1)
+		}
 	}
 }
 
