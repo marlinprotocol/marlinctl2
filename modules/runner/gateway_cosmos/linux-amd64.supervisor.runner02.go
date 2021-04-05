@@ -158,7 +158,7 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 
 	substitutions := runner02resource{
 		"linux-amd64.supervisor.runner02", r.Version, time.Now().Format(time.RFC822Z),
-		runner02gatewayProgramName + "_" + r.InstanceId, runner02defaultUser, "/", r.Storage + "/" + r.Version + "/" + runner02gatewayName, r.Storage + "/common/keyfile.json", "21900", "127.0.0.1", "21901",
+		runner02gatewayProgramName + "_" + r.InstanceId, runner02defaultUser, "/", r.Storage + "/" + r.Version + "/" + runner02gatewayName, r.Storage + "/common/keyfile.json", "21400", "127.0.0.1", "21401",
 		runner02bridgeProgramName + "_" + r.InstanceId, runner02defaultUser, "/", r.Storage + "/" + r.Version + "/" + runner02bridgeName, "127.0.0.1:8002",
 	}
 
