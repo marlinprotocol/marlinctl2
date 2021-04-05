@@ -122,7 +122,7 @@ func (r *linux_amd64_supervisor_runner02) Prepare() error {
 	if _, err := os.Stat(keyfileLocation); os.IsNotExist(err) {
 		log.Debug("Creating a new keyfile since none found at " + keyfileLocation)
 		var gatewayLocation = r.Storage + "/" + r.Version + "/" + runner02gatewayName
-		keyFileGenCommand := exec.Command(gatewayLocation, "keyfile", "--chain=cosmos-3", "--generate", "--filelocation="+keyfileLocation)
+		keyFileGenCommand := exec.Command(gatewayLocation, "keyfile", "--chain=cosmos", "--generate", "--filelocation="+keyfileLocation)
 		_, err := keyFileGenCommand.Output()
 		if err != nil {
 			return errors.New("Keyfile generation error: " + err.Error())
@@ -158,7 +158,7 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 
 	substitutions := runner02resource{
 		"linux-amd64.supervisor.runner02", r.Version, time.Now().Format(time.RFC822Z),
-		runner02gatewayProgramName + "_" + r.InstanceId, runner02defaultUser, "/", r.Storage + "/" + r.Version + "/" + runner02gatewayName, r.Storage + "/common/keyfile.json", "21900", "127.0.0.1", "21901",
+		runner02gatewayProgramName + "_" + r.InstanceId, runner02defaultUser, "/", r.Storage + "/" + r.Version + "/" + runner02gatewayName, r.Storage + "/common/keyfile.json", "22400", "127.0.0.1", "22401",
 		runner02bridgeProgramName + "_" + r.InstanceId, runner02defaultUser, "/", r.Storage + "/" + r.Version + "/" + runner02bridgeName, "127.0.0.1:8002",
 	}
 
@@ -470,10 +470,10 @@ func (r *linux_amd64_supervisor_runner02) Logs(lines int) error {
 	var runner02logRootDir = "/var/log/supervisor/"
 	err = filepath.Walk(runner02logRootDir, func(path string, f os.FileInfo, _ error) error {
 		if !f.IsDir() {
-			for _, v := range []string{runner02gatewaySupervisorConfFile + r.InstanceId + "-stdout.*",
-				runner02gatewaySupervisorConfFile + r.InstanceId + "-stderr.*",
-				runner02bridgeSupervisorConfFile + r.InstanceId + "-stdout.*",
-				runner02bridgeSupervisorConfFile + r.InstanceId + "-stderr.*"} {
+			for _, v := range []string{runner02gatewaySupervisorConfFile + "_" + r.InstanceId + "-stdout.*",
+				runner02gatewaySupervisorConfFile + "_" + r.InstanceId + "-stderr.*",
+				runner02bridgeSupervisorConfFile + "_" + r.InstanceId + "-stdout.*",
+				runner02bridgeSupervisorConfFile + "_" + r.InstanceId + "-stderr.*"} {
 				r, err := regexp.MatchString(v, f.Name())
 				if err == nil && r {
 					fileSubscriptions[v[:len(v)-2]] = runner02logRootDir + f.Name()
