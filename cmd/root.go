@@ -61,6 +61,7 @@ It can spawn up beacons, gateways, relays on various platforms and runtimes.`,
 		}
 		log.SetLevel(lvl)
 
+		// Uncomment following line to show CMD tree
 		// showCmdTree(cmd.Root(), "")
 
 		err = readConfig()
