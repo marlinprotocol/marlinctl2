@@ -100,7 +100,7 @@ func (a *app) gatewayIrisCreateSubstitutions(runnerID string) {
 	if len(runtimeArgs) == 0 {
 		runtimeArgs["DiscoveryAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("discovery-addr")
 		runtimeArgs["PubsubAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("pubsub-addr")
-		runtimeArgs["BootstrapAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("bootstrap-addr")
+		runtimeArgs["BridgeBootstrapAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("bootstrap-addr")
 		runtimeArgs["InternalListenAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("internal-listen-addr")
 		runtimeArgs["KeystorePath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("keystore-path"))
 		runtimeArgs["KeystorePassPath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("keystore-pass-path"))
@@ -120,7 +120,7 @@ func (a *app) gatewayCosmosCreateSubstitutions(runnerID string) {
 	if len(runtimeArgs) == 0 {
 		runtimeArgs["DiscoveryAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("discovery-addr")
 		runtimeArgs["PubsubAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("pubsub-addr")
-		runtimeArgs["BootstrapAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("bootstrap-addr")
+		runtimeArgs["BridgeBootstrapAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("bootstrap-addr")
 		runtimeArgs["InternalListenAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("internal-listen-addr")
 		runtimeArgs["KeystorePath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("keystore-path"))
 		runtimeArgs["KeystorePassPath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("keystore-pass-path"))
