@@ -78,8 +78,8 @@ func init() {
 
 	app.CreateCmd.ArgStore["discovery-addrs"] = app.CreateCmd.Cmd.Flags().StringP("discovery-addrs", "a", "127.0.0.1:8002", "Discovery address of relay")
 	app.CreateCmd.ArgStore["heartbeat-addrs"] = app.CreateCmd.Cmd.Flags().StringP("heartbeat-addrs", "g", "127.0.0.1:8003", "Heartbeat address of relay")
-	app.CreateCmd.ArgStore["discovery-bind_addr"] = app.CreateCmd.Cmd.Flags().StringP("discovery-bind_addr", "f", "0.0.0.0:22000", "Discovery bind addr")
-	app.CreateCmd.ArgStore["pubsub-bind_addr"] = app.CreateCmd.Cmd.Flags().StringP("pubsub-bind_addr", "p", "0.0.0.0:22002", "PubSub bind addr")
+	app.CreateCmd.ArgStore["discovery-bind-addr"] = app.CreateCmd.Cmd.Flags().StringP("discovery-bind-addr", "f", "0.0.0.0:22000", "Discovery bind addr")
+	app.CreateCmd.ArgStore["pubsub-bind-addr"] = app.CreateCmd.Cmd.Flags().StringP("pubsub-bind-addr", "p", "0.0.0.0:22002", "PubSub bind addr")
 
 	// ----------------------------------------------------------------------------------
 }

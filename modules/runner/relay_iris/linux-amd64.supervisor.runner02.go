@@ -127,7 +127,7 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 		process_name={{.RelayProgram}}
 		user={{.RelayUser}}
 		directory={{.RelayRunDir}}
-		command={{.RelayExecutablePath}} {{if .DiscoveryAddrs}} --discovery-addrs "{{.DiscoveryAddrs}}" {{end}} {{if .HeartbeatAddrs}} --heartbeat-addrs "{{.HeartbeatAddrs}}" {{end}} {{if .DiscoveryBindAddr}} --discovery-bind_addr "{{.DiscoveryBindAddr}}" {{end}} {{if .PubsubBindAddr}} --pubsub-bind_addr "{{.PubsubBindAddr}}" {{end}} 
+		command={{.RelayExecutablePath}} {{if .DiscoveryAddrs}} --discovery-addrs "{{.DiscoveryAddrs}}" {{end}} {{if .HeartbeatAddrs}} --heartbeat-addrs "{{.HeartbeatAddrs}}" {{end}} {{if .DiscoveryBindAddr}} --discovery-bind-addr "{{.DiscoveryBindAddr}}" {{end}} {{if .PubsubBindAddr}} --pubsub-bind-addr "{{.PubsubBindAddr}}" {{end}} 
 		priority=100
 		numprocs=1
 		numprocs_start=1
