@@ -53,6 +53,9 @@ var RootCmd = &cobra.Command{
 	Long: `Marlinctl provides a command line interface for setting up the different components of the Marlin network.
 It can spawn up beacons, gateways, relays on various platforms and runtimes.`,
 	Version: version.RootCmdVersion,
+	Run: func(cmd *cobra.Command, args []string) {
+		// NOP for upgrade
+	},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		lvl, err := log.ParseLevel(logLevel)
 		if err != nil {
@@ -145,8 +148,8 @@ func init() {
 	RootCmd.AddCommand(beacon.BeaconCmd)
 	RootCmd.AddCommand(relay.RelayCmd)
 
-	RootCmd.PersistentFlags().BoolVar(&skipRegistrySync, "skip-registry-sync", false, "skip registry sync during run")
-	RootCmd.PersistentFlags().BoolVar(&forcefulRegistrySync, "forceful-registry-sync", false, "forceful registry sync. Do not use if you don't know what this is for.")
+	RootCmd.PersistentFlags().BoolVar(&skipRegistrySync, "skip-sync", false, "skip registry sync during run")
+	RootCmd.PersistentFlags().BoolVar(&forcefulRegistrySync, "registry-sync", false, "forceful registry sync from remote. May be used to check for upgrades.")
 	RootCmd.PersistentFlags().BoolVar(&skipMarlinctlUpdateCheck, "skip-update-check", false, "skip update check during run")
 	RootCmd.PersistentFlags().StringVar(&logLevel, "loglevel", "info", "marlinctl loglevel (default is INFO)")
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.marlin/ctl/state.yaml)")
