@@ -211,7 +211,7 @@ func (a *app) setupDestroyCommand() {
 		Run: func(cmd *cobra.Command, args []string) {
 
 			// Extract runtime variables
-			instanceID := a.CreateCmd.getStringFromArgStoreOrDie("instance-id")
+			instanceID := a.DestroyCmd.getStringFromArgStoreOrDie("instance-id")
 
 			// Run application
 			projConfig := a.getProjectConfigOrDie()
