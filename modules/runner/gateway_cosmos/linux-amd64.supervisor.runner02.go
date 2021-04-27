@@ -158,8 +158,8 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 
 	substitutions := runner02resource{
 		"linux-amd64.supervisor.runner02", r.Version, time.Now().Format(time.RFC822Z),
-		runner02gatewayProgramName + "_" + r.InstanceId, runner02defaultUser, "/", r.Storage + "/" + r.Version + "/" + runner02gatewayName, r.Storage + "/common/keyfile.json", "22400", "127.0.0.1", "22401",
-		runner02bridgeProgramName + "_" + r.InstanceId, runner02defaultUser, "/", r.Storage + "/" + r.Version + "/" + runner02bridgeName, "127.0.0.1:8002",
+		runner02gatewayProgramName + "_" + r.InstanceId, runner02defaultUser, "/", r.Storage + "/" + r.Version + "/" + runner02gatewayName, r.Storage + "/common/keyfile.json", "22400", "127.0.0.1",
+		runner02bridgeProgramName + "_" + r.InstanceId, runner02defaultUser, "/", r.Storage + "/" + r.Version + "/" + runner02bridgeName, "", "", "", "", "", "", "",
 	}
 
 	for k, v := range runtimeArgs {
@@ -177,7 +177,7 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 		process_name={{.GatewayProgram}}
 		user={{.GatewayUser}}
 		directory={{.GatewayRunDir}}
-		command={{.GatewayExecutablePath}} dataconnect --keyfile {{.GatewayKeyfile}} --listenportpeer {{.GatewayListenPortPeer}} --marlinip {{.GatewayMarlinIp}} --marlinport {{.GatewayMarlinPort}}
+		command={{.GatewayExecutablePath}} dataconnect --keyfile {{.GatewayKeyfile}} --listenportpeer {{.GatewayListenPortPeer}} --marlinip {{.GatewayMarlinIp}} --marlinport {{.InternalListenAddr}}
 		priority=100
 		numprocs=1
 		numprocs_start=1
@@ -200,7 +200,7 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 		process_name={{.BridgeProgram}}
 		user={{.BridgeUser}}
 		directory={{.BridgeRunDir}}
-		command={{.BridgeExecutablePath}} -b"{{.BridgeBootstrapAddr}}"
+		command={{.BridgeExecutablePath}} --discovery-addr {{.DiscoveryAddr}} --pubsub-addr {{.PubsubAddr}} {{if .BridgeBootstrapAddr}} --beacon-addr {{.BridgeBootstrapAddr}}{{end}} --listen-addr {{.InternalListenAddr}} {{if .KeystorePath}} --keystore-path {{.KeystorePath}}{{end}} {{if .KeystorePassPath}} --keystore-pass-path {{.KeystorePassPath}} {{end}} --contracts {{.Contracts}}  
 		priority=100
 		numprocs=1
 		numprocs_start=1
@@ -506,9 +506,9 @@ func (r *linux_amd64_supervisor_runner02) Logs(lines int) error {
 }
 
 type runner02resource struct {
-	Runner, Version, StartTime                                                                                                                   string
-	GatewayProgram, GatewayUser, GatewayRunDir, GatewayExecutablePath, GatewayKeyfile, GatewayListenPortPeer, GatewayMarlinIp, GatewayMarlinPort string
-	BridgeProgram, BridgeUser, BridgeRunDir, BridgeExecutablePath, BridgeBootstrapAddr                                                           string
+	Runner, Version, StartTime                                                                                                                                                   string
+	GatewayProgram, GatewayUser, GatewayRunDir, GatewayExecutablePath, GatewayKeyfile, GatewayListenPortPeer, GatewayMarlinIp                                                    string
+	BridgeProgram, BridgeUser, BridgeRunDir, BridgeExecutablePath, BridgeBootstrapAddr, DiscoveryAddr, PubsubAddr, InternalListenAddr, KeystorePath, KeystorePassPath, Contracts string
 }
 
 func (r *linux_amd64_supervisor_runner02) fetchResourceInformation(fileLocation string) (bool, runner02resource, error) {

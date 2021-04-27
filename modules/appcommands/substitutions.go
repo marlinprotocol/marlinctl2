@@ -105,7 +105,8 @@ func (a *app) gatewayIrisCreateSubstitutions(runnerID string) {
 		runtimeArgs["KeystorePath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("keystore-path"))
 		runtimeArgs["KeystorePassPath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("keystore-pass-path"))
 		runtimeArgs["Contracts"] = a.CreateCmd.getStringFromArgStoreOrDie("contracts")
-
+		runtimeArgs["GatewayListenPortPeer"] = a.CreateCmd.getStringFromArgStoreOrDie("gateway-listen-port-peer")
+		
 		a.CreateCmd.ArgStore["runtime-args"] = runtimeArgs
 	}
 }
@@ -125,7 +126,8 @@ func (a *app) gatewayCosmosCreateSubstitutions(runnerID string) {
 		runtimeArgs["KeystorePath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("keystore-path"))
 		runtimeArgs["KeystorePassPath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("keystore-pass-path"))
 		runtimeArgs["Contracts"] = a.CreateCmd.getStringFromArgStoreOrDie("contracts")
-
+		runtimeArgs["GatewayListenPortPeer"] = a.CreateCmd.getStringFromArgStoreOrDie("gateway-listen-port-peer")
+		
 		a.CreateCmd.ArgStore["runtime-args"] = runtimeArgs
 	}
 }
