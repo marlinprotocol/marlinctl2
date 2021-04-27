@@ -173,6 +173,8 @@ func (a *app) setupCreateCommand() {
 			a.gatewayNearCreateSubstitutions(versionToRun.RunnerId)
 			a.gatewayIrisCreateSubstitutions(versionToRun.RunnerId)
 			a.gatewayCosmosCreateSubstitutions(versionToRun.RunnerId)
+			a.relayIrisCreateSubstitutions(versionToRun.RunnerId)
+			a.relayCosmosCreateSubstitutions(versionToRun.RunnerId)
 
 			a.doPreRunSanityOrDie(runner)
 			a.doPrepareOrDie(runner)

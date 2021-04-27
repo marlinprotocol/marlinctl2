@@ -109,7 +109,7 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 
 	substitutions := runner02resource{
 		"linux-amd64.supervisor.runner02", r.Version, time.Now().Format(time.RFC822Z),
-		runner02relayProgramName + "_" + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + runner02relayName, "127.0.0.1:8002", "127.0.0.1:8003", "0.0.0.0:21500", "0.0.0.0:21502",
+		runner02relayProgramName + "_" + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + runner02relayName, "", "", "", "",
 	}
 
 	for k, v := range runtimeArgs {
