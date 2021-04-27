@@ -106,7 +106,6 @@ func (a *app) gatewayIrisCreateSubstitutions(runnerID string) {
 		runtimeArgs["KeystorePassPath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("keystore-pass-path"))
 		runtimeArgs["Contracts"] = a.CreateCmd.getStringFromArgStoreOrDie("contracts")
 		runtimeArgs["GatewayListenPortPeer"] = a.CreateCmd.getStringFromArgStoreOrDie("gateway-listen-port-peer")
-		
 		a.CreateCmd.ArgStore["runtime-args"] = runtimeArgs
 	}
 }
@@ -127,7 +126,41 @@ func (a *app) gatewayCosmosCreateSubstitutions(runnerID string) {
 		runtimeArgs["KeystorePassPath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("keystore-pass-path"))
 		runtimeArgs["Contracts"] = a.CreateCmd.getStringFromArgStoreOrDie("contracts")
 		runtimeArgs["GatewayListenPortPeer"] = a.CreateCmd.getStringFromArgStoreOrDie("gateway-listen-port-peer")
-		
+
+		a.CreateCmd.ArgStore["runtime-args"] = runtimeArgs
+	}
+}
+
+// --------------------- RELAY_COSMOS -------------------------------
+
+func (a *app) relayIrisCreateSubstitutions(runnerID string) {
+	if a.ProjectID != "relay_iris" {
+		return
+	}
+	runtimeArgs := a.CreateCmd.getStringToStringFromArgStoreOrDie("runtime-args")
+	if len(runtimeArgs) == 0 {
+		runtimeArgs["DiscoveryAddrs"] = a.CreateCmd.getStringFromArgStoreOrDie("discovery-addrs")
+		runtimeArgs["HeartbeatAddrs"] = a.CreateCmd.getStringFromArgStoreOrDie("heartbeat-addrs")
+		runtimeArgs["DiscoveryBindAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("discovery-bind-addr")
+		runtimeArgs["PubsubBindAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("pubsub-bind-addr")
+
+		a.CreateCmd.ArgStore["runtime-args"] = runtimeArgs
+	}
+}
+
+// --------------------- RELAY_COSMOS -------------------------------
+
+func (a *app) relayCosmosCreateSubstitutions(runnerID string) {
+	if a.ProjectID != "relay_cosmos" {
+		return
+	}
+	runtimeArgs := a.CreateCmd.getStringToStringFromArgStoreOrDie("runtime-args")
+	if len(runtimeArgs) == 0 {
+		runtimeArgs["DiscoveryAddrs"] = a.CreateCmd.getStringFromArgStoreOrDie("discovery-addrs")
+		runtimeArgs["HeartbeatAddrs"] = a.CreateCmd.getStringFromArgStoreOrDie("heartbeat-addrs")
+		runtimeArgs["DiscoveryBindAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("discovery-bind-addr")
+		runtimeArgs["PubsubBindAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("pubsub-bind-addr")
+
 		a.CreateCmd.ArgStore["runtime-args"] = runtimeArgs
 	}
 }
