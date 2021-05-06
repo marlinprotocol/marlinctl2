@@ -18,7 +18,6 @@ package appcommands
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 
 	"github.com/google/go-cmp/cmp"
@@ -712,7 +711,7 @@ func (a *app) setupKeystoreCreateCommand() {
 			var passphrase string
 			if !a.KeystoreCreateCmd.Cmd.Flags().Changed("pass-path") {
 				// read from stdin
-				fmt.Println("Enter passphrase:")
+				log.Info("Enter passphrase to generate keystore.")
 				var err error
 				passphrase, err = util.ReadInputPasswordLine()
 				if err != nil {
