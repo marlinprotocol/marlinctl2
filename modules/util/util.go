@@ -501,7 +501,7 @@ func GetFileSeekOffsetLastNLines(fname string, lines int) int64 {
 		}
 	}
 
-	offset = offset + start + 2
+	offset = offset + start + 1
 	if offset < 0 {
 		return 0
 	}
