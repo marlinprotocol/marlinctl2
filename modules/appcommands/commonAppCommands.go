@@ -174,6 +174,7 @@ func (a *app) setupCreateCommand() {
 			a.gatewayCosmosCreateSubstitutions(versionToRun.RunnerId)
 			a.relayIrisCreateSubstitutions(versionToRun.RunnerId)
 			a.relayCosmosCreateSubstitutions(versionToRun.RunnerId)
+			a.relayDotCreateSubstitutions(versionToRun.RunnerId)
 
 			a.doPreRunSanityOrDie(runner)
 			a.doPrepareOrDie(runner)
