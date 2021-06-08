@@ -88,6 +88,7 @@ func init() {
 	app.CreateCmd.ArgStore["keystore-pass-path"] = app.CreateCmd.Cmd.Flags().StringP("keystore-pass-path", "y", keystorePassPath, "Keystore pass path")
 	app.CreateCmd.ArgStore["contracts"] = app.CreateCmd.Cmd.Flags().StringP("contracts", "c", "mainnet", "mainnet/kovan")
 	app.CreateCmd.ArgStore["gateway-listen-port-peer"] = app.CreateCmd.Cmd.Flags().StringP("gateway-listen-port-peer", "g", "22400", "port on which TMCore dials for connection")
+	app.CreateCmd.ArgStore["gateway-direction"] = app.CreateCmd.Cmd.Flags().StringP("gateway-direction", "z", "producer", "gateway usage direction (producer/consumer/both)")
 
 	// ----------------------------------------------------------------------------------
 }

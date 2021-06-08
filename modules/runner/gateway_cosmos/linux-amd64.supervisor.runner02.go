@@ -163,7 +163,7 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 
 	substitutions := runner02resource{
 		"linux-amd64.supervisor.runner02", r.Version, time.Now().Format(time.RFC822Z),
-		runner02gatewayProgramName + "_" + r.InstanceId, currentUser.Username, "/", r.Storage + "/" + r.Version + "/" + runner02gatewayName, r.Storage + "/common/keyfile.json", "22400", "127.0.0.1", "22401",
+		runner02gatewayProgramName + "_" + r.InstanceId, currentUser.Username, "/", r.Storage + "/" + r.Version + "/" + runner02gatewayName, r.Storage + "/common/keyfile.json", "22400", "127.0.0.1", "22401", "producer",
 		runner02bridgeProgramName + "_" + r.InstanceId, currentUser.Username, "/", r.Storage + "/" + r.Version + "/" + runner02bridgeName, "", "", "", "", "", "", "",
 	}
 
@@ -189,7 +189,7 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 		process_name={{.GatewayProgram}}
 		user={{.GatewayUser}}
 		directory={{.GatewayRunDir}}
-		command={{.GatewayExecutablePath}} dataconnect --keyfile {{.GatewayKeyfile}} --listenportpeer {{.GatewayListenPortPeer}} --marlinip {{.GatewayMarlinIp}} --marlinport {{.GatewayPort}}
+		command={{.GatewayExecutablePath}} dataconnect --keyfile {{.GatewayKeyfile}} --listenportpeer {{.GatewayListenPortPeer}} --marlinip {{.GatewayMarlinIp}} --marlinport {{.GatewayPort}} --direction {{.GatewayDirection}}
 		priority=100
 		numprocs=1
 		numprocs_start=1
@@ -519,7 +519,7 @@ func (r *linux_amd64_supervisor_runner02) Logs(lines int) error {
 
 type runner02resource struct {
 	Runner, Version, StartTime                                                                                                                                                   string
-	GatewayProgram, GatewayUser, GatewayRunDir, GatewayExecutablePath, GatewayKeyfile, GatewayListenPortPeer, GatewayMarlinIp, GatewayPort                                       string
+	GatewayProgram, GatewayUser, GatewayRunDir, GatewayExecutablePath, GatewayKeyfile, GatewayListenPortPeer, GatewayMarlinIp, GatewayPort, GatewayDirection                     string
 	BridgeProgram, BridgeUser, BridgeRunDir, BridgeExecutablePath, BridgeBootstrapAddr, DiscoveryAddr, PubsubAddr, InternalListenAddr, KeystorePath, KeystorePassPath, Contracts string
 }
 
