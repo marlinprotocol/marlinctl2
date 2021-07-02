@@ -69,6 +69,25 @@ func (a *app) gatewayDotCreateSubstitutions(runnerID string) {
 	}
 }
 
+// --------------------- GATEWAY_MATICBOR -------------------------------
+
+func (a *app) gatewayMaticBorCreateSubstitutions(runnerID string) {
+	if a.ProjectID != "gateway_maticbor" {
+		return
+	}
+	runtimeArgs := a.CreateCmd.getStringToStringFromArgStoreOrDie("runtime-args")
+	if len(runtimeArgs) == 0 {
+
+		runtimeArgs["DiscoveryAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("discovery-addr")
+		runtimeArgs["PubsubAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("pubsub-addr")
+		runtimeArgs["BootstrapAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("bootstrap-addr")
+		runtimeArgs["KeystorePath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("keystore-path"))
+		runtimeArgs["KeystorePassPath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("keystore-pass-path"))
+
+		a.CreateCmd.ArgStore["runtime-args"] = runtimeArgs
+	}
+}
+
 // --------------------- GATEWAY_NEAR -------------------------------
 
 func (a *app) gatewayNearCreateSubstitutions(runnerID string) {
