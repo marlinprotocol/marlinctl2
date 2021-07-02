@@ -22,31 +22,31 @@ import (
 	"github.com/spf13/viper"
 )
 
-type linux_amd64_supervisor_runner02_runnerdata struct {
+type linux_amd64_supervisor_runner01_runnerdata struct {
 	Gateway         string
 	GatewayChecksum string
 }
 
-type linux_amd64_supervisor_runner02 struct {
+type linux_amd64_supervisor_runner01 struct {
 	Version      string
 	Storage      string
 	InstanceId   string
-	RunnerData   linux_amd64_supervisor_runner02_runnerdata
+	RunnerData   linux_amd64_supervisor_runner01_runnerdata
 	SkipChecksum bool
 }
 
 const (
-	runner02gatewayName               = "gateway_maticbor_linux-amd64"
-	runner02gatewayProgramName        = "gateway_maticbor"
-	runner02defaultUser               = "root"
-	runner02supervisorConfFiles       = "/etc/supervisor/conf.d"
-	runner02gatewaySupervisorConfFile = "gateway_maticbor"
-	runner02logRootDir                = "/var/log/supervisor"
-	runner02oldLogRootDir             = "/var/log/old_logs"
-	runner02projectName               = "gateway_maticbor"
+	runner01gatewayName               = "gateway_maticbor_linux-amd64"
+	runner01gatewayProgramName        = "gateway_maticbor"
+	runner01defaultUser               = "root"
+	runner01supervisorConfFiles       = "/etc/supervisor/conf.d"
+	runner01gatewaySupervisorConfFile = "gateway_maticbor"
+	runner01logRootDir                = "/var/log/supervisor"
+	runner01oldLogRootDir             = "/var/log/old_logs"
+	runner01projectName               = "gateway_maticbor"
 )
 
-func (r *linux_amd64_supervisor_runner02) PreRunSanity() error {
+func (r *linux_amd64_supervisor_runner01) PreRunSanity() error {
 	if !util.IsSupervisorAvailable() {
 		return errors.New("System does not support supervisor")
 	}
@@ -56,14 +56,14 @@ func (r *linux_amd64_supervisor_runner02) PreRunSanity() error {
 	return nil
 }
 
-func (r *linux_amd64_supervisor_runner02) Download() error {
+func (r *linux_amd64_supervisor_runner01) Download() error {
 	var dirPath = r.Storage + "/" + r.Version
 	err := util.CreateDirPathIfNotExists(dirPath)
 	if err != nil {
 		return err
 	}
 
-	var gatewayLocation = dirPath + "/" + runner02gatewayName
+	var gatewayLocation = dirPath + "/" + runner01gatewayName
 
 	if _, err := os.Stat(gatewayLocation); os.IsNotExist(err) {
 		log.Info("Fetching gateway from upstream for version ", r.Version)
@@ -85,7 +85,7 @@ func (r *linux_amd64_supervisor_runner02) Download() error {
 	return nil
 }
 
-func (r *linux_amd64_supervisor_runner02) Prepare() error {
+func (r *linux_amd64_supervisor_runner01) Prepare() error {
 	err := r.Download()
 	if err != nil {
 		return err
@@ -99,7 +99,7 @@ func (r *linux_amd64_supervisor_runner02) Prepare() error {
 	return nil
 }
 
-func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) error {
+func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) error {
 	if _, err := os.Stat(GetResourceFileLocation(r.Storage, r.InstanceId)); err == nil {
 		return errors.New("Resource file already exisits, cannot create a new instance: " + GetResourceFileLocation(r.Storage, r.InstanceId))
 	}
@@ -109,9 +109,9 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 		return err
 	}
 
-	substitutions := runner02resource{
-		"linux-amd64.supervisor.runner02", r.Version, time.Now().Format(time.RFC822Z),
-		runner02gatewayProgramName + "_" + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + runner02gatewayName,
+	substitutions := runner01resource{
+		"linux-amd64.supervisor.runner01", r.Version, time.Now().Format(time.RFC822Z),
+		runner01gatewayProgramName + "_" + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + runner01gatewayName,
 		"", "", "", "", "",
 	}
 
@@ -139,7 +139,7 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 		stdout_logfile=/var/log/supervisor/{{.GatewayProgram}}-stdout.log
 		stderr_logfile=/var/log/supervisor/{{.GatewayProgram}}-stderr.log
 	`)))
-	gFile, err := os.Create(runner02supervisorConfFiles + "/" + runner02gatewaySupervisorConfFile + "_" + r.InstanceId + ".conf")
+	gFile, err := os.Create(runner01supervisorConfFiles + "/" + runner01gatewaySupervisorConfFile + "_" + r.InstanceId + ".conf")
 	if err != nil {
 		return err
 	}
@@ -176,7 +176,7 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 		statusLines := strings.Split(string(status), "\n")
 		var anyStatusLine = false
 		for _, v := range statusLines {
-			if match, err := regexp.MatchString(runner02gatewayProgramName+"_"+r.InstanceId, v); err == nil && match {
+			if match, err := regexp.MatchString(runner01gatewayProgramName+"_"+r.InstanceId, v); err == nil && match {
 				vSplit := strings.Split(v, " ")
 				supervisorStatus[vSplit[0]] = strings.Trim(strings.Join(vSplit[1:], " "), " ")
 				anyStatusLine = true
@@ -194,7 +194,7 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 	return nil
 }
 
-func (r *linux_amd64_supervisor_runner02) Restart() error {
+func (r *linux_amd64_supervisor_runner01) Restart() error {
 	available, resData, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
 	if err != nil {
 		return err
@@ -214,7 +214,7 @@ func (r *linux_amd64_supervisor_runner02) Restart() error {
 	return nil
 }
 
-func (r *linux_amd64_supervisor_runner02) Recreate() error {
+func (r *linux_amd64_supervisor_runner01) Recreate() error {
 	available, resData, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
 	if err != nil {
 		return err
@@ -255,7 +255,7 @@ func (r *linux_amd64_supervisor_runner02) Recreate() error {
 	return nil
 }
 
-func (r *linux_amd64_supervisor_runner02) Destroy() error {
+func (r *linux_amd64_supervisor_runner01) Destroy() error {
 	available, resData, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
 	if err != nil {
 		return err
@@ -279,8 +279,8 @@ func (r *linux_amd64_supervisor_runner02) Destroy() error {
 	return nil
 }
 
-func (r *linux_amd64_supervisor_runner02) PostRun() error {
-	var gatewayConfig = runner02supervisorConfFiles + "/" + runner02gatewaySupervisorConfFile + "_" + r.InstanceId + ".conf"
+func (r *linux_amd64_supervisor_runner01) PostRun() error {
+	var gatewayConfig = runner01supervisorConfFiles + "/" + runner01gatewaySupervisorConfFile + "_" + r.InstanceId + ".conf"
 
 	if _, err := os.Stat(gatewayConfig); !os.IsNotExist(err) {
 		if err := os.Remove(gatewayConfig); err != nil {
@@ -307,7 +307,7 @@ func (r *linux_amd64_supervisor_runner02) PostRun() error {
 	return nil
 }
 
-func (r *linux_amd64_supervisor_runner02) Status() error {
+func (r *linux_amd64_supervisor_runner01) Status() error {
 	available, resData, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
 	if err != nil {
 		return err
@@ -317,7 +317,7 @@ func (r *linux_amd64_supervisor_runner02) Status() error {
 	}
 
 	var projectConfig types.Project
-	err = viper.UnmarshalKey(runner02projectName, &projectConfig)
+	err = viper.UnmarshalKey(runner01projectName, &projectConfig)
 	if err != nil {
 		return err
 	}
@@ -334,7 +334,7 @@ func (r *linux_amd64_supervisor_runner02) Status() error {
 	statusLines := strings.Split(string(status), "\n")
 	var anyStatusLine = false
 	for _, v := range statusLines {
-		if match, err := regexp.MatchString(runner02gatewayProgramName+"_"+r.InstanceId, v); err == nil && match {
+		if match, err := regexp.MatchString(runner01gatewayProgramName+"_"+r.InstanceId, v); err == nil && match {
 			vSplit := strings.Split(v, " ")
 			supervisorStatus[vSplit[0]] = strings.Trim(strings.Join(vSplit[1:], " "), " ")
 			anyStatusLine = true
@@ -350,7 +350,7 @@ func (r *linux_amd64_supervisor_runner02) Status() error {
 	return nil
 }
 
-func (r *linux_amd64_supervisor_runner02) Logs(lines int) error {
+func (r *linux_amd64_supervisor_runner01) Logs(lines int) error {
 	available, _, err := r.fetchResourceInformation(GetResourceFileLocation(r.Storage, r.InstanceId))
 	if err != nil {
 		return err
@@ -360,14 +360,14 @@ func (r *linux_amd64_supervisor_runner02) Logs(lines int) error {
 	}
 	// Check for resource
 	fileSubscriptions := make(map[string]string)
-	var runner02logRootDir = "/var/log/supervisor/"
-	err = filepath.Walk(runner02logRootDir, func(path string, f os.FileInfo, _ error) error {
+	var runner01logRootDir = "/var/log/supervisor/"
+	err = filepath.Walk(runner01logRootDir, func(path string, f os.FileInfo, _ error) error {
 		if !f.IsDir() {
-			for _, v := range []string{runner02gatewaySupervisorConfFile + "_" + r.InstanceId + "-stdout.*",
-				runner02gatewaySupervisorConfFile + "_" + r.InstanceId + "-stderr.*"} {
+			for _, v := range []string{runner01gatewaySupervisorConfFile + "_" + r.InstanceId + "-stdout.*",
+				runner01gatewaySupervisorConfFile + "_" + r.InstanceId + "-stderr.*"} {
 				r, err := regexp.MatchString(v, f.Name())
 				if err == nil && r {
-					fileSubscriptions[v[:len(v)-2]] = runner02logRootDir + f.Name()
+					fileSubscriptions[v[:len(v)-2]] = runner01logRootDir + f.Name()
 				}
 			}
 		}
@@ -396,29 +396,29 @@ func (r *linux_amd64_supervisor_runner02) Logs(lines int) error {
 	return nil
 }
 
-type runner02resource struct {
+type runner01resource struct {
 	Runner, Version, StartTime                                               string
 	GatewayProgram, GatewayUser, GatewayRunDir, GatewayExecutablePath        string
 	DiscoveryAddr, PubsubAddr, BootstrapAddr, KeystorePath, KeystorePassPath string
 }
 
-func (r *linux_amd64_supervisor_runner02) fetchResourceInformation(fileLocation string) (bool, runner02resource, error) {
+func (r *linux_amd64_supervisor_runner01) fetchResourceInformation(fileLocation string) (bool, runner01resource, error) {
 	if _, err := os.Stat(fileLocation); os.IsNotExist(err) {
-		return false, runner02resource{}, err
+		return false, runner01resource{}, err
 	}
 
 	file, err := ioutil.ReadFile(fileLocation)
 	if err != nil {
-		return false, runner02resource{}, err
+		return false, runner01resource{}, err
 	}
 
-	var resData = runner02resource{}
+	var resData = runner01resource{}
 	err = json.Unmarshal([]byte(file), &resData)
 
 	return true, resData, err
 }
 
-func (r *linux_amd64_supervisor_runner02) writeResourceToFile(resData runner02resource, fileLocation string) error {
+func (r *linux_amd64_supervisor_runner01) writeResourceToFile(resData runner01resource, fileLocation string) error {
 	lSplice := strings.Split(fileLocation, "/")
 	var dirPath string
 
