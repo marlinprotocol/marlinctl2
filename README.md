@@ -4,8 +4,6 @@ Marlinctl 2.X provides an improved process management command line interface for
 
 # Stable releases
 
-Current stable release: 2.4.0
-
 If you wish to run stable releases compiled by marlin team, please use our public release artifacts. Following is marlinctl 2.0.0 for you.
 ```
 wget http://public.artifacts.marlin.pro/projects/marlinctl/2.0.0/marlinctl-2.0.0-linux-amd64 --output-document=/usr/local/bin/marlinctl
