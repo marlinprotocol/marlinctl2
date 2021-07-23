@@ -11,7 +11,7 @@ if [[ `md5sum /usr/local/bin/marlinctl | cut -d' ' -f1` == "2acbdb08c09ffadf2ce4
 sudo chmod +x /usr/local/bin/marlinctl
 sudo marlinctl --registry-sync
 ```
-If you run `marlinctl -v`, it should return the latest release of marlinctl:
+If you run `marlinctl -v`, it should return the latest release of marlinctl. For example (for illustration purposes only):
 ```
 marlinctl version 2.5.1 build master@76eacbd3b31dc8955caffb0313d133ed1e44c0ea
 Compiled on: 08-06-2021_04-40-35@UTC
