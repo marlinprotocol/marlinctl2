@@ -78,13 +78,12 @@ func init() {
 
 	app.CreateCmd.ArgStore["discovery-addrs"] = app.CreateCmd.Cmd.Flags().StringP("discovery-addrs", "a", "127.0.0.1:8002", "Discovery address of relay")
 	app.CreateCmd.ArgStore["heartbeat-addrs"] = app.CreateCmd.Cmd.Flags().StringP("heartbeat-addrs", "g", "127.0.0.1:8003", "Heartbeat address of relay")
-	app.CreateCmd.ArgStore["datadir"] = app.CreateCmd.Cmd.Flags().StringP("datadir", "d", "~/.ethereum/", "Data directory")
+	app.CreateCmd.ArgStore["datadir"] = app.CreateCmd.Cmd.Flags().StringP("datadir", "d", "~/.ethereum/", "{deprecated} Data directory")
 	app.CreateCmd.ArgStore["discovery-port"] = app.CreateCmd.Cmd.Flags().StringP("discovery-port", "f", "", "Discovery port")
 	app.CreateCmd.ArgStore["pubsub-port"] = app.CreateCmd.Cmd.Flags().StringP("pubsub-port", "p", "", "PubSub port")
 	app.CreateCmd.ArgStore["address"] = app.CreateCmd.Cmd.Flags().StringP("address", "b", "", "Address")
 	app.CreateCmd.ArgStore["name"] = app.CreateCmd.Cmd.Flags().StringP("name", "n", "", "Name of relay")
-	app.CreateCmd.ArgStore["abci-version"] = app.CreateCmd.Cmd.Flags().StringP("abci-version", "c", "", "ABCI version")
-	app.CreateCmd.ArgStore["sync-mode"] = app.CreateCmd.Cmd.Flags().StringP("sync-mode", "m", "light", "Sync mode of GETH")
+	app.CreateCmd.ArgStore["sync-mode"] = app.CreateCmd.Cmd.Flags().StringP("sync-mode", "m", "light", "{deprecated} Sync mode of GETH")
 
 	// ----------------------------------------------------------------------------------
 }
