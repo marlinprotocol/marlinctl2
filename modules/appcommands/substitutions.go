@@ -20,7 +20,6 @@ func (a *app) relayEthCreateSubstitutions(runnerID string) {
 		runtimeArgs["PubsubPort"] = a.CreateCmd.getStringFromArgStoreOrDie("pubsub-port")
 		runtimeArgs["Address"] = a.CreateCmd.getStringFromArgStoreOrDie("address")
 		runtimeArgs["Name"] = a.CreateCmd.getStringFromArgStoreOrDie("name")
-		runtimeArgs["AbciVersion"] = a.CreateCmd.getStringFromArgStoreOrDie("abci-version")
 		runtimeArgs["SyncMode"] = a.CreateCmd.getStringFromArgStoreOrDie("sync-mode")
 
 		a.CreateCmd.ArgStore["runtime-args"] = runtimeArgs

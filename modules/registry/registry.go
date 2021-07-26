@@ -207,7 +207,7 @@ func (c *RegistryConfig) decodeReleasesJsonVersion1(data interface{}, subscripti
 					if !isFirstRun && !util.CanUseVersion(maj, min, patch, subscription, build,
 						currMaj, currMin, currPatch, currSub, currBuild,
 						updatePolicy) {
-						if isPublic && util.IsHigherVersion(maj, min, patch,
+						if util.IsHigherVersion(maj, min, patch,
 							currMaj, currMin, currPatch, currSub) {
 							missedVersions = append(missedVersions, fullVersion)
 						}
@@ -260,7 +260,7 @@ func (c *RegistryConfig) decodeReleasesJsonVersion1(data interface{}, subscripti
 		for _, v := range missedVersions {
 			updatesMissedString = updatesMissedString + "[version \"" + v + "\"] "
 		}
-		log.Warning("It seems that you are missing vital updates on public releases channel." +
+		log.Warning("It seems that you are missing updates on release channels that you have subscribed to." +
 			" You are not able to upgrade to them due to update policy applied on the project." +
 			" Here are versions you are missing: " + updatesMissedString)
 
