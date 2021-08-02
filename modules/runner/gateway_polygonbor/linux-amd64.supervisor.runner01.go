@@ -1,4 +1,4 @@
-package gateway_maticbor
+package gateway_polygonbor
 
 import (
 	"encoding/json"
@@ -36,14 +36,14 @@ type linux_amd64_supervisor_runner01 struct {
 }
 
 const (
-	runner01gatewayName               = "gateway_maticbor_linux-amd64"
-	runner01gatewayProgramName        = "gateway_maticbor"
+	runner01gatewayName               = "gateway_polygonbor_linux-amd64"
+	runner01gatewayProgramName        = "gateway_polygonbor"
 	runner01defaultUser               = "root"
 	runner01supervisorConfFiles       = "/etc/supervisor/conf.d"
-	runner01gatewaySupervisorConfFile = "gateway_maticbor"
+	runner01gatewaySupervisorConfFile = "gateway_polygonbor"
 	runner01logRootDir                = "/var/log/supervisor"
 	runner01oldLogRootDir             = "/var/log/old_logs"
-	runner01projectName               = "gateway_maticbor"
+	runner01projectName               = "gateway_polygonbor"
 )
 
 func (r *linux_amd64_supervisor_runner01) PreRunSanity() error {

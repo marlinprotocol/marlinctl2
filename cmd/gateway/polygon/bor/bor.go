@@ -20,7 +20,7 @@ import (
 
 	"github.com/marlinprotocol/ctl2/modules/appcommands"
 	"github.com/marlinprotocol/ctl2/modules/keystore"
-	projectRunners "github.com/marlinprotocol/ctl2/modules/runner/gateway_maticbor"
+	projectRunners "github.com/marlinprotocol/ctl2/modules/runner/gateway_polygonbor"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -33,7 +33,7 @@ var BorCmd = &cobra.Command{
 }
 
 func init() {
-	app, err := appcommands.GetNewApp("gateway_maticbor", projectRunners.GetRunnerInstance,
+	app, err := appcommands.GetNewApp("gateway_polygonbor", projectRunners.GetRunnerInstance,
 		appcommands.CommandDetails{Use: "create", DescShort: "Create gateway for bor blockchain", DescLong: "Create gateway for bor blockchain"},
 		appcommands.CommandDetails{Use: "destroy", DescShort: "Destroy gateway for bor blockchain", DescLong: "Destroy gateway for bor blockchain"},
 		appcommands.CommandDetails{Use: "logs", DescShort: "Tail logs for running gateway (bor) instances", DescLong: "Tail logs for running gateway (bor) instances"},
@@ -52,7 +52,7 @@ func init() {
 		appcommands.CommandDetails{Use: "destroy", DescShort: "Destroy keystore", DescLong: "Destroy keystore"},
 	)
 	if err != nil {
-		log.Error("Error while creating gateway_maticbor application command tree")
+		log.Error("Error while creating gateway_polygonbor application command tree")
 		os.Exit(1)
 	}
 
@@ -77,8 +77,8 @@ func init() {
 	keystoreCmd.AddCommand(app.KeystoreCreateCmd.Cmd)
 	keystoreCmd.AddCommand(app.KeystoreDestroyCmd.Cmd)
 
-	// Extra flag additions for gateway_maticbor -----------------------------------------------
-	keystorePath, keystorePassPath, _ := keystore.GetKeystoreDetails("gateway_maticbor")
+	// Extra flag additions for gateway_polygonbor -----------------------------------------------
+	keystorePath, keystorePassPath, _ := keystore.GetKeystoreDetails("gateway_polygonbor")
 
 	app.CreateCmd.ArgStore["discovery-addr"] = app.CreateCmd.Cmd.Flags().StringP("discovery-addr", "d", "0.0.0.0:15002", "Discovery address")
 	app.CreateCmd.ArgStore["pubsub-addr"] = app.CreateCmd.Cmd.Flags().StringP("pubsub-addr", "p", "0.0.0.0:15000", "Pubsub address")

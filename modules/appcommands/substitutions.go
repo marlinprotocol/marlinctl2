@@ -69,10 +69,10 @@ func (a *app) gatewayDotCreateSubstitutions(runnerID string) {
 	}
 }
 
-// --------------------- GATEWAY_MATICBOR -------------------------------
+// --------------------- GATEWAY_POLYGONBOR -------------------------------
 
-func (a *app) gatewayMaticBorCreateSubstitutions(runnerID string) {
-	if a.ProjectID != "gateway_maticbor" {
+func (a *app) gatewayPolygonBorCreateSubstitutions(runnerID string) {
+	if a.ProjectID != "gateway_polygonbor" {
 		return
 	}
 	runtimeArgs := a.CreateCmd.getStringToStringFromArgStoreOrDie("runtime-args")

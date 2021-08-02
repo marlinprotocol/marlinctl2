@@ -1,4 +1,4 @@
-package gateway_maticbor
+package gateway_polygonbor
 
 import (
 	"errors"
@@ -42,5 +42,5 @@ func GetRunnerInstance(runnerId string, version string, storage string, runnerDa
 }
 
 func GetResourceFileLocation(storage string, instanceId string) string {
-	return storage + "/common/project_gateway_maticbor_instance" + instanceId + ".resource"
+	return storage + "/common/project_gateway_polygonbor_instance" + instanceId + ".resource"
 }
