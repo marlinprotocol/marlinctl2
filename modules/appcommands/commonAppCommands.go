@@ -713,7 +713,7 @@ func (a *app) setupKeystoreCreateCommand() {
 			var passphrase string
 			if !a.KeystoreCreateCmd.Cmd.Flags().Changed("pass-path") {
 				// read from stdin
-				log.Info("Enter passphrase to generate keystore")
+				log.Info("Enter passphrase to generate keystore\nPassphrase:")
 				var err error
 				passphrase, err = util.ReadInputPasswordLine()
 				if err != nil {
@@ -732,6 +732,7 @@ func (a *app) setupKeystoreCreateCommand() {
 
 			home, err := util.GetUser()
 			if err == nil {
+				log.Info("creating keystore...")
 				keystoreDir := home.HomeDir + "/.marlin/ctl/storage/projects/" + a.ProjectID + "/common/keystore"
 				err = keystore.Create(keystoreDir, passphrase)
 			}
