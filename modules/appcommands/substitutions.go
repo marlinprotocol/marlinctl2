@@ -155,6 +155,23 @@ func (a *app) gatewayCosmosCreateSubstitutions(runnerID string) {
 	}
 }
 
+// --------------------- RELAY_POLYGON -------------------------------
+
+func (a *app) relayPolygonCreateSubstitutions(runnerID string) {
+	if a.ProjectID != "relay_polygon" {
+		return
+	}
+	runtimeArgs := a.CreateCmd.getStringToStringFromArgStoreOrDie("runtime-args")
+	if len(runtimeArgs) == 0 {
+		runtimeArgs["DiscoveryAddrs"] = a.CreateCmd.getStringFromArgStoreOrDie("discovery-addrs")
+		runtimeArgs["HeartbeatAddrs"] = a.CreateCmd.getStringFromArgStoreOrDie("heartbeat-addrs")
+		runtimeArgs["DiscoveryBindAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("discovery-bind-addr")
+		runtimeArgs["PubsubBindAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("pubsub-bind-addr")
+
+		a.CreateCmd.ArgStore["runtime-args"] = runtimeArgs
+	}
+}
+
 // --------------------- RELAY_IRIS -------------------------------
 
 func (a *app) relayIrisCreateSubstitutions(runnerID string) {
