@@ -130,7 +130,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 		process_name={{.GatewayProgram}}
 		user={{.GatewayUser}}
 		directory={{.GatewayRunDir}}
-		command={{.GatewayExecutablePath}} --discovery-addr {{.DiscoveryAddr}} --pubsub-addr {{.PubsubAddr}} {{if .BootstrapAddr}} --beacon-addr {{.BootstrapAddr}}{{end}} {{if .KeystorePath}} --keystore-path {{.KeystorePath}}{{end}} {{if .KeystorePassPath}} --keystore-pass-path {{.KeystorePassPath}} {{end}}
+		command={{.GatewayExecutablePath}} --discovery-addr {{.DiscoveryAddr}} --pubsub-addr {{.PubsubAddr}} {{if .BootstrapAddr}} --beacon-addr {{.BootstrapAddr}}{{end}} {{if .SpamcheckAddr}} --spamcheck-addr {{.SpamcheckAddr}}{{end}} {{if .KeystorePath}} --keystore-path {{.KeystorePath}}{{end}} {{if .KeystorePassPath}} --keystore-pass-path {{.KeystorePassPath}} {{end}} --contracts {{.Contracts}}
 		priority=100
 		numprocs=1
 		numprocs_start=1

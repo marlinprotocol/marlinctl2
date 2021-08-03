@@ -80,11 +80,12 @@ func init() {
 	// Extra flag additions for gateway_polygonbor -----------------------------------------------
 	keystorePath, keystorePassPath, _ := keystore.GetKeystoreDetails("gateway_polygonbor")
 
-	app.CreateCmd.ArgStore["discovery-addr"] = app.CreateCmd.Cmd.Flags().StringP("discovery-addr", "d", "0.0.0.0:15002", "Discovery address")
-	app.CreateCmd.ArgStore["pubsub-addr"] = app.CreateCmd.Cmd.Flags().StringP("pubsub-addr", "p", "0.0.0.0:15000", "Pubsub address")
+	app.CreateCmd.ArgStore["discovery-addr"] = app.CreateCmd.Cmd.Flags().StringP("discovery-addr", "d", "0.0.0.0:22702", "Discovery address")
+	app.CreateCmd.ArgStore["pubsub-addr"] = app.CreateCmd.Cmd.Flags().StringP("pubsub-addr", "p", "0.0.0.0:22700", "Pubsub address")
 	app.CreateCmd.ArgStore["bootstrap-addr"] = app.CreateCmd.Cmd.Flags().StringP("bootstrap-addr", "b", "", "Bootstrap address")
 	app.CreateCmd.ArgStore["keystore-path"] = app.CreateCmd.Cmd.Flags().StringP("keystore-path", "k", keystorePath, "Keystore Path")
 	app.CreateCmd.ArgStore["keystore-pass-path"] = app.CreateCmd.Cmd.Flags().StringP("keystore-pass-path", "y", keystorePassPath, "Keystore pass path")
-
+	app.CreateCmd.ArgStore["contracts"] = app.CreateCmd.Cmd.Flags().StringP("contracts", "c", "mainnet", "mainnet/kovan")
+	app.CreateCmd.ArgStore["spamcheck-addr"] = app.CreateCmd.Cmd.Flags().StringP("spamcheck-addr", "s", "", "SpamCheck address")
 	// ----------------------------------------------------------------------------------
 }

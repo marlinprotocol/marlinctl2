@@ -83,6 +83,8 @@ func (a *app) gatewayPolygonBorCreateSubstitutions(runnerID string) {
 		runtimeArgs["BootstrapAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("bootstrap-addr")
 		runtimeArgs["KeystorePath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("keystore-path"))
 		runtimeArgs["KeystorePassPath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("keystore-pass-path"))
+		runtimeArgs["Contracts"] = a.CreateCmd.getStringFromArgStoreOrDie("contracts")
+		runtimeArgs["SpamcheckAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("spamcheck-addr")
 
 		a.CreateCmd.ArgStore["runtime-args"] = runtimeArgs
 	}
