@@ -86,6 +86,6 @@ func init() {
 	app.CreateCmd.ArgStore["keystore-path"] = app.CreateCmd.Cmd.Flags().StringP("keystore-path", "k", keystorePath, "Keystore Path")
 	app.CreateCmd.ArgStore["keystore-pass-path"] = app.CreateCmd.Cmd.Flags().StringP("keystore-pass-path", "y", keystorePassPath, "Keystore pass path")
 	app.CreateCmd.ArgStore["contracts"] = app.CreateCmd.Cmd.Flags().StringP("contracts", "c", "mainnet", "mainnet/kovan")
-	app.CreateCmd.ArgStore["spamcheck-addr"] = app.CreateCmd.Cmd.Flags().StringP("spamcheck-addr", "s", "", "SpamCheck address")
+	app.CreateCmd.ArgStore["spamcheck-addr"] = app.CreateCmd.Cmd.Flags().StringP("spamcheck-addr", "z", "", "SpamCheck address")
 	// ----------------------------------------------------------------------------------
 }

@@ -112,7 +112,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 	substitutions := runner01resource{
 		"linux-amd64.supervisor.runner01", r.Version, time.Now().Format(time.RFC822Z),
 		runner01gatewayProgramName + "_" + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + runner01gatewayName,
-		"", "", "", "", "",
+		"", "", "", "", "", "", "",
 	}
 
 	for k, v := range runtimeArgs {
@@ -397,9 +397,9 @@ func (r *linux_amd64_supervisor_runner01) Logs(lines int) error {
 }
 
 type runner01resource struct {
-	Runner, Version, StartTime                                               string
-	GatewayProgram, GatewayUser, GatewayRunDir, GatewayExecutablePath        string
-	DiscoveryAddr, PubsubAddr, BootstrapAddr, KeystorePath, KeystorePassPath string
+	Runner, Version, StartTime                                                                         string
+	GatewayProgram, GatewayUser, GatewayRunDir, GatewayExecutablePath                                  string
+	DiscoveryAddr, PubsubAddr, BootstrapAddr, KeystorePath, KeystorePassPath, SpamcheckAddr, Contracts string
 }
 
 func (r *linux_amd64_supervisor_runner01) fetchResourceInformation(fileLocation string) (bool, runner01resource, error) {
