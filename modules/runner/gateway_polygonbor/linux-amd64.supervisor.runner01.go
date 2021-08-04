@@ -38,11 +38,9 @@ type linux_amd64_supervisor_runner01 struct {
 const (
 	runner01gatewayName               = "gateway_polygonbor_linux-amd64"
 	runner01gatewayProgramName        = "gateway_polygonbor"
-	runner01defaultUser               = "root"
 	runner01supervisorConfFiles       = "/etc/supervisor/conf.d"
 	runner01gatewaySupervisorConfFile = "gateway_polygonbor"
 	runner01logRootDir                = "/var/log/supervisor"
-	runner01oldLogRootDir             = "/var/log/old_logs"
 	runner01projectName               = "gateway_polygonbor"
 )
 
@@ -116,7 +114,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 	}
 
 	for k, v := range runtimeArgs {
-		if k != "GatewayProgram" && k != "BridgeProgram" &&
+		if k != "GatewayProgram" &&
 			reflect.ValueOf(&substitutions).Elem().FieldByName(k).CanSet() {
 			reflect.ValueOf(&substitutions).Elem().FieldByName(k).SetString(v)
 		}
@@ -160,7 +158,7 @@ func (r *linux_amd64_supervisor_runner01) Create(runtimeArgs map[string]string) 
 
 	_, err = exec.Command("supervisorctl", "start", substitutions.GatewayProgram).Output()
 	if err != nil {
-		return errors.New("Error while starting bridge: " + err.Error())
+		return errors.New("Error while starting gateway: " + err.Error())
 	}
 	log.Debug("Trigerred gateway run")
 

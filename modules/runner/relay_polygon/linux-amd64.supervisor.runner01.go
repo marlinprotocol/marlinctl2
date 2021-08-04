@@ -38,11 +38,9 @@ type linux_amd64_supervisor_runner01 struct {
 const (
 	runner01relayName               = "relay_polygon_linux-amd64"
 	runner01relayProgramName        = "relay_polygon"
-	runner01defaultUser             = "root"
 	runner01supervisorConfFiles     = "/etc/supervisor/conf.d"
 	runner01relaySupervisorConfFile = "relay_polygon"
 	runner01logRootDir              = "/var/log/supervisor"
-	runner01oldLogRootDir           = "/var/log/old_logs"
 	runner01projectName             = "relay_polygon"
 )
 
