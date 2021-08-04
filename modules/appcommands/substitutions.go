@@ -68,6 +68,27 @@ func (a *app) gatewayDotCreateSubstitutions(runnerID string) {
 	}
 }
 
+// --------------------- GATEWAY_POLYGONBOR -------------------------------
+
+func (a *app) gatewayPolygonBorCreateSubstitutions(runnerID string) {
+	if a.ProjectID != "gateway_polygonbor" {
+		return
+	}
+	runtimeArgs := a.CreateCmd.getStringToStringFromArgStoreOrDie("runtime-args")
+	if len(runtimeArgs) == 0 {
+
+		runtimeArgs["DiscoveryAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("discovery-addr")
+		runtimeArgs["PubsubAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("pubsub-addr")
+		runtimeArgs["BootstrapAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("bootstrap-addr")
+		runtimeArgs["KeystorePath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("keystore-path"))
+		runtimeArgs["KeystorePassPath"] = util.ExpandTilde(a.CreateCmd.getStringFromArgStoreOrDie("keystore-pass-path"))
+		runtimeArgs["Contracts"] = a.CreateCmd.getStringFromArgStoreOrDie("contracts")
+		runtimeArgs["SpamcheckAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("spamcheck-addr")
+
+		a.CreateCmd.ArgStore["runtime-args"] = runtimeArgs
+	}
+}
+
 // --------------------- GATEWAY_NEAR -------------------------------
 
 func (a *app) gatewayNearCreateSubstitutions(runnerID string) {
@@ -128,6 +149,23 @@ func (a *app) gatewayCosmosCreateSubstitutions(runnerID string) {
 		runtimeArgs["Contracts"] = a.CreateCmd.getStringFromArgStoreOrDie("contracts")
 		runtimeArgs["GatewayListenPortPeer"] = a.CreateCmd.getStringFromArgStoreOrDie("gateway-listen-port-peer")
 		runtimeArgs["GatewayDirection"] = a.CreateCmd.getStringFromArgStoreOrDie("gateway-direction")
+
+		a.CreateCmd.ArgStore["runtime-args"] = runtimeArgs
+	}
+}
+
+// --------------------- RELAY_POLYGON -------------------------------
+
+func (a *app) relayPolygonCreateSubstitutions(runnerID string) {
+	if a.ProjectID != "relay_polygon" {
+		return
+	}
+	runtimeArgs := a.CreateCmd.getStringToStringFromArgStoreOrDie("runtime-args")
+	if len(runtimeArgs) == 0 {
+		runtimeArgs["DiscoveryAddrs"] = a.CreateCmd.getStringFromArgStoreOrDie("discovery-addrs")
+		runtimeArgs["HeartbeatAddrs"] = a.CreateCmd.getStringFromArgStoreOrDie("heartbeat-addrs")
+		runtimeArgs["DiscoveryBindAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("discovery-bind-addr")
+		runtimeArgs["PubsubBindAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("pubsub-bind-addr")
 
 		a.CreateCmd.ArgStore["runtime-args"] = runtimeArgs
 	}

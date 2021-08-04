@@ -5,6 +5,7 @@ import (
 	"github.com/marlinprotocol/ctl2/cmd/relay/dot"
 	"github.com/marlinprotocol/ctl2/cmd/relay/eth"
 	"github.com/marlinprotocol/ctl2/cmd/relay/iris"
+	"github.com/marlinprotocol/ctl2/cmd/relay/polygon"
 	"github.com/spf13/cobra"
 )
 
@@ -19,4 +20,5 @@ func init() {
 	RelayCmd.AddCommand(cosmos.CosmosCmd)
 	RelayCmd.AddCommand(iris.IrisCmd)
 	RelayCmd.AddCommand(dot.DotCmd)
+	RelayCmd.AddCommand(polygon.PolygonCmd)
 }

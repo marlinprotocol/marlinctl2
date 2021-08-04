@@ -18,6 +18,7 @@ package appcommands
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 
 	"github.com/google/go-cmp/cmp"
@@ -172,9 +173,11 @@ func (a *app) setupCreateCommand() {
 			a.gatewayNearCreateSubstitutions(versionToRun.RunnerId)
 			a.gatewayIrisCreateSubstitutions(versionToRun.RunnerId)
 			a.gatewayCosmosCreateSubstitutions(versionToRun.RunnerId)
+			a.gatewayPolygonBorCreateSubstitutions(versionToRun.RunnerId)
 			a.relayIrisCreateSubstitutions(versionToRun.RunnerId)
 			a.relayCosmosCreateSubstitutions(versionToRun.RunnerId)
 			a.relayDotCreateSubstitutions(versionToRun.RunnerId)
+			a.relayPolygonCreateSubstitutions(versionToRun.RunnerId)
 
 			a.doPreRunSanityOrDie(runner)
 			a.doPrepareOrDie(runner)
@@ -713,8 +716,10 @@ func (a *app) setupKeystoreCreateCommand() {
 			if !a.KeystoreCreateCmd.Cmd.Flags().Changed("pass-path") {
 				// read from stdin
 				log.Info("Enter passphrase to generate keystore")
+				fmt.Printf("Passphrase:")
 				var err error
 				passphrase, err = util.ReadInputPasswordLine()
+				fmt.Println()
 				if err != nil {
 					log.Error("Error while reading passphrase", err)
 					os.Exit(1)
@@ -731,6 +736,7 @@ func (a *app) setupKeystoreCreateCommand() {
 
 			home, err := util.GetUser()
 			if err == nil {
+				log.Info("creating keystore...")
 				keystoreDir := home.HomeDir + "/.marlin/ctl/storage/projects/" + a.ProjectID + "/common/keystore"
 				err = keystore.Create(keystoreDir, passphrase)
 			}
