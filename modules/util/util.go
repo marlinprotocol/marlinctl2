@@ -18,6 +18,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -25,6 +26,7 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/ssh/terminal"
 
+	"github.com/hpcloud/tail"
 	"github.com/jedib0t/go-pretty/table"
 	"github.com/jedib0t/go-pretty/text"
 	"github.com/schollz/progressbar/v3"
@@ -543,7 +545,7 @@ func DownloadExecutable(exectype string, version string, url string, skipchecksu
 	return os.Chmod(filelocation, 0755)
 }
 
-func SupervisorStart(programs []string) error {
+func SupervisorRereadUpdate() error {
 	_, err := exec.Command("supervisorctl", "reread").Output()
 	if err != nil {
 		return errors.New("Error while supervisorctl reread: " + err.Error())
@@ -553,7 +555,14 @@ func SupervisorStart(programs []string) error {
 	if err != nil {
 		return errors.New("Error while supervisorctl update: " + err.Error())
 	}
+	return nil
+}
 
+func SupervisorStart(programs []string) error {
+	err := SupervisorRereadUpdate()
+	if err != nil {
+		return err
+	}
 	for _, prg := range programs {
 		_, err = exec.Command("supervisorctl", "start", prg).Output()
 		if err != nil {
@@ -598,4 +607,77 @@ func SupervisorStatusBestEffort(programs []string, instanceID string) {
 			PrettyPrintKVMap(supervisorStatus)
 		}
 	}
+}
+
+func SupervisorRestartProgramBestEffort(exectype string, program string) {
+	_, err1 := exec.Command("supervisorctl", "restart", program).Output()
+
+	if err1 == nil {
+		log.Info("Triggered restart for ", exectype)
+	} else {
+		log.Warning("Triggered restart for ", exectype, ", however supervisor did return some errors. ", err1.Error())
+	}
+}
+
+func SupervisorStop(program []string) []error {
+	errors_vec := []error{}
+	for _, prg := range program {
+		returned, err := exec.Command("supervisorctl", "stop", prg).Output()
+		if err != nil {
+			alreadyDead, err2 := regexp.MatchString("not running", string(returned))
+			if !alreadyDead || err2 != nil {
+				errors_vec = append(errors_vec, errors.New("Error while stopping: "+err.Error()))
+			}
+		}
+	}
+	if len(errors_vec) == 0 {
+		log.Info("All stop requests returned good exit codes. Waiting 5 seconds for SIGTERM to take effect")
+	} else {
+		log.Warn("Not all stop requests may have been successful. Waiting 5 seconds for SIGTERM to take effect")
+	}
+	time.Sleep(5 * time.Second)
+	return errors_vec
+}
+
+func LogTailer(program []string, instanceID string, lines int) error {
+	intrest_list := []string{}
+	for _, prg := range program {
+		intrest_list = append(intrest_list, prg+"_"+instanceID+"-stdout.*")
+		intrest_list = append(intrest_list, prg+"_"+instanceID+"-stderr.*")
+	}
+
+	fileSubscriptions := make(map[string]string)
+	var runner02logRootDir = "/var/log/supervisor/"
+	err := filepath.Walk(runner02logRootDir, func(path string, f os.FileInfo, _ error) error {
+		if !f.IsDir() {
+			for _, v := range intrest_list {
+				r, err := regexp.MatchString(v, f.Name())
+				if err == nil && r {
+					fileSubscriptions[v[:len(v)-2]] = runner02logRootDir + f.Name()
+				}
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return nil
+	}
+
+	var wg sync.WaitGroup
+	for k, v := range fileSubscriptions {
+		wg.Add(1)
+		go func(filename string, filelocation string) {
+			seeklocation := GetFileSeekOffsetLastNLines(filelocation, lines)
+			t, err := tail.TailFile(filelocation, tail.Config{Location: &tail.SeekInfo{Offset: seeklocation}, Follow: true, Logger: tail.DiscardingLogger})
+			if err != nil {
+				fmt.Println(err)
+			}
+			for line := range t.Lines {
+				log.Info(fmt.Sprintf("[%20s] ", filename) + line.Text)
+			}
+			wg.Done()
+		}(k, v)
+	}
+	wg.Wait()
+	return nil
 }

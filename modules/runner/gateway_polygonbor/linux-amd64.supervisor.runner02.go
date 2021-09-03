@@ -6,16 +6,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
-	"path/filepath"
 	"reflect"
-	"regexp"
 	"strings"
-	"sync"
 	"text/template"
 	"time"
 
-	"github.com/hpcloud/tail"
 	"github.com/marlinprotocol/ctl2/modules/util"
 	"github.com/marlinprotocol/ctl2/types"
 	log "github.com/sirupsen/logrus"
@@ -166,11 +161,12 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 	}
 	mpFile.Close()
 
-	util.SupervisorStart([]string{substitutions.GatewayProgram, substitutions.MevProxyProgram})
+	err = util.SupervisorStart([]string{substitutions.GatewayProgram, substitutions.MevProxyProgram})
+	if err != nil {
+		return err
+	}
 	util.SupervisorStatusBestEffort([]string{runner02gatewayProgramName, runner02mevproxyProgramName}, r.InstanceId)
-	r.writeResourceToFile(substitutions, GetResourceFileLocation(r.Storage, r.InstanceId))
-
-	return nil
+	return r.writeResourceToFile(substitutions, GetResourceFileLocation(r.Storage, r.InstanceId))
 }
 
 func (r *linux_amd64_supervisor_runner02) Restart() error {
@@ -182,21 +178,8 @@ func (r *linux_amd64_supervisor_runner02) Restart() error {
 		return errors.New("resource by id " + r.InstanceId + " doesn't exist. Can't return status.")
 	}
 
-	_, err1 := exec.Command("supervisorctl", "restart", resData.GatewayProgram).Output()
-
-	if err1 == nil {
-		log.Info("Triggered restart")
-	} else {
-		log.Warning("Triggered restart, however supervisor did return some errors. ", err1.Error())
-	}
-
-	_, err2 := exec.Command("supervisorctl", "restart", resData.MevProxyProgram).Output()
-
-	if err2 == nil {
-		log.Info("Triggered restart")
-	} else {
-		log.Warning("Triggered restart, however supervisor did return some errors. ", err1.Error())
-	}
+	util.SupervisorRestartProgramBestEffort("gateway", resData.GatewayProgram)
+	util.SupervisorRestartProgramBestEffort("mevpoxy", resData.MevProxyProgram)
 
 	return nil
 }
@@ -251,27 +234,10 @@ func (r *linux_amd64_supervisor_runner02) Destroy() error {
 		return errors.New("resource by id " + r.InstanceId + " doesn't exists. Can't destroy")
 	}
 
-	returned, err := exec.Command("supervisorctl", "stop", resData.MevProxyProgram).Output()
-	if err != nil {
-		alreadyDead, err2 := regexp.MatchString("not running", string(returned))
-		if !alreadyDead || err2 != nil {
-			return errors.New("Error while stopping mevproxy: " + err.Error())
-		}
+	errs := util.SupervisorStop([]string{resData.MevProxyProgram, resData.GatewayProgram})
+	if len(errs) != 0 {
+		return errors.New(fmt.Sprintf("Error while stopping programs %v", errs))
 	}
-	log.Debug("Trigerred mevproxy stop")
-
-	returned, err = exec.Command("supervisorctl", "stop", resData.GatewayProgram).Output()
-	if err != nil {
-		alreadyDead, err2 := regexp.MatchString("not running", string(returned))
-		if !alreadyDead || err2 != nil {
-			return errors.New("Error while stopping gateway: " + err.Error())
-		}
-	}
-	log.Debug("Trigerred gateway stop")
-
-	log.Info("Waiting 5 seconds for SIGTERM to take effect")
-	time.Sleep(5 * time.Second)
-
 	return nil
 }
 
@@ -284,14 +250,9 @@ func (r *linux_amd64_supervisor_runner02) PostRun() error {
 		}
 	}
 
-	_, err := exec.Command("supervisorctl", "reread").Output()
+	err := util.SupervisorRereadUpdate()
 	if err != nil {
-		return errors.New("Error while supervisorctl reread: " + err.Error())
-	}
-
-	_, err = exec.Command("supervisorctl", "update").Output()
-	if err != nil {
-		return errors.New("Error while supervisorctl update: " + err.Error())
+		return err
 	}
 
 	err = os.Remove(GetResourceFileLocation(r.Storage, r.InstanceId))
@@ -323,25 +284,8 @@ func (r *linux_amd64_supervisor_runner02) Status() error {
 	log.Info("Resource information")
 	util.PrettyPrintKVStruct(resData)
 
-	status, _ := exec.Command("supervisorctl", "status").Output()
-
-	var supervisorStatus = make(map[string]interface{})
-
-	statusLines := strings.Split(string(status), "\n")
-	var anyStatusLine = false
-	for _, v := range statusLines {
-		if match, err := regexp.MatchString(runner02gatewayProgramName+"_"+r.InstanceId+"|"+runner02mevproxyProgramName+"_"+r.InstanceId, v); err == nil && match {
-			vSplit := strings.Split(v, " ")
-			supervisorStatus[vSplit[0]] = strings.Trim(strings.Join(vSplit[1:], " "), " ")
-			anyStatusLine = true
-		}
-	}
-	if !anyStatusLine {
-		log.Info("No proceses seem to be running")
-	} else {
-		log.Info("Process status")
-		util.PrettyPrintKVMap(supervisorStatus)
-	}
+	log.Info("Process Status")
+	util.SupervisorStatusBestEffort([]string{resData.GatewayProgram, resData.MevProxyProgram}, r.InstanceId)
 
 	return nil
 }
@@ -354,44 +298,9 @@ func (r *linux_amd64_supervisor_runner02) Logs(lines int) error {
 	if !available {
 		return errors.New("resource by id " + r.InstanceId + " doesn't exists. Can't tail logs")
 	}
-	// Check for resource
-	fileSubscriptions := make(map[string]string)
-	var runner02logRootDir = "/var/log/supervisor/"
-	err = filepath.Walk(runner02logRootDir, func(path string, f os.FileInfo, _ error) error {
-		if !f.IsDir() {
-			for _, v := range []string{runner02gatewaySupervisorConfFile + "_" + r.InstanceId + "-stdout.*",
-				runner02gatewaySupervisorConfFile + "_" + r.InstanceId + "-stderr.*",
-				runner02mevproxySupervisorConfFile + "_" + r.InstanceId + "-stdout.*",
-				runner02mevproxySupervisorConfFile + "_" + r.InstanceId + "-stderr.*"} {
-				r, err := regexp.MatchString(v, f.Name())
-				if err == nil && r {
-					fileSubscriptions[v[:len(v)-2]] = runner02logRootDir + f.Name()
-				}
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		return nil
-	}
 
-	var wg sync.WaitGroup
-	for k, v := range fileSubscriptions {
-		wg.Add(1)
-		go func(filename string, filelocation string) {
-			seeklocation := util.GetFileSeekOffsetLastNLines(filelocation, lines)
-			t, err := tail.TailFile(filelocation, tail.Config{Location: &tail.SeekInfo{Offset: seeklocation}, Follow: true, Logger: tail.DiscardingLogger})
-			if err != nil {
-				fmt.Println(err)
-			}
-			for line := range t.Lines {
-				log.Info(fmt.Sprintf("[%20s] ", filename) + line.Text)
-			}
-			wg.Done()
-		}(k, v)
-	}
-	wg.Wait()
-	return nil
+	return util.LogTailer([]string{runner02gatewaySupervisorConfFile, runner02mevproxySupervisorConfFile},
+		r.InstanceId, lines)
 }
 
 type runner02resource struct {
