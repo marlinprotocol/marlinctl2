@@ -14,10 +14,12 @@ import (
 	"os/user"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -522,4 +524,78 @@ func ReadStringFromFile(filePath string) (string, error) {
 		return "", err
 	}
 	return strings.TrimSuffix(string(passBytes), "\n"), nil
+}
+
+func DownloadExecutable(exectype string, version string, url string, skipchecksum bool, checksum string, filelocation string) error {
+	if _, err := os.Stat(filelocation); os.IsNotExist(err) {
+		log.Info("Fetching ", exectype, " from upstream for version ", version)
+		DownloadFile(filelocation, url)
+	}
+	if !skipchecksum {
+		err := VerifyChecksum(filelocation, checksum)
+		if err != nil {
+			return errors.New("Error while verifying checksum: " + err.Error())
+		} else {
+			log.Debug("Successully verified integrity for ", filelocation)
+		}
+	}
+
+	return os.Chmod(filelocation, 0755)
+}
+
+func SupervisorStart(programs []string) error {
+	_, err := exec.Command("supervisorctl", "reread").Output()
+	if err != nil {
+		return errors.New("Error while supervisorctl reread: " + err.Error())
+	}
+
+	_, err = exec.Command("supervisorctl", "update").Output()
+	if err != nil {
+		return errors.New("Error while supervisorctl update: " + err.Error())
+	}
+
+	for _, prg := range programs {
+		_, err = exec.Command("supervisorctl", "start", prg).Output()
+		if err != nil {
+			return errors.New("Error while starting program: " + err.Error())
+		}
+	}
+
+	log.Info("Waiting 10 seconds to poll for status")
+	time.Sleep(10 * time.Second)
+	return nil
+}
+
+func SupervisorStatusBestEffort(programs []string, instanceID string) {
+	status, err := exec.Command("supervisorctl", "status").Output()
+	if err != nil {
+		log.Warning("Error while reading supervisor status: " + err.Error())
+	} else {
+		var supervisorStatus = make(map[string]interface{})
+
+		programs_len := len(programs)
+		matchstr := ""
+		for idx, prg := range programs {
+			matchstr = matchstr + prg + "_" + instanceID
+			if idx != programs_len-1 {
+				matchstr = matchstr + "|"
+			}
+		}
+
+		statusLines := strings.Split(string(status), "\n")
+		var anyStatusLine = false
+		for _, v := range statusLines {
+			if match, err := regexp.MatchString(matchstr, v); err == nil && match {
+				vSplit := strings.Split(v, " ")
+				supervisorStatus[vSplit[0]] = strings.Trim(strings.Join(vSplit[1:], " "), " ")
+				anyStatusLine = true
+			}
+		}
+		if !anyStatusLine {
+			log.Info("No proceses seem to be running")
+		} else {
+			log.Info("Process status")
+			PrettyPrintKVMap(supervisorStatus)
+		}
+	}
 }

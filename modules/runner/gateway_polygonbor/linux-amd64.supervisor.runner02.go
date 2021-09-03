@@ -65,46 +65,16 @@ func (r *linux_amd64_supervisor_runner02) Download() error {
 		return err
 	}
 
-	var gatewayLocation = dirPath + "/" + runner02gatewayName
-
-	if _, err := os.Stat(gatewayLocation); os.IsNotExist(err) {
-		log.Info("Fetching gateway from upstream for version ", r.Version)
-		util.DownloadFile(gatewayLocation, r.RunnerData.Gateway)
-	}
-	if !r.SkipChecksum {
-		err := util.VerifyChecksum(gatewayLocation, r.RunnerData.GatewayChecksum)
-		if err != nil {
-			return errors.New("Error while verifying gateway checksum: " + err.Error())
-		} else {
-			log.Debug("Successully verified gateway's integrity")
-		}
-	}
-
-	err = os.Chmod(gatewayLocation, 0755)
+	err = util.DownloadExecutable("gateway", r.Version, r.RunnerData.Gateway, r.SkipChecksum, r.RunnerData.GatewayChecksum, dirPath+"/"+runner02gatewayName)
 	if err != nil {
 		return err
 	}
-	return nil
 
-	var mevproxyLocation = dirPath + "/" + runner02mevproxyName
-
-	if _, err := os.Stat(gatewayLocation); os.IsNotExist(err) {
-		log.Info("Fetching gateway from upstream for version ", r.Version)
-		util.DownloadFile(mevproxyLocation, r.RunnerData.MevProxy)
-	}
-	if !r.SkipChecksum {
-		err := util.VerifyChecksum(mevproxyLocation, r.RunnerData.MevProxyChecksum)
-		if err != nil {
-			return errors.New("Error while verifying gateway checksum: " + err.Error())
-		} else {
-			log.Debug("Successully verified gateway's integrity")
-		}
-	}
-
-	err = os.Chmod(mevproxyLocation, 0755)
+	err = util.DownloadExecutable("mevproxy", r.Version, r.RunnerData.MevProxy, r.SkipChecksum, r.RunnerData.MevProxyChecksum, dirPath+"/"+runner02mevproxyName)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -168,10 +138,10 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 	if err != nil {
 		return err
 	}
-	defer gFile.Close()
 	if err := gt.Execute(gFile, substitutions); err != nil {
 		panic(err)
 	}
+	gFile.Close()
 
 	mpt := template.Must(template.New("mevproxy-template").Parse(util.TrimSpacesEveryLine(`
 		[program:{{.MevProxyProgram}}]
@@ -191,58 +161,13 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 	if err != nil {
 		return err
 	}
-	defer gFile.Close()
 	if err := mpt.Execute(mpFile, substitutions); err != nil {
 		panic(err)
 	}
+	mpFile.Close()
 
-	_, err = exec.Command("supervisorctl", "reread").Output()
-	if err != nil {
-		return errors.New("Error while supervisorctl reread: " + err.Error())
-	}
-
-	_, err = exec.Command("supervisorctl", "update").Output()
-	if err != nil {
-		return errors.New("Error while supervisorctl update: " + err.Error())
-	}
-
-	_, err = exec.Command("supervisorctl", "start", substitutions.GatewayProgram).Output()
-	if err != nil {
-		return errors.New("Error while starting gateway: " + err.Error())
-	}
-	log.Debug("Trigerred gateway run")
-
-	_, err = exec.Command("supervisorctl", "start", substitutions.MevProxyProgram).Output()
-	if err != nil {
-		return errors.New("Error while starting mev_proxy: " + err.Error())
-	}
-	log.Debug("Trigerred mevproxy run")
-
-	log.Info("Waiting 10 seconds to poll for status")
-	time.Sleep(10 * time.Second)
-
-	status, err := exec.Command("supervisorctl", "status").Output()
-	if err != nil {
-		log.Warning("Error while reading supervisor status: " + err.Error())
-	} else {
-		var supervisorStatus = make(map[string]interface{})
-
-		statusLines := strings.Split(string(status), "\n")
-		var anyStatusLine = false
-		for _, v := range statusLines {
-			if match, err := regexp.MatchString(runner02gatewayProgramName+"_"+r.InstanceId+"|"+runner02mevproxyProgramName+"_"+r.InstanceId, v); err == nil && match {
-				vSplit := strings.Split(v, " ")
-				supervisorStatus[vSplit[0]] = strings.Trim(strings.Join(vSplit[1:], " "), " ")
-				anyStatusLine = true
-			}
-		}
-		if !anyStatusLine {
-			log.Info("No proceses seem to be running")
-		} else {
-			log.Info("Process status")
-			util.PrettyPrintKVMap(supervisorStatus)
-		}
-	}
+	util.SupervisorStart([]string{substitutions.GatewayProgram, substitutions.MevProxyProgram})
+	util.SupervisorStatusBestEffort([]string{runner02gatewayProgramName, runner02mevproxyProgramName}, r.InstanceId)
 	r.writeResourceToFile(substitutions, GetResourceFileLocation(r.Storage, r.InstanceId))
 
 	return nil
@@ -260,6 +185,14 @@ func (r *linux_amd64_supervisor_runner02) Restart() error {
 	_, err1 := exec.Command("supervisorctl", "restart", resData.GatewayProgram).Output()
 
 	if err1 == nil {
+		log.Info("Triggered restart")
+	} else {
+		log.Warning("Triggered restart, however supervisor did return some errors. ", err1.Error())
+	}
+
+	_, err2 := exec.Command("supervisorctl", "restart", resData.MevProxyProgram).Output()
+
+	if err2 == nil {
 		log.Info("Triggered restart")
 	} else {
 		log.Warning("Triggered restart, however supervisor did return some errors. ", err1.Error())
