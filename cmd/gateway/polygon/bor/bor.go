@@ -87,5 +87,7 @@ func init() {
 	app.CreateCmd.ArgStore["keystore-pass-path"] = app.CreateCmd.Cmd.Flags().StringP("keystore-pass-path", "y", keystorePassPath, "Keystore pass path")
 	app.CreateCmd.ArgStore["contracts"] = app.CreateCmd.Cmd.Flags().StringP("contracts", "c", "mainnet", "mainnet/kovan")
 	app.CreateCmd.ArgStore["spamcheck-addr"] = app.CreateCmd.Cmd.Flags().StringP("spamcheck-addr", "z", "", "SpamCheck address")
+	app.CreateCmd.ArgStore["mevproxy-listen-addr"] = app.CreateCmd.Cmd.Flags().StringP("mevproxy-listen-addr", "m", "0.0.0.0:18545", "Port to recieve MEV bundles on")
+	app.CreateCmd.ArgStore["mevproxy-jsonrpc-addr"] = app.CreateCmd.Cmd.Flags().StringP("mevproxy-jsonrpc-addr", "j", "127.0.0.1:8545", "Polygon Bor JSON RPC port")
 	// ----------------------------------------------------------------------------------
 }
