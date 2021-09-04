@@ -39,7 +39,7 @@ const (
 	runner02mevproxyProgramName        = "mevproxy_polygon"
 	runner02supervisorConfFiles        = "/etc/supervisor/conf.d"
 	runner02gatewaySupervisorConfFile  = "gateway_polygonbor"
-	runner02mevproxySupervisorConfFile = "mevproxy_polygon"
+	runner02mevproxySupervisorConfFile = "mevproxy_polygonbor"
 	runner02projectName                = "gateway_polygonbor"
 )
 

@@ -80,14 +80,14 @@ func init() {
 	// Extra flag additions for gateway_polygonbor -----------------------------------------------
 	keystorePath, keystorePassPath, _ := keystore.GetKeystoreDetails("gateway_polygonbor")
 
-	app.CreateCmd.ArgStore["discovery-addr"] = app.CreateCmd.Cmd.Flags().StringP("discovery-addr", "d", "0.0.0.0:22702", "Discovery address")
-	app.CreateCmd.ArgStore["pubsub-addr"] = app.CreateCmd.Cmd.Flags().StringP("pubsub-addr", "p", "0.0.0.0:22700", "Pubsub address")
-	app.CreateCmd.ArgStore["bootstrap-addr"] = app.CreateCmd.Cmd.Flags().StringP("bootstrap-addr", "b", "", "Bootstrap address")
-	app.CreateCmd.ArgStore["keystore-path"] = app.CreateCmd.Cmd.Flags().StringP("keystore-path", "k", keystorePath, "Keystore Path")
-	app.CreateCmd.ArgStore["keystore-pass-path"] = app.CreateCmd.Cmd.Flags().StringP("keystore-pass-path", "y", keystorePassPath, "Keystore pass path")
+	app.CreateCmd.ArgStore["discovery-addr"] = app.CreateCmd.Cmd.Flags().StringP("discovery-addr", "d", "0.0.0.0:22702", "discovery address")
+	app.CreateCmd.ArgStore["pubsub-addr"] = app.CreateCmd.Cmd.Flags().StringP("pubsub-addr", "p", "0.0.0.0:22700", "pubsub address")
+	app.CreateCmd.ArgStore["bootstrap-addr"] = app.CreateCmd.Cmd.Flags().StringP("bootstrap-addr", "b", "", "bootstrap address")
+	app.CreateCmd.ArgStore["keystore-path"] = app.CreateCmd.Cmd.Flags().StringP("keystore-path", "k", keystorePath, "keystore Path")
+	app.CreateCmd.ArgStore["keystore-pass-path"] = app.CreateCmd.Cmd.Flags().StringP("keystore-pass-path", "y", keystorePassPath, "keystore pass path")
 	app.CreateCmd.ArgStore["contracts"] = app.CreateCmd.Cmd.Flags().StringP("contracts", "c", "mainnet", "mainnet/kovan")
-	app.CreateCmd.ArgStore["spamcheck-addr"] = app.CreateCmd.Cmd.Flags().StringP("spamcheck-addr", "z", "", "SpamCheck address")
-	app.CreateCmd.ArgStore["mevproxy-listen-addr"] = app.CreateCmd.Cmd.Flags().StringP("mevproxy-listen-addr", "m", "0.0.0.0:18545", "Port to recieve MEV bundles on")
-	app.CreateCmd.ArgStore["mevproxy-jsonrpc-addr"] = app.CreateCmd.Cmd.Flags().StringP("mevproxy-jsonrpc-addr", "j", "127.0.0.1:8545", "Polygon Bor JSON RPC port")
+	app.CreateCmd.ArgStore["spamcheck-addr"] = app.CreateCmd.Cmd.Flags().StringP("spamcheck-addr", "z", "", "spamcheck address")
+	app.CreateCmd.ArgStore["mevproxy-listen-addr"] = app.CreateCmd.Cmd.Flags().StringP("mevproxy-listen-addr", "m", "0.0.0.0:18545", "port to recieve MEV bundles on")
+	app.CreateCmd.ArgStore["mevproxy-jsonrpc-addr"] = app.CreateCmd.Cmd.Flags().StringP("bundle-addr", "j", "127.0.0.1:8545", "polygon bor JSON RPC port")
 	// ----------------------------------------------------------------------------------
 }
