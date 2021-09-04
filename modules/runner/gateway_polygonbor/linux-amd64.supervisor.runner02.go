@@ -143,7 +143,7 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 		process_name={{.MevProxyProgram}}
 		user={{.MevProxyUser}}
 		directory={{.MevProxyRunDir}}
-		command={{.MevProxyExecutablePath}} -listenAddr {{.MevProxyListenAddr}} -rpcAddr {{.MevProxyJsonRpcAddr}}
+		command={{.MevProxyExecutablePath}} -listenAddr {{.MevProxyListenAddr}} -rpcAddr {{.MevProxyBundleAddr}}
 		priority=100
 		numprocs=1
 		numprocs_start=1
@@ -308,7 +308,7 @@ type runner02resource struct {
 	GatewayProgram, GatewayUser, GatewayRunDir, GatewayExecutablePath                                  string
 	DiscoveryAddr, PubsubAddr, BootstrapAddr, KeystorePath, KeystorePassPath, SpamcheckAddr, Contracts string
 	MevProxyProgram, MevProxyUser, MevProxyRunDir, MevProxyExecutablePath                              string
-	MevProxyListenAddr, MevProxyJsonRpcAddr                                                            string
+	MevProxyListenAddr, MevProxyBundleAddr                                                             string
 }
 
 func (r *linux_amd64_supervisor_runner02) fetchResourceInformation(fileLocation string) (bool, runner02resource, error) {
