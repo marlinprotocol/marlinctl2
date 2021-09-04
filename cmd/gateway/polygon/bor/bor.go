@@ -88,6 +88,6 @@ func init() {
 	app.CreateCmd.ArgStore["contracts"] = app.CreateCmd.Cmd.Flags().StringP("contracts", "c", "mainnet", "mainnet/kovan")
 	app.CreateCmd.ArgStore["spamcheck-addr"] = app.CreateCmd.Cmd.Flags().StringP("spamcheck-addr", "z", "", "spamcheck address")
 	app.CreateCmd.ArgStore["mevproxy-listen-addr"] = app.CreateCmd.Cmd.Flags().StringP("mevproxy-listen-addr", "m", "0.0.0.0:18545", "port to recieve MEV bundles on")
-	app.CreateCmd.ArgStore["mevproxy-jsonrpc-addr"] = app.CreateCmd.Cmd.Flags().StringP("bundle-addr", "j", "127.0.0.1:8545", "polygon bor JSON RPC port")
+	app.CreateCmd.ArgStore["mevproxy-jsonrpc-addr"] = app.CreateCmd.Cmd.Flags().StringP("bundle-addr", "j", "http://127.0.0.1:8545", "polygon bor JSON RPC port")
 	// ----------------------------------------------------------------------------------
 }
