@@ -102,7 +102,7 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 		runner02gatewayProgramName + "_" + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + runner02gatewayName,
 		"", "", "", "", "", "", "",
 		runner02mevproxyProgramName + "_" + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + runner02mevproxyName,
-		"", "",
+		"", "", "",
 	}
 
 	for k, v := range runtimeArgs {
@@ -143,7 +143,7 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 		process_name={{.MevProxyProgram}}
 		user={{.MevProxyUser}}
 		directory={{.MevProxyRunDir}}
-		command={{.MevProxyExecutablePath}} -listenAddr {{.MevProxyListenAddr}} -rpcAddr {{.MevProxyBundleAddr}}
+		command={{.MevProxyExecutablePath}} -listenAddr {{.MevProxyListenAddr}} -rpcAddr {{.MevProxyBundleAddr}} {{if .SubgraphPath}} --subgraphPath {{.SubgraphPath}} {{end}}
 		priority=100
 		numprocs=1
 		numprocs_start=1
@@ -308,7 +308,7 @@ type runner02resource struct {
 	GatewayProgram, GatewayUser, GatewayRunDir, GatewayExecutablePath                                  string
 	DiscoveryAddr, PubsubAddr, BootstrapAddr, KeystorePath, KeystorePassPath, SpamcheckAddr, Contracts string
 	MevProxyProgram, MevProxyUser, MevProxyRunDir, MevProxyExecutablePath                              string
-	MevProxyListenAddr, MevProxyBundleAddr                                                             string
+	MevProxyListenAddr, MevProxyBundleAddr, SubgraphPath                                               string
 }
 
 func (r *linux_amd64_supervisor_runner02) fetchResourceInformation(fileLocation string) (bool, runner02resource, error) {

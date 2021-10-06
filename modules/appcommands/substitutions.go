@@ -86,6 +86,7 @@ func (a *app) gatewayPolygonBorCreateSubstitutions(runnerID string) {
 		runtimeArgs["SpamcheckAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("spamcheck-addr")
 		runtimeArgs["MevProxyListenAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("mevproxy-listen-addr")
 		runtimeArgs["MevProxyBundleAddr"] = a.CreateCmd.getStringFromArgStoreOrDie("mevproxy-bundle-addr")
+		runtimeArgs["SubgraphPath"] = a.CreateCmd.getStringFromArgStoreOrDie("subgraph-path")
 		a.CreateCmd.ArgStore["runtime-args"] = runtimeArgs
 	}
 }
