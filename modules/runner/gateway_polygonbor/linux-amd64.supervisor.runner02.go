@@ -143,7 +143,7 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 		process_name={{.MevProxyProgram}}
 		user={{.MevProxyUser}}
 		directory={{.MevProxyRunDir}}
-		command={{.MevProxyExecutablePath}} -listenAddr {{.MevProxyListenAddr}} -rpcAddr {{.MevProxyBundleAddr}} {{if .SubgraphPath}} --subgraphPath {{.SubgraphPath}} {{end}}
+		command={{.MevProxyExecutablePath}} -listenAddr {{.MevProxyListenAddr}} -rpcAddr {{.MevProxyBundleAddr}} {{if .SubgraphPath}} -subgraphPath {{.SubgraphPath}} {{end}}
 		priority=100
 		numprocs=1
 		numprocs_start=1
