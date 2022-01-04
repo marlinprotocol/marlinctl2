@@ -89,6 +89,6 @@ func init() {
 	app.CreateCmd.ArgStore["spamcheck-addr"] = app.CreateCmd.Cmd.Flags().StringP("spamcheck-addr", "z", "", "spamcheck address")
 	app.CreateCmd.ArgStore["mevproxy-listen-addr"] = app.CreateCmd.Cmd.Flags().StringP("mevproxy-listen-addr", "m", "0.0.0.0:18545", "endpoint to recieve MEV bundles on")
 	app.CreateCmd.ArgStore["mevproxy-bundle-addr"] = app.CreateCmd.Cmd.Flags().StringP("bundle-addr", "j", "http://127.0.0.1:8545", "polygon bor JSON RPC endpoint")
-	app.CreateCmd.ArgStore["subgraph-path"] = app.CreateCmd.Cmd.Flags().StringP("subgraph-path", "s", "/marlinprotocol/mev-bor", "subgraph url")
+	app.CreateCmd.ArgStore["subgraph-path"] = app.CreateCmd.Cmd.Flags().StringP("subgraph-path", "g", "/marlinprotocol/mev-bor", "subgraph url")
 	// ----------------------------------------------------------------------------------
 }
