@@ -14,32 +14,32 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package vsocktoip
+package tcptovsock
 
 import (
 	"os"
 
 	"github.com/marlinprotocol/ctl2/modules/appcommands"
-	projectRunners "github.com/marlinprotocol/ctl2/modules/runner/vsock_to_ip"
+	projectRunners "github.com/marlinprotocol/ctl2/modules/runner/proxy_tcptovsock"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
 // AppCmd represents the registry command
-var VsockToIpCmd = &cobra.Command{
-	Use:   "vsocktoip",
-	Short: "Vsock to IP Proxy",
-	Long:  `Vsock to IP Proxy`,
+var TcpToVsockCmd = &cobra.Command{
+	Use:   "tcptovsock",
+	Short: "TCP to Vsock Proxy",
+	Long:  `TCP to Vsock Proxy`,
 }
 
 func init() {
-	app, err := appcommands.GetNewApp("vsocktoip", projectRunners.GetRunnerInstance,
-		appcommands.CommandDetails{Use: "create", DescShort: "Create Vsock to IP proxy", DescLong: "Create proxy from local Vsock address to local IP address"},
-		appcommands.CommandDetails{Use: "destroy", DescShort: "Destroy running Vsock to IP proxy", DescLong: "Create running proxy from local Vsock address to local IP address"},
-		appcommands.CommandDetails{Use: "logs", DescShort: "Tail logs for running Vsock to IP proxy", DescLong: "Tail logs for running proxy from local Vsock address to local IP address"},
-		appcommands.CommandDetails{Use: "status", DescShort: "Show status of currently running Vsock to IP proxy", DescLong: "Show status of currently running proxy from local Vsock address to local IP address"},
-		appcommands.CommandDetails{Use: "recreate", DescShort: "Recreate end to end Vsock to IP proxy", DescLong: "Recreate end to end proxy from local Vsock address to local IP address"},
-		appcommands.CommandDetails{Use: "restart", DescShort: "Restart services for Vsock to IP proxy", DescLong: "Restart services for proxy from local Vsock address to local IP address"},
+	app, err := appcommands.GetNewApp("tcptovsock", projectRunners.GetRunnerInstance,
+		appcommands.CommandDetails{Use: "create", DescShort: "Create TCP to Vsock proxy", DescLong: "Create proxy from local TCP address to local Vsock address"},
+		appcommands.CommandDetails{Use: "destroy", DescShort: "Destroy running TCP to Vsock proxy", DescLong: "Create running proxy from local TCP address to local Vsock address"},
+		appcommands.CommandDetails{Use: "logs", DescShort: "Tail logs for running TCP to Vsock proxy", DescLong: "Tail logs for running proxy from local TCP address to local Vsock address"},
+		appcommands.CommandDetails{Use: "status", DescShort: "Show status of currently running TCP to Vsock proxy", DescLong: "Show status of currently running proxy from local TCP address to local Vsock address"},
+		appcommands.CommandDetails{Use: "recreate", DescShort: "Recreate end to end TCP to Vsock proxy", DescLong: "Recreate end to end proxy from local TCP address to local Vsock address"},
+		appcommands.CommandDetails{Use: "restart", DescShort: "Restart services for TCP to Vsock proxy", DescLong: "Restart services for proxy from local TCP address to local Vsock address"},
 		appcommands.CommandDetails{Use: "versions", DescShort: "Show available versions for use", DescLong: "Show available versions for use"},
 
 		appcommands.CommandDetails{Use: "show", DescShort: "Show current configuration residing on disk", DescLong: "Show current configuration residing on disk"},
@@ -49,20 +49,20 @@ func init() {
 		appcommands.CommandDetails{Use: "apply", DescShort: "Apply modifications to config", DescLong: "Apply modifications to config"},
 	)
 	if err != nil {
-		log.Error("Error while creating vsock to ip proxy application command tree")
+		log.Error("Error while creating TCP to vsock proxy application command tree")
 		os.Exit(1)
 	}
 
-	VsockToIpCmd.AddCommand(app.CreateCmd.Cmd)
-	VsockToIpCmd.AddCommand(app.DestroyCmd.Cmd)
-	VsockToIpCmd.AddCommand(app.LogsCmd.Cmd)
-	VsockToIpCmd.AddCommand(app.StatusCmd.Cmd)
-	VsockToIpCmd.AddCommand(app.RecreateCmd.Cmd)
-	VsockToIpCmd.AddCommand(app.RestartCmd.Cmd)
-	VsockToIpCmd.AddCommand(app.VersionsCmd.Cmd)
+	TcpToVsockCmd.AddCommand(app.CreateCmd.Cmd)
+	TcpToVsockCmd.AddCommand(app.DestroyCmd.Cmd)
+	TcpToVsockCmd.AddCommand(app.LogsCmd.Cmd)
+	TcpToVsockCmd.AddCommand(app.StatusCmd.Cmd)
+	TcpToVsockCmd.AddCommand(app.RecreateCmd.Cmd)
+	TcpToVsockCmd.AddCommand(app.RestartCmd.Cmd)
+	TcpToVsockCmd.AddCommand(app.VersionsCmd.Cmd)
 
 	configCmd := &cobra.Command{Use: "config", Short: "Configurations of project set on disk", Long: "Configurations of project set on disk"}
-	VsockToIpCmd.AddCommand(configCmd)
+	TcpToVsockCmd.AddCommand(configCmd)
 	configCmd.AddCommand(app.ConfigShowCmd.Cmd)
 	configCmd.AddCommand(app.ConfigDiffCmd.Cmd)
 	configCmd.AddCommand(app.ConfigModifyCmd.Cmd)
@@ -70,8 +70,8 @@ func init() {
 	configCmd.AddCommand(app.ConfigApplyCmd.Cmd)
 	// Extra flag additions for gateway_cosmos -----------------------------------------------
 
-	app.CreateCmd.ArgStore["listner-addr"] = app.CreateCmd.Cmd.Flags().StringP("listner-addr", "l", "0:8000", "Listner Vsock port")
-	app.CreateCmd.ArgStore["server-addr"]  = app.CreateCmd.Cmd.Flags().StringP("server-addr", "s", "9001", "Server IP address")
+	app.CreateCmd.ArgStore["ip-addr"] = app.CreateCmd.Cmd.Flags().StringP("listner-addr", "l", "127.0.0.1:8000", "Listner TCP port")
+	app.CreateCmd.ArgStore["vsock-addr"]  = app.CreateCmd.Cmd.Flags().StringP("server-addr", "s", "0:9001", "Server Vsock address")
 
 	// ----------------------------------------------------------------------------------
 }

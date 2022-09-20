@@ -223,3 +223,19 @@ func (a *app) relayDotCreateSubstitutions(runnerID string) {
 		a.CreateCmd.ArgStore["runtime-args"] = runtimeArgs
 	}
 }
+
+// -------------------- PROXY ------------------------------------
+
+func (a *app) proxyCreateSusbstitutions(runnerID string) {
+	if ((a.ProjectID != "tcptovsock") || (a.ProjectID != "vsocktotcp")) {
+		return
+	}
+
+	runtimeArgs := a.CreateCmd.getStringToStringFromArgStoreOrDie("runtime-args")
+	if len(runtimeArgs) == 0 {
+		runtimeArgs["TcpAddress"] = a.CreateCmd.getStringFromArgStoreOrDie("ip-addr")
+		runtimeArgs["VsockAddress"] = a.CreateCmd.getStringFromArgStoreOrDie("vsock-addr")
+		
+		a.CreateCmd.ArgStore["runtime-args"] = runtimeArgs
+	}
+}

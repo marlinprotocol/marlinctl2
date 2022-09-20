@@ -1,8 +1,8 @@
 package proxy
 
 import (
-	"github.com/marlinprotocol/ctl2/cmd/proxy/iptovsock"
-	"github.com/marlinprotocol/ctl2/cmd/proxy/vsocktoip"
+	"github.com/marlinprotocol/ctl2/cmd/proxy/tcptovsock"
+	"github.com/marlinprotocol/ctl2/cmd/proxy/vsocktotcp"
 	"github.com/spf13/cobra"
 )
 
@@ -13,8 +13,8 @@ var ProxyCmd = &cobra.Command{
 }
 
 func init() {
-	ProxyCmd.AddCommand(iptovsock.IpToVsockCmd)
-	ProxyCmd.AddCommand(vsocktoip.VsockToIpCmd)
+	ProxyCmd.AddCommand(tcptovsock.TcpToVsockCmd)
+	ProxyCmd.AddCommand(vsocktotcp.VsockToTcpCmd)
 }
 
 
