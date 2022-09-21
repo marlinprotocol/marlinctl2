@@ -38,6 +38,7 @@ import (
 	"github.com/inconshreveable/go-update"
 	"github.com/marlinprotocol/ctl2/cmd/beacon"
 	"github.com/marlinprotocol/ctl2/cmd/gateway"
+	"github.com/marlinprotocol/ctl2/cmd/proxy"
 	"github.com/marlinprotocol/ctl2/cmd/relay"
 )
 
@@ -147,10 +148,11 @@ func init() {
 	RootCmd.AddCommand(gateway.GatewayCmd)
 	RootCmd.AddCommand(beacon.BeaconCmd)
 	RootCmd.AddCommand(relay.RelayCmd)
+	RootCmd.AddCommand(proxy.ProxyCmd)
 
-	RootCmd.PersistentFlags().BoolVar(&skipRegistrySync, "skip-sync", false, "skip registry sync during run")
+	RootCmd.PersistentFlags().BoolVar(&skipRegistrySync, "skip-sync", true, "skip registry sync during run")
 	RootCmd.PersistentFlags().BoolVar(&forcefulRegistrySync, "registry-sync", false, "forceful registry sync from remote. May be used to check for upgrades.")
-	RootCmd.PersistentFlags().BoolVar(&skipMarlinctlUpdateCheck, "skip-update-check", false, "skip update check during run")
+	RootCmd.PersistentFlags().BoolVar(&skipMarlinctlUpdateCheck, "skip-update-check", true, "skip update check during run")
 	RootCmd.PersistentFlags().StringVar(&logLevel, "loglevel", "info", "marlinctl loglevel (default is INFO)")
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.marlin/ctl/state.yaml)")
 }

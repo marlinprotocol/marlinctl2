@@ -42,5 +42,5 @@ func GetRunnerInstance(runnerId string, version string, storage string, runnerDa
 }
 
 func GetResourceFileLocation(storage string, instanceId string) string {
-	return storage + "/common/project_proxy_instance" + instanceId + ".resource"
+	return storage + "/common/project_vsocktotcp_instance" + instanceId + ".resource"
 }

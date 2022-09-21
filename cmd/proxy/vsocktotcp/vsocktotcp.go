@@ -47,6 +47,9 @@ func init() {
 		appcommands.CommandDetails{Use: "modify", DescShort: "Modify configs on disk", DescLong: "Modify configs on disk"},
 		appcommands.CommandDetails{Use: "reset", DescShort: "Reset Configurations on disk", DescLong: "Reset Configurations on disk"},
 		appcommands.CommandDetails{Use: "apply", DescShort: "Apply modifications to config", DescLong: "Apply modifications to config"},
+
+		appcommands.CommandDetails{Use: "create", DescShort: "Create keystore", DescLong: "Create keystore"},
+		appcommands.CommandDetails{Use: "destroy", DescShort: "Destroy keystore", DescLong: "Destroy keystore"},
 	)
 	if err != nil {
 		log.Error("Error while creating vsock to TCP proxy application command tree")
@@ -70,8 +73,8 @@ func init() {
 	configCmd.AddCommand(app.ConfigApplyCmd.Cmd)
 	// Extra flag additions for gateway_cosmos -----------------------------------------------
 
-	app.CreateCmd.ArgStore["vsock-addr"] = app.CreateCmd.Cmd.Flags().StringP("listner-addr", "l", "0:8000", "Listner Vsock port")
-	app.CreateCmd.ArgStore["ip-addr"]  = app.CreateCmd.Cmd.Flags().StringP("server-addr", "s", "127.0.0.1:9001", "Server TCP address")
+	app.CreateCmd.ArgStore["vsock-addr"] = app.CreateCmd.Cmd.Flags().StringP("vsock-addr", "v", "0:8000", "Listner Vsock port")
+	app.CreateCmd.ArgStore["ip-addr"]  = app.CreateCmd.Cmd.Flags().StringP("ip-addr", "t", "127.0.0.1:9001", "Server TCP address")
 
 	// ----------------------------------------------------------------------------------
 }

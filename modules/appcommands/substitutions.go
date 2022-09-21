@@ -2,7 +2,9 @@
 
 package appcommands
 
-import "github.com/marlinprotocol/ctl2/modules/util"
+import (
+	"github.com/marlinprotocol/ctl2/modules/util"
+)
 
 // ----------------- RELAY ETH -------------------------------------
 
@@ -227,10 +229,9 @@ func (a *app) relayDotCreateSubstitutions(runnerID string) {
 // -------------------- PROXY ------------------------------------
 
 func (a *app) proxyCreateSusbstitutions(runnerID string) {
-	if ((a.ProjectID != "tcptovsock") || (a.ProjectID != "vsocktotcp")) {
+	if ((a.ProjectID != "tcptovsock") && (a.ProjectID != "vsocktotcp")) {
 		return
 	}
-
 	runtimeArgs := a.CreateCmd.getStringToStringFromArgStoreOrDie("runtime-args")
 	if len(runtimeArgs) == 0 {
 		runtimeArgs["TcpAddress"] = a.CreateCmd.getStringFromArgStoreOrDie("ip-addr")

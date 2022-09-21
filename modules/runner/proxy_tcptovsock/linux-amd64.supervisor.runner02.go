@@ -331,7 +331,7 @@ func (r *linux_amd64_supervisor_runner02) Status() error {
 	statusLines := strings.Split(string(status), "\n")
 	var anyStatusLine = false
 	for _, v := range statusLines {
-		if match, err := regexp.MatchString(runner02proxyProgramName+r.InstanceId, v); err == nil && match {
+		if match, err := regexp.MatchString(runner02proxyProgramName+"_"+r.InstanceId, v); err == nil && match {
 			vSplit := strings.Split(v, " ")
 			supervisorStatus[vSplit[0]] = strings.Trim(strings.Join(vSplit[1:], " "), " ")
 			anyStatusLine = true
