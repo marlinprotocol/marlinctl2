@@ -178,6 +178,7 @@ func (a *app) setupCreateCommand() {
 			a.relayCosmosCreateSubstitutions(versionToRun.RunnerId)
 			a.relayDotCreateSubstitutions(versionToRun.RunnerId)
 			a.relayPolygonCreateSubstitutions(versionToRun.RunnerId)
+			a.cpCreateSusbstitutions(versionToRun.RunnerId)
 
 			a.doPreRunSanityOrDie(runner)
 			a.doPrepareOrDie(runner)
