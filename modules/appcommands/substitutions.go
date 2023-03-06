@@ -234,8 +234,8 @@ func (a *app) cpCreateSusbstitutions(runnerID string) {
 	if len(runtimeArgs) == 0 {
 		runtimeArgs["AwsProfile"] = a.CreateCmd.getStringFromArgStoreOrDie("profile")
 		runtimeArgs["KeyName"] = a.CreateCmd.getStringFromArgStoreOrDie("key-name")
-		runtimeArgs["KeyLocation"] = a.CreateCmd.getStringFromArgStoreOrDie("loc")
-
+		runtimeArgs["Rpc"] = a.CreateCmd.getStringFromArgStoreOrDie("rpc")
+		runtimeArgs["Regions"] = a.CreateCmd.getStringFromArgStoreOrDie("regions")
 		a.CreateCmd.ArgStore["runtime-args"] = runtimeArgs
 	}
 }

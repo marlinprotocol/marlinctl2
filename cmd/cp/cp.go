@@ -33,7 +33,7 @@ var CpCmd = &cobra.Command{
 }
 
 func init() {
-	app, err := appcommands.GetNewApp("beacon", projectRunners.GetRunnerInstance,
+	app, err := appcommands.GetNewApp("cp", projectRunners.GetRunnerInstance,
 		appcommands.CommandDetails{Use: "create", DescShort: "Create control plane", DescLong: "Create control plane"},
 		appcommands.CommandDetails{Use: "destroy", DescShort: "Destroy control plane", DescLong: "Destroy control plane"},
 		appcommands.CommandDetails{Use: "logs", DescShort: "Tail logs for running control plane instances", DescLong: "Tail logs for running control plane instances"},
@@ -77,10 +77,11 @@ func init() {
 	keystoreCmd.AddCommand(app.KeystoreCreateCmd.Cmd)
 	keystoreCmd.AddCommand(app.KeystoreDestroyCmd.Cmd)
 
-	// Extra flag additions for beacon -----------------------------------------------
+	// Extra flag additions for cp -----------------------------------------------
 	app.CreateCmd.ArgStore["profile"] = app.CreateCmd.Cmd.Flags().StringP("profile", "p", "default", "AWS profile")
 	app.CreateCmd.ArgStore["key-name"]  = app.CreateCmd.Cmd.Flags().StringP("key-name", "k", "marlin", "AWS keypair name")
-	app.CreateCmd.ArgStore["loc"]  = app.CreateCmd.Cmd.Flags().StringP("loc", "l", "/home/ubuntu/marlin", "AWS keypair local location")
+	app.CreateCmd.ArgStore["rpc"]  = app.CreateCmd.Cmd.Flags().StringP("rpc", "u", "", "RPC url")
+	app.CreateCmd.ArgStore["regions"] = app.CreateCmd.Cmd.Flags().StringP("regions", "v", "ap-south-1", "Allowed AWS regions")
 
 	// ----------------------------------------------------------------------------------
 }

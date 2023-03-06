@@ -37,7 +37,7 @@ type linux_amd64_supervisor_runner02 struct {
 
 type runner02resource struct {
 	Runner, Version, StartTime string
-	CpProgram, CpUser, CpRunDir, CpPath, AwsProfile, KeyName, KeyLocation string 
+	CpProgram, CpUser, CpRunDir, CpPath, AwsProfile, KeyName, Rpc, Regions string
 }
 
 const (
@@ -62,40 +62,40 @@ func (r *linux_amd64_supervisor_runner02) PreRunSanity() error {
 }
 
 func (r *linux_amd64_supervisor_runner02) Download() error {
-	// var dirPath = r.Storage + "/" + r.Version
-	// err := util.CreateDirPathIfNotExists(dirPath)
-	// if err != nil {
-	// 	return err
-	// }
+	var dirPath = r.Storage + "/" + r.Version
+	err := util.CreateDirPathIfNotExists(dirPath)
+	if err != nil {
+		return err
+	}
 
-	// var proxyLocation = dirPath + "/" + runner02proxyName
+	var cpLocation = dirPath + "/" + runner02cpName
 
-	// if _, err := os.Stat(proxyLocation); os.IsNotExist(err) {
-	// 	log.Info("Fetching beacon from upstream for version ", r.Version)
-	// 	util.DownloadFile(proxyLocation, r.RunnerData.Proxy)
-	// }
-	// if !r.SkipChecksum {
-	// 	err := util.VerifyChecksum(proxyLocation, r.RunnerData.ProxyChecksum)
-	// 	if err != nil {
-	// 		return errors.New("Error while verifying beacon checksum: " + err.Error())
-	// 	} else {
-	// 		log.Debug("Successully verified beacon's integrity")
-	// 	}
-	// }
+	if _, err := os.Stat(cpLocation); os.IsNotExist(err) {
+		log.Info("Fetching control-plane from upstream for version ", r.Version)
+		util.DownloadFile(cpLocation, r.RunnerData.Cp)
+	}
+	if !r.SkipChecksum {
+		err := util.VerifyChecksum(cpLocation, r.RunnerData.CpChecksum)
+		if err != nil {
+			return errors.New("Error while verifying cp checksum: " + err.Error())
+		} else {
+			log.Debug("Successully verified cp's integrity")
+		}
+	}
 
-	// err = os.Chmod(proxyLocation, 0755)
-	// if err != nil {
-	// 	return err
-	// }
+	err = os.Chmod(cpLocation, 0755)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func (r *linux_amd64_supervisor_runner02) Prepare() error {
-	// err := r.Download()
-	// if err != nil {
-	// 	return err
-	// }
-	err := util.ChownRmarlinctlDir()
+	err := r.Download()
+	if err != nil {
+		return err
+	}
+	err = util.ChownRmarlinctlDir()
 	if err != nil {
 		return err
 	}
@@ -113,7 +113,7 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 
 	substitutions := runner02resource {
 		"linux-amd64.supervisor.runner02", r.Version, time.Now().Format(time.RFC822Z),
-		runner02cpProgramName + "_" + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + runner02cpName, "default", "marlin", "/home/ubuntu/marlin.pem",
+		runner02cpProgramName + "_" + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + runner02cpName, "default", "marlin", "", "ap-south-1",
 	}
 
 	for k, v := range runtimeArgs {
@@ -131,9 +131,12 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 		process_name={{.CpProgram}}
 		user={{.CpUser}}
 		directory={{.CpRunDir}}
-		command={{.CpExecutablePath}} --profile {{.AwsProfile}} --key-name {{.KeyName}} --loc {{.KeyLocation}}
+		command={{.CpExecutablePath}} --profile {{.AwsProfile}} --key-name {{.KeyName}} --rpc {{.Rpc}} --regions {{.Regions}}
 		priority=100
 		numprocs=1
+		numprocs_start=1
+		autostart=true
+		autorestart=true
 		stdout_logfile=/var/log/supervisor/{{.CpProgram}}-stdout.log
 		stderr_logfile=/var/log/supervisor/{{.CpProgram}}-stderr.log
 	`)))
@@ -263,7 +266,7 @@ func (r *linux_amd64_supervisor_runner02) Destroy() error {
 
 	_, err = exec.Command("supervisorctl", "stop", resData.CpProgram).Output()
 	if err != nil {
-		return errors.New("Error while stopping beacon: " + err.Error())
+		return errors.New("Error while stopping cp: " + err.Error())
 	}
 	log.Debug("Trigerred beacon stop")
 
