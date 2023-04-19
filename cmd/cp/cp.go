@@ -82,6 +82,8 @@ func init() {
 	app.CreateCmd.ArgStore["key-name"]  = app.CreateCmd.Cmd.Flags().StringP("key-name", "k", "marlin", "AWS keypair name")
 	app.CreateCmd.ArgStore["rpc"]  = app.CreateCmd.Cmd.Flags().StringP("rpc", "u", "", "RPC url")
 	app.CreateCmd.ArgStore["regions"] = app.CreateCmd.Cmd.Flags().StringP("regions", "v", "ap-south-1", "Allowed AWS regions")
-
+	app.CreateCmd.ArgStore["rates"] = app.CreateCmd.Cmd.Flags().StringP("rates", "t", "", "Location of rates for instance types")
+	app.CreateCmd.ArgStore["black"] = app.CreateCmd.Cmd.Flags().StringP("black", "b", "", "Location of blacklist file")
+	app.CreateCmd.ArgStore["white"] = app.CreateCmd.Cmd.Flags().StringP("white", "w", "", "Location of whitelist file")
 	// ----------------------------------------------------------------------------------
 }

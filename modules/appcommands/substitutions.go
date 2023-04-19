@@ -236,6 +236,9 @@ func (a *app) cpCreateSusbstitutions(runnerID string) {
 		runtimeArgs["KeyName"] = a.CreateCmd.getStringFromArgStoreOrDie("key-name")
 		runtimeArgs["Rpc"] = a.CreateCmd.getStringFromArgStoreOrDie("rpc")
 		runtimeArgs["Regions"] = a.CreateCmd.getStringFromArgStoreOrDie("regions")
+		runtimeArgs["Rates"] = a.CreateCmd.getStringFromArgStoreOrDie("rates")
+		runtimeArgs["Black"] = a.CreateCmd.getStringFromArgStoreOrDie("black")
+		runtimeArgs["White"] = a.CreateCmd.getStringFromArgStoreOrDie("white")
 		a.CreateCmd.ArgStore["runtime-args"] = runtimeArgs
 	}
 }
