@@ -37,6 +37,7 @@ import (
 
 	"github.com/inconshreveable/go-update"
 	"github.com/marlinprotocol/ctl2/cmd/beacon"
+	"github.com/marlinprotocol/ctl2/cmd/cp"
 	"github.com/marlinprotocol/ctl2/cmd/gateway"
 	"github.com/marlinprotocol/ctl2/cmd/relay"
 )
@@ -147,6 +148,7 @@ func init() {
 	RootCmd.AddCommand(gateway.GatewayCmd)
 	RootCmd.AddCommand(beacon.BeaconCmd)
 	RootCmd.AddCommand(relay.RelayCmd)
+	RootCmd.AddCommand(cp.CpCmd)
 
 	RootCmd.PersistentFlags().BoolVar(&skipRegistrySync, "skip-sync", false, "skip registry sync during run")
 	RootCmd.PersistentFlags().BoolVar(&forcefulRegistrySync, "registry-sync", false, "forceful registry sync from remote. May be used to check for upgrades.")

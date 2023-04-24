@@ -223,3 +223,22 @@ func (a *app) relayDotCreateSubstitutions(runnerID string) {
 		a.CreateCmd.ArgStore["runtime-args"] = runtimeArgs
 	}
 }
+// -------------------- CP ------------------------------------
+
+func (a *app) cpCreateSusbstitutions(runnerID string) {
+	if (a.ProjectID != "cp") {
+		return
+	}
+
+	runtimeArgs := a.CreateCmd.getStringToStringFromArgStoreOrDie("runtime-args")
+	if len(runtimeArgs) == 0 {
+		runtimeArgs["AwsProfile"] = a.CreateCmd.getStringFromArgStoreOrDie("profile")
+		runtimeArgs["KeyName"] = a.CreateCmd.getStringFromArgStoreOrDie("key-name")
+		runtimeArgs["Rpc"] = a.CreateCmd.getStringFromArgStoreOrDie("rpc")
+		runtimeArgs["Regions"] = a.CreateCmd.getStringFromArgStoreOrDie("regions")
+		runtimeArgs["Rates"] = a.CreateCmd.getStringFromArgStoreOrDie("rates")
+		runtimeArgs["Black"] = a.CreateCmd.getStringFromArgStoreOrDie("black")
+		runtimeArgs["White"] = a.CreateCmd.getStringFromArgStoreOrDie("white")
+		a.CreateCmd.ArgStore["runtime-args"] = runtimeArgs
+	}
+}
