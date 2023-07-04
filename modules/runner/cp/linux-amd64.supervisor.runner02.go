@@ -37,7 +37,7 @@ type linux_amd64_supervisor_runner02 struct {
 
 type runner02resource struct {
 	Runner, Version, StartTime string
-	CpProgram, CpUser, CpRunDir, CpPath, AwsProfile, KeyName, Rpc, Regions, Rates, Black, White string
+	CpProgram, CpUser, CpRunDir, CpPath, AwsProfile, KeyName, Rpc, Regions, Rates, Bandwidth, Provider, Contract, Black, White, AddressBlack, AddressWhite string
 }
 
 const (
@@ -114,7 +114,7 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 	substitutions := runner02resource {
 		"linux-amd64.supervisor.runner02", r.Version, time.Now().Format(time.RFC822Z),
 		runner02cpProgramName + "_" + r.InstanceId, currentUser.Username, currentUser.HomeDir, r.Storage + "/" + r.Version + "/" + runner02cpName,
-		"default", "marlin", "", "ap-south-1", "", "", "",
+		"default", "marlin", "", "ap-south-1", "", "", "", "", "", "", "", "",
 	}
 
 	for k, v := range runtimeArgs {
@@ -132,7 +132,7 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 		process_name={{.CpProgram}}
 		user={{.CpUser}}
 		directory={{.CpRunDir}}
-		command={{.CpExecutablePath}} --profile {{.AwsProfile}} --key-name {{.KeyName}} --rpc {{.Rpc}} --regions {{.Regions}} --rates {{.Rates}} --white {{.White}} --black {{.Black}}
+		command={{.CpExecutablePath}} --profile {{.AwsProfile}} --key-name {{.KeyName}} --rpc {{.Rpc}} --regions {{.Regions}} --rates {{.Rates}} --bandwidth {{.Bandwidth}} --contract {{.Contract}} --Provider {{.Provider}} --whitelist {{.White}} --blacklist {{.Black}} --address-blacklist {{.AddressBlack}} --address-whitelist {{.AddressWhite}}
 		priority=100
 		numprocs=1
 		numprocs_start=1

@@ -83,7 +83,12 @@ func init() {
 	app.CreateCmd.ArgStore["rpc"]  = app.CreateCmd.Cmd.Flags().StringP("rpc", "u", "", "RPC url")
 	app.CreateCmd.ArgStore["regions"] = app.CreateCmd.Cmd.Flags().StringP("regions", "v", "ap-south-1", "Allowed AWS regions")
 	app.CreateCmd.ArgStore["rates"] = app.CreateCmd.Cmd.Flags().StringP("rates", "t", "", "Location of rates for instance types")
+	app.CreateCmd.ArgStore["bandwidth"] = app.CreateCmd.Cmd.Flags().StringP("bandwidth", "g", "", "Location of bandwidth rates file")
+	app.CreateCmd.ArgStore["provider"] = app.CreateCmd.Cmd.Flags().StringP("provider", "o", "", "Address of provider")
+	app.CreateCmd.ArgStore["contract"] = app.CreateCmd.Cmd.Flags().StringP("contract", "c", "", "Address of contract")
 	app.CreateCmd.ArgStore["black"] = app.CreateCmd.Cmd.Flags().StringP("black", "b", "", "Location of blacklist file")
 	app.CreateCmd.ArgStore["white"] = app.CreateCmd.Cmd.Flags().StringP("white", "w", "", "Location of whitelist file")
+	app.CreateCmd.ArgStore["address-blacklist"] = app.CreateCmd.Cmd.Flags().StringP("address-black", "z", "", "Location of blacklist address file")
+	app.CreateCmd.ArgStore["address-whitelist"] = app.CreateCmd.Cmd.Flags().StringP("address-white", "y", "", "Location of whitelist address file")
 	// ----------------------------------------------------------------------------------
 }
