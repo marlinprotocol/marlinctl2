@@ -37,7 +37,7 @@ type linux_amd64_supervisor_runner02 struct {
 
 type runner02resource struct {
 	Runner, Version, StartTime string
-	CpProgram, CpUser, CpRunDir, CpPath, AwsProfile, KeyName, Rpc, Regions, Rates, Bandwidth, Provider, Contract, Black, White, AddressBlack, AddressWhite string
+	CpProgram, CpUser, CpRunDir, CpPath, AwsProfile, KeyName, Rpc, Regions, InstanceRates, BandwidthRates, Provider, Contract, ImageBlacklist, ImageWhitelist, AddressBlacklist, AddressWhitelist string
 }
 
 const (
@@ -132,7 +132,7 @@ func (r *linux_amd64_supervisor_runner02) Create(runtimeArgs map[string]string) 
 		process_name={{.CpProgram}}
 		user={{.CpUser}}
 		directory={{.CpRunDir}}
-		command={{.CpExecutablePath}} --profile {{.AwsProfile}} --key-name {{.KeyName}} --rpc {{.Rpc}} --regions {{.Regions}} --rates {{.Rates}} --bandwidth {{.Bandwidth}} --contract {{.Contract}} --Provider {{.Provider}} --whitelist {{.White}} --blacklist {{.Black}} --address-blacklist {{.AddressBlack}} --address-whitelist {{.AddressWhite}}
+		command={{.CpExecutablePath}} --profile {{.AwsProfile}} --key-name {{.KeyName}} --rpc {{.Rpc}} --regions {{.Regions}} --rates {{.InstanceRates}} --bandwidth {{.BandwidthRates}} --contract {{.Contract}} --Provider {{.Provider}} --whitelist {{.ImageWhitelist}} --blacklist {{.ImageBlacklist}} --address-blacklist {{.AddressBlacklist}} --address-whitelist {{.AddressWhitelist}}
 		priority=100
 		numprocs=1
 		numprocs_start=1
