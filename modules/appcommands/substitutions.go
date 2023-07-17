@@ -236,9 +236,14 @@ func (a *app) cpCreateSusbstitutions(runnerID string) {
 		runtimeArgs["KeyName"] = a.CreateCmd.getStringFromArgStoreOrDie("key-name")
 		runtimeArgs["Rpc"] = a.CreateCmd.getStringFromArgStoreOrDie("rpc")
 		runtimeArgs["Regions"] = a.CreateCmd.getStringFromArgStoreOrDie("regions")
-		runtimeArgs["Rates"] = a.CreateCmd.getStringFromArgStoreOrDie("rates")
-		runtimeArgs["Black"] = a.CreateCmd.getStringFromArgStoreOrDie("black")
-		runtimeArgs["White"] = a.CreateCmd.getStringFromArgStoreOrDie("white")
+		runtimeArgs["InstanceRates"] = a.CreateCmd.getStringFromArgStoreOrDie("instance-rates")
+		runtimeArgs["BandwidthRates"] = a.CreateCmd.getStringFromArgStoreOrDie("bandwidth-rates")
+		runtimeArgs["Provider"] = a.CreateCmd.getStringFromArgStoreOrDie("provider")
+		runtimeArgs["Contract"] = a.CreateCmd.getStringFromArgStoreOrDie("contract")
+		runtimeArgs["ImageBlacklist"] = a.CreateCmd.getStringFromArgStoreOrDie("image-blacklist")
+		runtimeArgs["ImageWhitelist"] = a.CreateCmd.getStringFromArgStoreOrDie("image-whitelist")
+		runtimeArgs["AddressBlacklist"] = a.CreateCmd.getStringFromArgStoreOrDie("address-blacklist")
+		runtimeArgs["AddressWhitelist"] = a.CreateCmd.getStringFromArgStoreOrDie("address-whitelist")
 		a.CreateCmd.ArgStore["runtime-args"] = runtimeArgs
 	}
 }
